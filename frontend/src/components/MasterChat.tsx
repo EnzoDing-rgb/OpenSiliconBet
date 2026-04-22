@@ -26,11 +26,21 @@ export function MasterChat({ runId }: MasterChatProps) {
     const trimmed = message.trim();
     if (!trimmed || !runId || sending) return;
 
+    const now = Date.now();
+    const optimisticUserMsg: ChatMessage = {
+      role: 'user',
+      speaker: 'user',
+      target_speaker: speaker,
+      content: trimmed,
+      created_at: now,
+    };
+
     setSending(true);
     setError(null);
+    setChatHistory((prev) => [...prev, optimisticUserMsg]);
+    setMessage('');
     try {
       const reply = await postChat(runId, speaker, trimmed);
-      setMessage('');
       // server already updated chat history in memory, we just fetch it from response
       setChatHistory(reply.chat_history);
     } catch (err: unknown) {

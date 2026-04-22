@@ -23,15 +23,16 @@
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(219, 234, 254, 0.75);
+  color: #111827;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.15s ease;
 }
 
 .speaker-tabs .tab:hover {
-  background: rgba(248, 250, 252, 0.9);
-  border-color: #9ca3af;
+  background: rgba(191, 219, 254, 0.85);
+  border-color: rgba(59, 130, 246, 0.55);
 }
 
 .speaker-tabs .tab.active {

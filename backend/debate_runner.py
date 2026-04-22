@@ -35,6 +35,7 @@ DEBATE_TOPIC = "《知觉与错误知觉》：错误知觉是国际冲突的独�
 
 MAX_RESPONSE_TOKENS = 400
 RESPONSE_LEN_HINT_ZH = "严格控制在150字以内。"
+DISPLAY_DELAY_SECONDS_PER_TURN = 7.0
 
 # Judge output needs to be longer than debater turns; otherwise it gets cut off.
 JUDGE_MAX_RESPONSE_TOKENS = 500
@@ -262,19 +263,27 @@ class DebateRunner:
                     return
 
                 response_text = _clean_model_output(response_text)
+                response_text = (response_text or "").strip()
+
+                # Ensure first round explicitly self-identifies (deterministic UX).
+                # Round 1 has two turns: i=1 (Mearsheimer) and i=2 (Jervis).
+                if i == 1:
+                    response_text = f"【我是约翰·米尔斯海默】\n\n{response_text}"
+                elif i == 2:
+                    response_text = f"【我是罗伯特·杰维斯】\n\n{response_text}"
 
                 # Add turn
                 turn = Turn(
                     round=(i + 1) // 2,  # 1,1,2,2,3,3
                     speaker=speaker,
-                    text=response_text.strip(),
+                    text=response_text,
                     created_at=time.time(),
                 )
                 run.turns.append(turn)
                 last_text_by_speaker[speaker] = turn.text
 
-                # Brief pause between turns
-                await asyncio.sleep(0.4)
+                # Slow down text output so UI doesn't race ahead of audio playback.
+                await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
             # Mark done
             run.status = RunStatus.DONE

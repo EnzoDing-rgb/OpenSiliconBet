@@ -44,3 +44,4 @@ INFO:     127.0.0.1:42896 - "GET /api/debate/status/65dbc814-4825-474f-9426-972f
 INFO:     127.0.0.1:42910 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
 INFO:     127.0.0.1:42920 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
 INFO:     127.0.0.1:42922 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     connection closed

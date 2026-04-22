@@ -489,10 +489,15 @@ class DebateRunner:
         # Build system prompt same as debate (reuse skill for the answering speaker)
         system_prompt = self._build_system_prompt(target_speaker)
 
-        # Only for the first master-chat turn ever in this run: tell the assistant who the user is.
+        # Only for the first master-chat turn ever in this run: set the discussion scene once.
+        # Keep it short to avoid prompt bloat across turns.
         first_turn_user_context = (
-            "现在跟你对话的是一个国家政治领域国家安全学的博士生，来自中国。"
-            "你可以在相关且有帮助时表达你对中国的鲜明观点；如果不相关就不要硬表达。"
+            "【对话场景设定（仅本次会话首次注入）】\n"
+            "你在与一位中国的国家安全学方向博士生进行学术讨论。整体风格要求：严谨、可证伪、术语清晰、尽量用“主张-机制-证据/可检验预测-反例边界”结构。\n"
+            "【身份相关性规则】\n"
+            "- 若问题与提问者身份/语境无关：完全忽略其身份，不要硬扯。\n"
+            "- 只有当问题与中国语境/政策含义/案例选择直接相关时：才可简短点到提问者语境（最多一句），其余仍以理论与机制为主。\n"
+            "【表达约束】不做空泛口号，不堆砌名词；若引入假设或外部事实，请明确标注为“假设/示例”。"
         )
         is_first_chat_turn = len(run.chat_history) == 0
 

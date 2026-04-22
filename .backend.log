@@ -1,63 +1,57 @@
-INFO:     Started server process [823027]
+INFO:     Started server process [11275]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:56332 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38582 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38584 - "WebSocket /ws/debate-audio?run_id=ab82c836-e915-4a0f-890e-b81191dbc7e1" [accepted]
+INFO:     127.0.0.1:39288 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53098 - "POST /api/debate/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41258 - "WebSocket /ws/debate-audio?run_id=27213633-3f69-41df-a3c5-4a992189ca1e" [accepted]
 INFO:     connection open
-INFO:     127.0.0.1:38600 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51990 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51992 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52008 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52022 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52038 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52054 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34292 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34304 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34314 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34316 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34332 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34336 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34346 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55254 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55258 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55260 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55262 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55272 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55280 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55290 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34846 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34858 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34866 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34878 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34890 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34898 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47876 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47890 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47894 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47896 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47904 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47912 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:47922 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48492 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48500 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48512 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48514 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48518 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48526 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48532 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41272 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41284 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41294 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41306 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41316 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41326 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49224 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49230 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49236 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49242 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49246 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49258 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49264 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58496 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58512 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58526 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58536 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58546 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58560 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58110 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58124 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58138 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58154 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58158 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58162 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58178 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60160 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60168 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60172 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60176 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60184 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60186 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60202 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60558 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60566 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60572 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60586 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60592 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60600 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
 Debate saved to /home/fengde/Projects/full-stack/debate_book/docs/debate_result.md
-INFO:     127.0.0.1:43678 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43690 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43700 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43712 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43716 - "GET /api/debate/status/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38260 - "POST /api/debate/chat/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54240 - "POST /api/debate/chat/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:33904 - "POST /api/debate/chat/ab82c836-e915-4a0f-890e-b81191dbc7e1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56572 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56574 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56576 - "GET /api/debate/status/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56190 - "POST /api/debate/chat/27213633-3f69-41df-a3c5-4a992189ca1e HTTP/1.1" 200 OK
 INFO:     connection closed
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [823027]
+INFO:     Finished server process [11275]

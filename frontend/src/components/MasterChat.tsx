@@ -53,7 +53,12 @@ export function MasterChat({ runId }: MasterChatProps) {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Enter (without Shift) → send; Shift+Enter → newline
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Guard IME composition (e.g., Chinese Pinyin) to avoid accidental sends.
+    const native = e.nativeEvent as KeyboardEvent
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isComposing = (native as any).isComposing || (native as any).keyCode === 229
+
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
       handleSend();
     }

@@ -8,6 +8,19 @@ export interface Turn {
   created_at: number;
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  speaker: "user" | Speaker;
+  target_speaker?: Speaker;
+  content: string;
+  created_at: number;
+}
+
+export interface ChatResponse {
+  reply: string;
+  chat_history: ChatMessage[];
+}
+
 export interface DebateStatusResponse {
   status: RunStatus;
   current_round: number;

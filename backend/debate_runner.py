@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, APIConnectionError, AuthenticationError
-from .models import DebateRun, RunStatus, Turn, Speaker
+from .models import DebateRun, RunStatus, Turn, Speaker, ChatMessage
 
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -33,8 +33,14 @@ MEARSHEIMER_SKILL_PATH = PROJECT_ROOT / ".agents" / "skills" / "john-mearsheimer
 # Debate topic and prompts from prompt.md
 DEBATE_TOPIC = "《知觉与错误知觉》：错误知觉是国际冲突的独立原因吗？"
 
-MAX_RESPONSE_TOKENS = 200
-RESPONSE_LEN_HINT_ZH = "严格控制在100字以内。"
+MAX_RESPONSE_TOKENS = 400
+RESPONSE_LEN_HINT_ZH = "严格控制在150字以内。"
+
+# Judge output needs to be longer than debater turns; otherwise it gets cut off.
+JUDGE_MAX_RESPONSE_TOKENS = 500
+
+# Master chat should allow longer, multi-turn replies.
+CHAT_MAX_RESPONSE_TOKENS = 500
 
 
 def _speaker_zh(speaker: Speaker) -> str:
@@ -141,11 +147,11 @@ def _judge_user_prompt(topic: str, turns: List["Turn"]) -> str:
         "<120字以内，点出胜负关键>\n\n"
         "4) **总结**\n"
         "- **杰维斯**\n"
-        "  - 优点(strong)：...\n"
-        "  - 缺点(weak)：...\n"
+        "  - 优点(strong)：<400字以内>\n"
+        "  - 缺点(weak)：<400字以内>\n"
         "- **米尔斯海默**\n"
-        "  - 优点(strong)：...\n"
-        "  - 缺点(weak)：...\n"
+        "  - 优点(strong)：<400字以内>\n"
+        "  - 缺点(weak)：<400字以内>\n"
     )
 
 
@@ -280,13 +286,13 @@ class DebateRunner:
             run.error = f"Unexpected error: {str(e)}"
             self._save_result(run)
 
-    async def _call_llm(self, system_prompt: str, user_prompt: str) -> Optional[str]:
+    async def _call_llm(self, system_prompt: str, user_prompt: str, *, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
         """Call LLM with error handling (supports 2 protocols)."""
         if self.protocol == "anthropic":
-            return await asyncio.to_thread(self._call_anthropic, system_prompt, user_prompt)
-        return await asyncio.to_thread(self._call_openai, system_prompt, user_prompt)
+            return await asyncio.to_thread(self._call_anthropic, system_prompt, user_prompt, max_tokens)
+        return await asyncio.to_thread(self._call_openai, system_prompt, user_prompt, max_tokens)
 
-    def _call_openai(self, system_prompt: str, user_prompt: str) -> Optional[str]:
+    def _call_openai(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -295,7 +301,20 @@ class DebateRunner:
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.7,
-                max_tokens=MAX_RESPONSE_TOKENS,
+                max_tokens=max_tokens,
+            )
+            return response.choices[0].message.content
+        except AuthenticationError:
+            print("API Authentication failed")
+            return None
+
+    def _call_openai_messages(self, messages: List[Dict[str, str]], max_tokens: int) -> Optional[str]:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=max_tokens,
             )
             return response.choices[0].message.content
         except AuthenticationError:
@@ -310,12 +329,21 @@ class DebateRunner:
         except Exception as e:
             print(f"Unexpected LLM error: {e}")
             return None
+        except APIConnectionError:
+            print("API Connection error")
+            return None
+        except APIError as e:
+            print(f"API Error: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected LLM error: {e}")
+            return None
 
-    def _call_anthropic(self, system_prompt: str, user_prompt: str) -> Optional[str]:
+    def _call_anthropic(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
         try:
             message = self.client.messages.create(
                 model=self.model,
-                max_tokens=MAX_RESPONSE_TOKENS,
+                max_tokens=max_tokens,
                 temperature=0.7,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}],
@@ -341,7 +369,19 @@ class DebateRunner:
         judge_md: Optional[str] = None
         if run.status == RunStatus.DONE and run.turns:
             try:
-                judge_text = self._call_openai(_judge_system_prompt(), _judge_user_prompt(run.topic, run.turns)) if self.protocol != "anthropic" else self._call_anthropic(_judge_system_prompt(), _judge_user_prompt(run.topic, run.turns))
+                judge_text = (
+                    self._call_openai(
+                        _judge_system_prompt(),
+                        _judge_user_prompt(run.topic, run.turns),
+                        JUDGE_MAX_RESPONSE_TOKENS,
+                    )
+                    if self.protocol != "anthropic"
+                    else self._call_anthropic(
+                        _judge_system_prompt(),
+                        _judge_user_prompt(run.topic, run.turns),
+                        JUDGE_MAX_RESPONSE_TOKENS,
+                    )
+                )
                 if judge_text:
                     judge_md = judge_text.strip()
                     run.judge_result = judge_md  # store for frontend display
@@ -415,6 +455,104 @@ class DebateRunner:
                 return f.read()
         except Exception:
             return None
+
+    async def chat_with_debater(
+        self,
+        run_id: str,
+        target_speaker: Speaker,
+        user_message: str,
+    ) -> Optional[str]:
+        """Continue chat with selected debater, shared room context.
+        All messages (user + all assistants) in a single chat_history per run.
+        """
+        run = self.runs.get(run_id)
+        if not run:
+            return None
+
+        # Build system prompt same as debate (reuse skill for the answering speaker)
+        system_prompt = self._build_system_prompt(target_speaker)
+
+        # Only for the first master-chat turn ever in this run: tell the assistant who the user is.
+        first_turn_user_context = (
+            "现在跟你对话的是一个国家政治领域国家安全学的博士生，来自中国。"
+            "你可以在相关且有帮助时表达你对中国的鲜明观点；如果不相关就不要硬表达。"
+        )
+        is_first_chat_turn = len(run.chat_history) == 0
+
+        # Build openai messages array with full shared-room history as context.
+        messages: List[Dict[str, str]] = [{"role": "system", "content": system_prompt}]
+        if is_first_chat_turn:
+            messages.append({"role": "system", "content": first_turn_user_context})
+
+        # Each historical message:
+        # - User → {"role":"user", "content": content}
+        # - Assistant → {"role":"assistant", "content": "【Master Name】content"}
+        #   so that the next answering master knows who said what earlier in the shared room.
+        for msg in run.chat_history:
+            if msg.role == "user":
+                messages.append({"role": "user", "content": msg.content})
+            else:
+                # assistant from previous turn (could be different master)
+                assert msg.speaker in ("jervis", "mearsheimer")
+                sp: Speaker = msg.speaker  # type: ignore
+                speaker_name = _speaker_zh(sp)
+                prefixed = f"【{speaker_name}】{msg.content}"
+                messages.append({"role": "assistant", "content": prefixed})
+
+        # Finally, prepend the debate transcript to the current question.
+        full_question_lines: List[str] = []
+        full_question_lines.append("### 当前已经完成的三轮辩论全文（参考上下文）")
+        for t in run.turns:
+            name = _speaker_zh(t.speaker)
+            full_question_lines.append(f"**{name}**: {t.text}")
+        full_question_lines.append("")
+        full_question_lines.append(f"### 当前这轮：你是{_speaker_zh(target_speaker)}，需要你回答用户的问题。")
+        full_question_lines.append("这场对话是一个共享会场，所有之前的对话（包括提问和另外一位大师的回答）你都能看见。此轮只需要你作答即可。")
+        full_question_lines.append("")
+        full_question_lines.append(f"**用户问题**: {user_message}")
+        full_question_lines.append("")
+        full_question_lines.append(
+            "请以你的身份回应，用markdown加粗重点，保持层次感，允许展开到300-400字。"
+        )
+        messages.append({"role": "user", "content": "\n".join(full_question_lines)})
+
+        # Call LLM
+        reply: Optional[str] = None
+        if self.protocol == "anthropic":
+            # Protocol is forced to openai elsewhere; this is fallback.
+            reply = self._call_anthropic(system_prompt, "\n".join(full_question_lines), CHAT_MAX_RESPONSE_TOKENS)
+        else:
+            reply = self._call_openai_messages(messages, CHAT_MAX_RESPONSE_TOKENS)
+
+        if reply is None:
+            return None
+
+        # Clean boilerplate disclaimer
+        cleaned = _clean_model_output(reply)
+
+        # Append to shared room: user message first, then assistant reply.
+        from datetime import datetime
+        now_ts = datetime.now().timestamp()
+        run.chat_history.append(
+            ChatMessage(
+                role="user",
+                speaker="user",
+                target_speaker=target_speaker.value if hasattr(target_speaker, 'value') else target_speaker,
+                content=user_message,
+                created_at=now_ts,
+            )
+        )
+        if cleaned:
+            run.chat_history.append(
+                ChatMessage(
+                    role="assistant",
+                    speaker=target_speaker.value if hasattr(target_speaker, 'value') else target_speaker,
+                    content=cleaned,
+                    created_at=now_ts,
+                )
+            )
+
+        return cleaned
 
 
 # Singleton instance

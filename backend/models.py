@@ -21,6 +21,14 @@ class Turn(BaseModel):
     created_at: float
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    speaker: str  # "user" | Speaker enum (jervis/mearsheimer)
+    target_speaker: Optional[str] = None  # if user asks specifically to one master
+    content: str
+    created_at: float
+
+
 class DebateRun(BaseModel):
     run_id: str
     status: RunStatus
@@ -29,6 +37,7 @@ class DebateRun(BaseModel):
     error: Optional[str] = None
     finished_at: Optional[float] = None
     judge_result: Optional[str] = None
+    chat_history: List[ChatMessage] = []
 
 
 class StartDebateResponse(BaseModel):

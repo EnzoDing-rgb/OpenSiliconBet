@@ -1,6 +1,8 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from .models import StartDebateResponse, DebateStatusResponse
+from pydantic import BaseModel
+from typing import List
+from .models import StartDebateResponse, DebateStatusResponse, Speaker, ChatMessage
 from .debate_runner import runner
 
 app = FastAPI(title="Debate Book API", version="1.0")
@@ -13,6 +15,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class ChatRequest(BaseModel):
+    speaker: Speaker
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    chat_history: List[ChatMessage]
 
 
 @app.post("/api/debate/start", response_model=StartDebateResponse)
@@ -42,6 +54,23 @@ async def get_debate_status(run_id: str):
         turns=run.turns,
         error=run.error,
         judge_result=run.judge_result
+    )
+
+
+@app.post("/api/debate/chat/{run_id}", response_model=ChatResponse)
+async def post_chat(run_id: str, request: ChatRequest):
+    """Continue chat with selected debater in shared room; full history returned every time."""
+    run = runner.get_run_status(run_id)
+    if not run:
+        return ChatResponse(
+            reply="Run not found",
+            chat_history=[]
+        )
+
+    reply = await runner.chat_with_debater(run_id, request.speaker, request.message)
+    return ChatResponse(
+        reply=reply if reply else "",
+        chat_history=run.chat_history
     )
 
 

@@ -17,7 +17,15 @@ body {
   color: #1f2937;
 }
 
+.app-root {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
 .app-container {
+  flex: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -25,6 +33,87 @@ body {
   margin: 0 auto;
   padding: 64px 24px 56px;
   justify-content: center;
+}
+
+@media (min-width: 1200px) {
+  .master-chat-drawer {
+    position: fixed;
+    right: 18px;
+    top: 140px;
+    z-index: 20;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .master-chat-drawer-toggle {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    padding: 14px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+  }
+
+  .master-chat-drawer-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  .master-chat-drawer-panel {
+    width: 500px;
+    max-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 22px 70px rgba(15, 23, 42, 0.14);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  .master-chat-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+  }
+
+  .master-chat-drawer-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .master-chat-drawer-close {
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(209, 213, 219, 0.9);
+    background: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .master-chat-drawer-close:hover {
+    background: rgba(248, 250, 252, 0.95);
+  }
+}
+
+@media (max-width: 1199px) {
+  .master-chat-drawer {
+    display: none;
+  }
 }
 
 .app-header {

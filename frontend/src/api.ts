@@ -1,4 +1,4 @@
-import type { StartDebateResponse, DebateStatusResponse, DebateResultResponse } from './types';
+import type { StartDebateResponse, DebateStatusResponse, DebateResultResponse, Speaker, ChatResponse } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
@@ -19,6 +19,17 @@ export async function getDebateResult(runId: string): Promise<string> {
   const response = await fetch(`${API_BASE}/debate/result/${runId}`);
   const data: DebateResultResponse = await response.json();
   return data.content || '';
+}
+
+export async function postChat(runId: string, speaker: Speaker, message: string): Promise<ChatResponse> {
+  const response = await fetch(`${API_BASE}/debate/chat/${runId}`, {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ speaker, message }),
+  });
+  return await response.json();
 }
 
 export function downloadMarkdown(content: string, filename: string = 'debate_result.md') {

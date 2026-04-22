@@ -1,0 +1,21 @@
+INFO:     Started server process [747540]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:39936 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57390 - "POST /api/debate/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57396 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57406 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57412 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57416 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53240 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53250 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53256 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53270 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53286 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53290 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53298 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36788 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+Debate saved to /home/fengde/Projects/full-stack/debate_book/docs/debate_result.md
+INFO:     127.0.0.1:36796 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36804 - "GET /api/debate/status/18b5199d-b11e-4195-908e-5efb4d10726e HTTP/1.1" 200 OK

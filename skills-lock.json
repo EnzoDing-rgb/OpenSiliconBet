@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "andrej-karpathy-perspective": {
+      "source": "alchaincyf/karpathy-skill",
+      "sourceType": "github",
+      "computedHash": "7614adaeabec7cf2316e52c2b7a8a6f81da9eb0ecf860e939c74406905e19e63"
+    },
+    "huashu-nuwa": {
+      "source": "alchaincyf/nuwa-skill",
+      "sourceType": "github",
+      "computedHash": "368d55aba2b2f244027e9dddda609c4e0ccf8a28de808c25b49c7386fb005a42"
+    }
+  }
+}

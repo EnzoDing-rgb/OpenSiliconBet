@@ -1,0 +1,179 @@
+# 辩论系统：罗伯特·杰维斯 vs 约翰·米尔斯海默
+
+一个全栈小应用，让两位学者（通过蒸馏好的 Skill）围绕《知觉与错误知觉》的核心命题进行 3 轮辩论。你可以在浏览器里一键启动，实时看辩论过程，最后下载完整的 Markdown 记录。
+
+## 目录结构
+
+```
+debate_book/
+├── backend/              # Python FastAPI 后端
+│   ├── app.py           # FastAPI 入口
+│   ├── debate_runner.py # 辩论流程控制 + LLM 调用
+│   ├── models.py        # 数据类型
+│   └── requirements.txt # 后端依赖
+├── frontend/            # React+Vite 前端
+├── .agents/
+│   └── skills/          # 女娲蒸馏的两个 Skill
+│       ├── robert-jervis-perspective/SKILL.md
+│       └── john-mearsheimer-perspective/SKILL.md
+├── .env.example         # 环境变量示例
+├── prompt.md            # 原始需求
+└── README.md            # 本文档
+```
+
+## 快速开始
+
+### 1. 安装依赖
+
+**后端**：
+
+（推荐用虚拟环境，避免破坏系统 Python）：
+```bash
+# 在项目根目录创建虚拟环境
+python3 -m venv .venv
+source .venv/bin/activate
+cd backend
+pip install -r requirements.txt
+```
+
+如果系统允许你直接装，也可以：
+```bash
+# cd backend && pip install -r requirements.txt --break-system-packages
+```
+
+**前端**：
+```bash
+cd ../frontend
+npm install
+```
+
+### 2. 配置 API
+
+当前项目已经**硬编码**了你提供的火山方舟 API 配置，不需要再改 `.env`：
+
+- API Key: `ark-da654523-f2ad-42e4-9a13-c33d664f9fc5-d83b0`
+- Base URL: `https://ark.cn-beijing.volces.com/api/coding/v3`
+- Model: `ark-code-latest`
+- Protocol: `openai`（兼容 OpenAI 接口协议）
+
+如果你需要改 API 信息，直接编辑 `backend/debate_runner.py` 开头的三个常量就行：
+```python
+# Hardcoded API config (as requested)
+ARK_API_KEY = "ark-da654523-f2ad-42e4-9a13-c33d664f9fc5-d83b0"
+ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/coding/v3"
+ARK_MODEL = "ark-code-latest"
+```
+
+### 3. 启动服务
+
+**启动后端**（端口 8000，绑定 0.0.0.0 允许远程访问）：
+```bash
+# 在项目根目录，确保已经激活虚拟环境
+# source .venv/bin/activate
+uvicorn backend.app:app --reload --port 8000 --host 0.0.0.0
+```
+
+**启动前端**（另开终端）：
+```bash
+cd frontend
+npm run dev -- --host 0.0.0.0
+```
+
+### 快捷启动（推荐）
+
+项目自带 `dev.sh` 一键启动脚本，帮你做好这些事情：
+```bash
+./dev.sh [--tunnel]
+```
+
+1. ✅ 自动创建虚拟环境（如果还没有）
+2. ✅ 自动安装后端/前端依赖（如果缺失）
+3. ✅ **启动前自动杀死占用端口的旧进程**，避免端口冲突
+4. ✅ 启动后端 + 前端，输出日志到前台
+5. ✅ 检测内网 IP，打印可访问地址
+6. ✅ **只有 URL 会绿色高亮**，直接点击就能打开
+7. ✅ `Ctrl+C` 一键停止**所有服务**，干净清理不会留僵尸进程
+
+如果要开启公网穿透，加 `--tunnel` 参数：
+```bash
+./dev.sh --tunnel
+```
+
+---
+
+打开浏览器访问 `http://localhost:5173`（本地）或者 `http://你的Linux_IP:5173`（远程 Mac）即可开始辩论。
+
+### 从 Mac Chrome 访问远程 Linux（你的场景）（你的场景）
+
+你的环境：
+- **Linux 服务器 IP**：`100.90.186.53`，用户名：`fengde`
+- **Mac 客户端**：`100.114.70.79`，和 Linux 在同一tailscale/私有网络
+
+#### 方式一：SSH 端口转发（最简单，不需要公网 IP）
+
+**Linux 端**（在 Linux 上启动服务）：
+```bash
+./dev.sh
+```
+
+**Mac 端**（在你的 Mac 本地终端执行端口转发）：
+```bash
+ssh -L 5173:localhost:5173 -L 8000:localhost:8000 fengde@100.90.186.53
+```
+
+保持这个 SSH 连接打开，然后在**Mac Chrome**访问：
+```
+http://localhost:5173
+```
+
+流量会通过 SSH 隧道加密转发到 Linux，不需要公网 IP，也不需要改防火墙，直接就能用。
+
+---
+
+#### 方式二：Cloudflare 内网穿透（可以从公共互联网任何地方访问）
+
+如果需要从其他网络访问，Linux 上已经装了 `cloudflared` 的话直接启动：
+```bash
+./dev.sh --tunnel
+```
+
+脚本会：
+1. 自动杀掉旧端口进程，启动前端+后端
+2. 自动启动 cloudflare tunnel 并拿到公开 HTTPS URL
+3. 绿色高亮打印出可访问地址，直接在任何浏览器打开就行
+
+---
+
+#### 方式三：直接内网 IP 访问（如果 Mac 和 Linux 在同一个局域网/VPN）
+
+Linux 启动后，Mac 直接访问：
+```
+http://100.90.186.53:5173
+```
+就能打开，不用任何额外配置（确保 Linux 防火墙放通 5173 端口就行）。
+
+## 辩论流程
+
+程序严格遵循 3 轮结构：
+
+1. **第一轮**：杰维斯开篇立论 → 米尔斯海默根本批判
+2. **第二轮**：杰维斯回应质疑 → 米尔斯海默强化批判
+3. **第三轮**：杰维斯总结立场 → 米尔斯海默总结批判
+
+每轮发言控制在 300 字以内。
+
+## 输出
+
+- 辩论过程实时显示在网页上
+- 完成后自动保存 `docs/debate_result.md`
+- 网页提供「下载 Markdown 记录」按钮
+
+## 技术栈
+
+- 后端：Python 3.8+, FastAPI, Uvicorn, OpenAI SDK
+- 前端：React 18 + TypeScript + Vite
+- API：兼容 OpenAI 格式的接口（官方 OpenAI、本地模型都可以）
+
+## 替换头像
+
+占位头像是基于首字母的 SVG。如果你有真实照片，替换 `frontend/src/utils/avatars.ts` 里的 SVG 代码换成 `<img>` 引用即可。

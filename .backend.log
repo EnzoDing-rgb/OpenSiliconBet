@@ -1,12 +1,46 @@
-INFO:     Started server process [772976]
+INFO:     Started server process [817901]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:39338 - "GET /api/health HTTP/1.1" 200 OK
-WARNING:  Unsupported upgrade request.
-WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
-INFO:     127.0.0.1:59144 - "GET /ws/debate-audio?test=1 HTTP/1.1" 404 Not Found
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [772976]
+INFO:     127.0.0.1:52322 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52334 - "POST /api/debate/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52340 - "WebSocket /ws/debate-audio?run_id=b2ea3bc1-d6be-4956-b084-5fa0db48a0aa" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:45986 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45992 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45998 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46004 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46008 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46024 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46030 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41282 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41288 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41290 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41304 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41320 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41328 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+Debate saved to /home/fengde/Projects/full-stack/debate_book/docs/debate_result.md
+INFO:     127.0.0.1:40930 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40940 - "GET /api/debate/status/b2ea3bc1-d6be-4956-b084-5fa0db48a0aa HTTP/1.1" 200 OK
+INFO:     connection closed
+websocket closed due to Connection to remote host was lost.
+INFO:     127.0.0.1:50838 - "POST /api/debate/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50852 - "WebSocket /ws/debate-audio?run_id=65dbc814-4825-474f-9426-972fcd38b69b" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:60904 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60914 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60924 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60932 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60942 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60958 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47832 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47836 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47838 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47848 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47860 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+Debate saved to /home/fengde/Projects/full-stack/debate_book/docs/debate_result.md
+INFO:     127.0.0.1:47876 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42896 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42910 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42920 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42922 - "GET /api/debate/status/65dbc814-4825-474f-9426-972fcd38b69b HTTP/1.1" 200 OK

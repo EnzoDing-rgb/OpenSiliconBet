@@ -105,11 +105,13 @@ class TtsSession:
         speaker: Speaker,
         full_text: str,
         round_num: int,
+        turn_index: int,
     ):
         self.websocket = websocket
         self.speaker = speaker
         self.full_text = full_text
         self.round_num = round_num
+        self.turn_index = turn_index
         self.chunker = TextChunker()
         self._done = asyncio.Event()
         self._error: Optional[Exception] = None
@@ -129,6 +131,7 @@ class TtsSession:
             "format": "PCM_24000HZ_MONO_16BIT",
             "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
             "round": self.round_num,
+            "turn_index": self.turn_index,
         }
         await self.websocket.send_text(json.dumps(meta))
 
@@ -169,7 +172,7 @@ class TtsSession:
 
         callback = Callback(self)
 
-        # 3. Connect to ali yun websocket
+        # 3. Connect to ali yun websocket (with retries because SDK has fixed 5s connect timeout)
         qwen_tts = None
         try:
             qwen_tts = QwenTtsRealtime(
@@ -177,7 +180,18 @@ class TtsSession:
                 callback=callback,
                 url=TTS_WS_URL,
             )
-            qwen_tts.connect()
+            last_connect_err: Optional[Exception] = None
+            for attempt in range(1, 5):
+                try:
+                    qwen_tts.connect()
+                    last_connect_err = None
+                    break
+                except TimeoutError as e:
+                    last_connect_err = e
+                    # exponential-ish backoff: 0.6s, 1.2s, 2.4s, 4.8s
+                    await asyncio.sleep(0.6 * (2 ** (attempt - 1)))
+            if last_connect_err is not None:
+                raise last_connect_err
             voice_id = self._get_voice_id()
             qwen_tts.update_session(
                 voice=voice_id,
@@ -210,15 +224,17 @@ class TtsSession:
             await self.websocket.send_text(json.dumps({
                 "type": "error",
                 "message": str(self._error),
+                "turn_index": self.turn_index,
             }))
             self._done.set()
             return
 
         # 5. Done, notify browser
         await self.websocket.send_text(json.dumps({
-            "type": "round_done",
+            "type": "turn_done",
             "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
             "round": self.round_num,
+            "turn_index": self.turn_index,
         }))
         self._done.set()
 
@@ -231,6 +247,19 @@ class TtsManager:
 
     def __init__(self):
         self._current_session: Optional[TtsSession] = None
+        # Prevent accidental multi-client “duel playback” for same run_id
+        self._active_run_audio: dict[str, int] = {}
+
+    def _claim_run_audio(self, run_id: str) -> bool:
+        cur = self._active_run_audio.get(run_id, 0)
+        if cur > 0:
+            return False
+        self._active_run_audio[run_id] = 1
+        return True
+
+    def _release_run_audio(self, run_id: str) -> None:
+        if run_id in self._active_run_audio:
+            self._active_run_audio.pop(run_id, None)
 
     async def handle_connection(self, websocket: WebSocket, runner) -> None:
         """Handle incoming websocket connection from browser"""
@@ -245,6 +274,14 @@ class TtsManager:
             # Resolve run_id from query params (preferred), fallback to latest run
             run_id = websocket.query_params.get("run_id")
             is_test = websocket.query_params.get("test") == "1"
+            if run_id and not is_test:
+                if not self._claim_run_audio(run_id):
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": "This run is already playing audio in another tab/device.",
+                    }))
+                    await websocket.close()
+                    return
 
             if is_test:
                 # Minimal E2E: single fixed sentence
@@ -253,6 +290,7 @@ class TtsManager:
                     speaker=Speaker.JERVIS,
                     full_text="你好，这是实时语音合成链路的最小自测。",
                     round_num=1,
+                    turn_index=0,
                 )
                 self._current_session = session
                 await session.run()
@@ -276,10 +314,19 @@ class TtsManager:
 
                 if turn_index < len(run.turns):
                     turn = run.turns[turn_index]
-                    session = TtsSession(websocket, turn.speaker, turn.text, turn.round)
+                    session = TtsSession(websocket, turn.speaker, turn.text, turn.round, turn_index=turn_index)
                     self._current_session = session
                     await session.run()
                     self._current_session = None
+                    # Soft flow-control: wait for client to ACK it finished playback
+                    try:
+                        while True:
+                            raw = await websocket.receive_text()
+                            msg = json.loads(raw)
+                            if msg.get("type") == "ack_turn_done" and msg.get("turn_index") == turn_index:
+                                break
+                    except WebSocketDisconnect:
+                        return
                     turn_index += 1
                     continue
 
@@ -296,3 +343,6 @@ class TtsManager:
             if self._current_session:
                 # No need to keep going
                 pass
+        finally:
+            if run_id and not is_test:
+                self._release_run_audio(run_id)

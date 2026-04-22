@@ -5,11 +5,12 @@ type AudioMeta = {
   format: 'PCM_24000HZ_MONO_16BIT'
   speaker: 'jervis' | 'mearsheimer'
   round: number
+  turn_index: number
 }
 
 type ControlMsg =
   | AudioMeta
-  | { type: 'round_done'; speaker: 'jervis' | 'mearsheimer'; round: number }
+  | { type: 'turn_done'; speaker: 'jervis' | 'mearsheimer'; round: number; turn_index: number }
   | { type: 'all_done' }
   | { type: 'error'; message: string }
 
@@ -20,6 +21,7 @@ class PcmPlayer {
   private queuedSamples = 0
   private readOffset = 0
   private currentChunk: Float32Array | null = null
+  private readonly sampleRate = 24000
 
   prime() {
     if (this.ctx) return
@@ -54,6 +56,12 @@ class PcmPlayer {
     if (this.ctx.state !== 'running') {
       await this.ctx.resume()
     }
+  }
+
+  getBufferedMs() {
+    const currentRemaining = this.currentChunk ? Math.max(0, this.currentChunk.length - this.readOffset) : 0
+    const total = this.queuedSamples + currentRemaining
+    return (total / this.sampleRate) * 1000
   }
 
   pushPcm16le(buf: ArrayBuffer) {
@@ -102,6 +110,7 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
   const [done, setDone] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const player = useMemo(() => new PcmPlayer(), [])
+  const pendingAckRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!enabled || !runId) return
@@ -110,8 +119,13 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
     void player.resumeIfNeeded()
     setError(null)
     setDone(false)
+    pendingAckRef.current = null
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const wsHost = window.location.hostname || 'localhost'
+    const wsPort = '8000'
+
+    const ws = new WebSocket(`${wsProtocol}://${wsHost}:${wsPort}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
     ws.binaryType = 'arraybuffer'
     wsRef.current = ws
 
@@ -125,6 +139,9 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
         if (msg.type === 'meta') setMeta(msg)
         if (msg.type === 'error') setError(msg.message)
         if (msg.type === 'all_done') setDone(true)
+        if (msg.type === 'turn_done') {
+          pendingAckRef.current = msg.turn_index
+        }
         return
       }
       if (evt.data instanceof ArrayBuffer) {
@@ -140,11 +157,22 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
       wsRef.current = null
     }
 
+    const ackTimer = window.setInterval(() => {
+      const pending = pendingAckRef.current
+      const wsNow = wsRef.current
+      if (pending == null || !wsNow || wsNow.readyState !== WebSocket.OPEN) return
+      if (player.getBufferedMs() < 120) {
+        wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: pending }))
+        pendingAckRef.current = null
+      }
+    }, 80)
+
     return () => {
       try {
         ws.close()
       } catch {}
       wsRef.current = null
+      window.clearInterval(ackTimer)
       player.stop()
     }
   }, [enabled, runId, player])

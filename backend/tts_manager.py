@@ -1,0 +1,298 @@
+import asyncio
+import base64
+import json
+import re
+import threading
+from typing import Optional, Callable, List
+import dashscope
+from dashscope.audio.qwen_tts_realtime import QwenTtsRealtime, QwenTtsRealtimeCallback
+from fastapi import WebSocket, WebSocketDisconnect
+
+from .models import DebateRun, Turn, Speaker, RunStatus
+
+
+# ========== Configuration ==========
+# Get from environment variable
+DASHSCOPE_API_KEY = None
+# Voice ids from voice cloning
+VOICE_ID_JERVIS = None
+VOICE_ID_MEARSHEIMER = None
+# TTS model (must match voice cloning target_model)
+TTS_MODEL = "qwen3-tts-vc-realtime-2026-01-15"
+# Aliyun websocket url (for China region)
+TTS_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
+# Text chunking config
+MIN_CHARS = 40
+MAX_CHARS = 180
+FLUSH_PUNCT = r"[。！？；\n]"
+
+
+def init_tts(
+    api_key: str,
+    voice_jervis: str,
+    voice_mearsheimer: str,
+    model: str = "qwen3-tts-vc-realtime-2026-01-15",
+    url: str = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime",
+) -> None:
+    """Initialize TTS config, call this once at startup"""
+    global DASHSCOPE_API_KEY, VOICE_ID_JERVIS, VOICE_ID_MEARSHEIMER, TTS_MODEL, TTS_WS_URL
+    DASHSCOPE_API_KEY = api_key
+    VOICE_ID_JERVIS = voice_jervis
+    VOICE_ID_MEARSHEIMER = voice_mearsheimer
+    TTS_MODEL = model
+    TTS_WS_URL = url
+    dashscope.api_key = api_key
+
+
+class TextChunker:
+    """Cut full text into chunks for streaming TTS:
+    - flush when reach MIN_CHARS and hit punctuation
+    - flush when reach MAX_CHARS regardless
+    - balance between low latency and good prosody
+    """
+
+    def __init__(self, min_chars: int = MIN_CHARS, max_chars: int = MAX_CHARS, punct_re: str = FLUSH_PUNCT):
+        self.min_chars = min_chars
+        self.max_chars = max_chars
+        self.punct_re = re.compile(punct_re)
+        self._buffer: List[str] = []
+        self._len = 0
+
+    def push(self, text: str) -> List[str]:
+        """Push new text, return ready chunks to send"""
+        out: List[str] = []
+        words = list(text)
+        for c in words:
+            self._buffer.append(c)
+            self._len += 1
+
+            # Check if we should flush
+            need_flush = False
+            # Hard boundary
+            if self._len >= self.max_chars:
+                need_flush = True
+            # Sentence-ending punctuation should flush immediately (even if < min_chars)
+            elif self.punct_re.search(c):
+                need_flush = True
+            # Soft boundary: once we reached min_chars, allow flushing on weaker separators
+            elif self._len >= self.min_chars and c in ("，", "、", "：", ":", ",", "\n"):
+                need_flush = True
+
+            if need_flush:
+                chunk = "".join(self._buffer)
+                out.append(chunk)
+                self._buffer.clear()
+                self._len = 0
+
+        return out
+
+    def flush_remaining(self) -> Optional[str]:
+        """Flush any remaining text in buffer"""
+        if self._len == 0:
+            return None
+        chunk = "".join(self._buffer)
+        self._buffer.clear()
+        self._len = 0
+        return chunk
+
+
+class TtsSession:
+    """One TTS session for a single debate turn"""
+
+    def __init__(
+        self,
+        websocket: WebSocket,
+        speaker: Speaker,
+        full_text: str,
+        round_num: int,
+    ):
+        self.websocket = websocket
+        self.speaker = speaker
+        self.full_text = full_text
+        self.round_num = round_num
+        self.chunker = TextChunker()
+        self._done = asyncio.Event()
+        self._error: Optional[Exception] = None
+
+    def _get_voice_id(self) -> str:
+        if self.speaker == Speaker.JERVIS:
+            return VOICE_ID_JERVIS
+        else:
+            return VOICE_ID_MEARSHEIMER
+
+    async def run(self) -> None:
+        """Run the full session: chunk text → send to aliyun → forward audio to browser"""
+        # 1. Send meta to browser first
+        # Format: PCM_24000HZ_MONO_16BIT matches what dashscope returns
+        meta = {
+            "type": "meta",
+            "format": "PCM_24000HZ_MONO_16BIT",
+            "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
+            "round": self.round_num,
+        }
+        await self.websocket.send_text(json.dumps(meta))
+
+        # 2. Setup callback for dashscope: forward audio to browser
+        class Callback(QwenTtsRealtimeCallback):
+            def __init__(self, outer: "TtsSession"):
+                self.outer = outer
+                self.complete_event = threading.Event()
+                self.loop = asyncio.get_running_loop()
+
+            def on_open(self) -> None:
+                pass
+
+            def on_close(self, close_status_code, close_msg) -> None:
+                self.complete_event.set()
+
+            def on_event(self, response: dict) -> None:
+                """Handle events from aliyun: audio delta goes to browser"""
+                try:
+                    event_type = response.get("type", "")
+                    if event_type == "response.audio.delta":
+                        recv_audio_b64 = response.get("delta")
+                        if not recv_audio_b64:
+                            return
+                        pcm_bytes = base64.b64decode(recv_audio_b64)
+                        asyncio.run_coroutine_threadsafe(
+                            self.outer.websocket.send_bytes(pcm_bytes),
+                            self.loop,
+                        )
+                    elif event_type == "response.done":
+                        # End of current response (may arrive before session.finished)
+                        pass
+                    elif event_type == "session.finished":
+                        self.complete_event.set()
+                except Exception as e:
+                    self.outer._error = e
+                    self.complete_event.set()
+
+        callback = Callback(self)
+
+        # 3. Connect to ali yun websocket
+        qwen_tts = None
+        try:
+            qwen_tts = QwenTtsRealtime(
+                model=TTS_MODEL,
+                callback=callback,
+                url=TTS_WS_URL,
+            )
+            qwen_tts.connect()
+            voice_id = self._get_voice_id()
+            qwen_tts.update_session(
+                voice=voice_id,
+                response_format=dashscope.audio.qwen_tts_realtime.AudioFormat.PCM_24000HZ_MONO_16BIT,
+                mode="server_commit",
+            )
+
+            # 4. Chunk text and send to ali yun
+            chunks = self.chunker.push(self.full_text)
+            for chunk in chunks:
+                qwen_tts.append_text(chunk)
+                # Small sleep to avoid flooding, keep it flowing
+                await asyncio.sleep(0.05)
+
+            remaining = self.chunker.flush_remaining()
+            if remaining:
+                qwen_tts.append_text(remaining)
+
+            qwen_tts.finish()
+            await asyncio.to_thread(callback.complete_event.wait)
+        finally:
+            try:
+                if qwen_tts is not None:
+                    qwen_tts.close()
+            except Exception:
+                pass
+
+        if self._error:
+            # Send error to browser
+            await self.websocket.send_text(json.dumps({
+                "type": "error",
+                "message": str(self._error),
+            }))
+            self._done.set()
+            return
+
+        # 5. Done, notify browser
+        await self.websocket.send_text(json.dumps({
+            "type": "round_done",
+            "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
+            "round": self.round_num,
+        }))
+        self._done.set()
+
+    async def wait_done(self) -> None:
+        await self._done.wait()
+
+
+class TtsManager:
+    """Manager for TTS sessions: one at a time, matches fixed debate order"""
+
+    def __init__(self):
+        self._current_session: Optional[TtsSession] = None
+
+    async def handle_connection(self, websocket: WebSocket, runner) -> None:
+        """Handle incoming websocket connection from browser"""
+        try:
+            # Wait for start message
+            start_msg = await websocket.receive_text()
+            data = json.loads(start_msg)
+            if data.get("type") != "start":
+                await websocket.close()
+                return
+
+            # Resolve run_id from query params (preferred), fallback to latest run
+            run_id = websocket.query_params.get("run_id")
+            is_test = websocket.query_params.get("test") == "1"
+
+            if is_test:
+                # Minimal E2E: single fixed sentence
+                session = TtsSession(
+                    websocket=websocket,
+                    speaker=Speaker.JERVIS,
+                    full_text="你好，这是实时语音合成链路的最小自测。",
+                    round_num=1,
+                )
+                self._current_session = session
+                await session.run()
+                self._current_session = None
+                await websocket.send_text(json.dumps({"type": "all_done"}))
+                return
+
+            # Stream turns as they appear while debate is running
+            turn_index = 0
+            while True:
+                run = runner.get_run_status(run_id) if run_id else runner.get_current_run()
+                if not run:
+                    await websocket.send_text(json.dumps({"type": "error", "message": "Run not found"}))
+                    await websocket.close()
+                    return
+
+                if run.status == RunStatus.ERROR:
+                    await websocket.send_text(json.dumps({"type": "error", "message": run.error or "Debate run error"}))
+                    await websocket.close()
+                    return
+
+                if turn_index < len(run.turns):
+                    turn = run.turns[turn_index]
+                    session = TtsSession(websocket, turn.speaker, turn.text, turn.round)
+                    self._current_session = session
+                    await session.run()
+                    self._current_session = None
+                    turn_index += 1
+                    continue
+
+                if run.status == RunStatus.DONE:
+                    break
+
+                await asyncio.sleep(0.2)
+
+            # All done
+            await websocket.send_text(json.dumps({"type": "all_done"}))
+
+        except WebSocketDisconnect:
+            # Client disconnected, clean up
+            if self._current_session:
+                # No need to keep going
+                pass

@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import { RoleCard } from './components/RoleCard'
 import { TurnMessage } from './components/TurnMessage'
-import { MasterChat } from './components/MasterChat'
+import { MasterChat } from './components/MasterChat.tsx'
+import { DebateAudio } from './components/DebateAudio'
 import { speakerMeta } from './utils/avatars'
 import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown } from './api'
 import type { Turn, RunStatus } from './types'
@@ -15,6 +16,7 @@ function App() {
   const [judgeResult, setJudgeResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  const [audioEnabled, setAudioEnabled] = useState(false)
 
   // Simple markdown render for judge result
   const renderJudgeMarkdown = (text: string) => {
@@ -87,6 +89,8 @@ function App() {
   }
 
   const handleStart = useCallback(async () => {
+    // Must be triggered by user gesture to allow autoplay audio
+    setAudioEnabled(true)
     setLoading(true)
     setError(null)
     setTurns([])
@@ -184,6 +188,8 @@ function App() {
             </button>
           )}
         </div>
+
+        <DebateAudio runId={runId} enabled={audioEnabled} />
 
         {error && (
           <div className="error-box">

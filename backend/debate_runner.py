@@ -456,6 +456,14 @@ class DebateRunner:
         except Exception:
             return None
 
+    def get_current_run(self) -> Optional[DebateRun]:
+        """Get the current active run (for TTS to consume)"""
+        if not self.runs:
+            return None
+        # Get the last run (the one currently being played)
+        last_run_id = list(self.runs.keys())[-1]
+        return self.runs[last_run_id]
+
     async def chat_with_debater(
         self,
         run_id: str,

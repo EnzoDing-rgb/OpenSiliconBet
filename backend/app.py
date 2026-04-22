@@ -1,9 +1,29 @@
-from fastapi import FastAPI, BackgroundTasks
+import json
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from .models import StartDebateResponse, DebateStatusResponse, Speaker, ChatMessage
 from .debate_runner import runner
+from .tts_manager import init_tts, TtsManager
+
+# Load environment
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+
+# Get TTS config from environment
+api_key = os.getenv("DASHSCOPE_API_KEY", "")
+voice_jervis = os.getenv("VOICE_ID_JERVIS", "")
+voice_mearsheimer = os.getenv("VOICE_ID_MEARSHEIMER", "")
+tts_model = os.getenv("TTS_MODEL", "qwen3-tts-vc-realtime-2026-01-15")
+tts_ws_url = os.getenv("TTS_WS_URL", "wss://dashscope.aliyuncs.com/api-ws/v1/realtime")
+
+# Initialize TTS
+if api_key and voice_jervis and voice_mearsheimer:
+    init_tts(api_key, voice_jervis, voice_mearsheimer, tts_model, tts_ws_url)
+
+tts_manager = TtsManager()
 
 app = FastAPI(title="Debate Book API", version="1.0")
 
@@ -87,3 +107,21 @@ async def get_debate_result(run_id: str):
 async def health_check():
     """Health check endpoint"""
     return {"status": "ok"}
+
+
+@app.websocket("/ws/debate-audio")
+async def websocket_debate_audio(websocket: WebSocket):
+    """WebSocket endpoint for real-time debate audio streaming.
+    Flow:
+    1. Client connects
+    2. Client sends {"type":"start"} → start automatic sequential TTS for all turns
+    3. Server sends:
+       - meta {"type":"meta", "format": "...", "speaker": "...", "round": N}
+       - binary audio chunks → direct to browser WebAudio
+       - round_done {"type":"round_done", ...}
+       - all_done {"type":"all_done"}
+    4. On disconnect → clean up resources
+    """
+    await websocket.accept()
+    await tts_manager.handle_connection(websocket, runner)
+

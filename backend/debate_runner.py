@@ -14,6 +14,7 @@ from .models import DebateRun, RunStatus, Turn, Speaker, ChatMessage
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Hardcoded API config (as requested)
+# 调用一下火山的模型
 ARK_API_KEY = "ark-da654523-f2ad-42e4-9a13-c33d664f9fc5-d83b0"
 ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/coding/v3"
 ARK_MODEL = "ark-code-latest"

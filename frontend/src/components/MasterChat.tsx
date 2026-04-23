@@ -142,13 +142,13 @@ export function MasterChat({ runId }: MasterChatProps) {
           className={speaker === 'jervis' ? 'tab active' : 'tab'}
           onClick={() => setSpeaker('jervis')}
         >
-          罗伯特·杰维斯
+          滴滴Researcher
         </button>
         <button
           className={speaker === 'mearsheimer' ? 'tab active' : 'tab'}
           onClick={() => setSpeaker('mearsheimer')}
         >
-          约翰·米尔斯海默
+          ManusResearcher
         </button>
       </div>
 
@@ -160,11 +160,11 @@ export function MasterChat({ runId }: MasterChatProps) {
                 <>
                   国安学博士生
                   {msg.target_speaker && (
-                    <span className="target-chip">@{msg.target_speaker === 'jervis' ? '杰维斯' : '米尔斯海默'}</span>
+                    <span className="target-chip">@{msg.target_speaker === 'jervis' ? '滴滴Researcher' : 'ManusResearcher'}</span>
                   )}
                 </>
               ) : (
-                msg.speaker === 'jervis' ? '罗伯特·杰维斯' : '约翰·米尔斯海默'
+                msg.speaker === 'jervis' ? '滴滴Researcher' : 'ManusResearcher'
               )}
             </div>
             <div className="chat-content">{renderMarkdown(msg.content)}</div>

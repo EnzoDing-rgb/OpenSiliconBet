@@ -40,7 +40,7 @@ function App() {
 
     const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 
-    let para: string[] = []
+    const para: string[] = []
     let inUl = false
     const closeUl = () => {
       if (inUl) {
@@ -103,7 +103,7 @@ function App() {
       const id = await startDebate()
       setRunId(id)
     } catch (e) {
-      setError(`无法启动辩论：${e}`)
+      setError(`无法启动对谈：${e}`)
       setLoading(false)
     }
   }, [])
@@ -111,7 +111,7 @@ function App() {
   const handleDownload = useCallback(async () => {
     if (!runId) return
     const content = await getDebateResult(runId)
-    downloadMarkdown(content)
+    downloadMarkdown(content, 'case_dialogue_result.md')
   }, [runId])
 
   // Polling
@@ -150,9 +150,9 @@ function App() {
     <div className="app-root">
       <div className="app-container">
         <header className="app-header">
-          <h1>观点交锋</h1>
+          <h1>国家安全案例研究对谈</h1>
           <p className="topic">
-            <strong>主题</strong>：《知觉与错误知觉》：错误知觉是国际冲突的独立原因吗？
+            <strong>主题</strong>：滴滴数据安全案 vs Manus案（对比研究）
           </p>
         </header>
 
@@ -232,7 +232,7 @@ function App() {
 
         {judgeResult && (
           <div className="judge-box">
-            <h2 className="judge-title">裁判评分</h2>
+            <h2 className="judge-title">对比小结</h2>
             <div className="judge-content">
               {renderJudgeMarkdown(judgeResult)}
             </div>
@@ -240,10 +240,10 @@ function App() {
         )}
 
         <footer className="app-footer">
-          debate-book · Robert Jervis vs John Mearsheimer
+          case-dialogue · Didi vs Manus
         </footer>
       </div>
-      {runId && judgeResult && (
+      {runId && (
         <div className="master-chat-drawer">
           {!chatOpen && (
             <button
@@ -251,13 +251,13 @@ function App() {
               onClick={() => setChatOpen(true)}
               aria-label="展开与大师对话"
             >
-              与大师对话
+              与研究者对话
             </button>
           )}
           {chatOpen && (
             <div className="master-chat-drawer-panel">
               <div className="master-chat-drawer-header">
-                <div className="master-chat-drawer-title">与大师对话</div>
+                <div className="master-chat-drawer-title">与研究者对话</div>
                 <button
                   className="master-chat-drawer-close"
                   onClick={() => setChatOpen(false)}

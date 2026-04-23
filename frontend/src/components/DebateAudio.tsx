@@ -26,7 +26,6 @@ class PcmPlayer {
   prime() {
     if (this.ctx) return
     this.ctx = new AudioContext({ sampleRate: 24000 })
-    // eslint-disable-next-line deprecation/deprecation
     this.node = this.ctx.createScriptProcessor(4096, 0, 1)
     this.node.onaudioprocess = (e) => {
       const out = e.outputBuffer.getChannelData(0)
@@ -92,12 +91,16 @@ class PcmPlayer {
     if (this.node) {
       try {
         this.node.disconnect()
-      } catch {}
+      } catch {
+        void 0
+      }
     }
     if (this.ctx) {
       try {
         this.ctx.close()
-      } catch {}
+      } catch {
+        void 0
+      }
     }
     this.node = null
     this.ctx = null
@@ -170,7 +173,9 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
     return () => {
       try {
         ws.close()
-      } catch {}
+      } catch {
+        void 0
+      }
       wsRef.current = null
       window.clearInterval(ackTimer)
       player.stop()
@@ -190,7 +195,7 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
         ) : meta ? (
           <span>
             {' '}
-            正在播放：{meta.speaker === 'jervis' ? '杰维斯' : '米尔斯海默'}（第 {meta.round} 轮）
+            正在播放：{meta.speaker === 'jervis' ? '滴滴Researcher' : 'ManusResearcher'}（第 {meta.round} 轮）
           </span>
         ) : (
           <span> 连接中...</span>

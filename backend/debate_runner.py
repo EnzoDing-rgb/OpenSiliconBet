@@ -28,11 +28,26 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
 
 # Skill file paths (relative to project root)
 PROJECT_ROOT = Path(os.path.dirname(__file__)).parent
-JERVIS_SKILL_PATH = PROJECT_ROOT / ".agents" / "skills" / "robert-jervis-perspective" / "SKILL.md"
-MEARSHEIMER_SKILL_PATH = PROJECT_ROOT / ".agents" / "skills" / "john-mearsheimer-perspective" / "SKILL.md"
+#
+# Skill drop-in points:
+# - Default: use repo-local case skills under docs/
+# - If you later move skills into .agents/skills/, you can override via env:
+#   - DIDI_SKILL_PATH=/abs/or/relative/path
+#   - MANUS_SKILL_PATH=/abs/or/relative/path
+#
+def _skill_path(env_name: str, default_rel: Path) -> Path:
+    raw = _env(env_name)
+    if raw:
+        p = Path(raw)
+        return p if p.is_absolute() else (PROJECT_ROOT / p)
+    return default_rel
 
-# Debate topic and prompts from prompt.md
-DEBATE_TOPIC = "《知觉与错误知觉》：错误知觉是国际冲突的独立原因吗？"
+
+JERVIS_SKILL_PATH = _skill_path("DIDI_SKILL_PATH", PROJECT_ROOT / "docs" / "didi-case-research-SKILL.md")
+MEARSHEIMER_SKILL_PATH = _skill_path("MANUS_SKILL_PATH", PROJECT_ROOT / "docs" / "manus-case-research-SKILL.md")
+
+# Dialogue topic
+DEBATE_TOPIC = "滴滴数据安全案 vs Manus案：国家安全与数据/技术跨境治理的对比研究"
 
 MAX_RESPONSE_TOKENS = 400
 RESPONSE_LEN_HINT_ZH = "严格控制在150字以内。"
@@ -46,7 +61,7 @@ CHAT_MAX_RESPONSE_TOKENS = 500
 
 
 def _speaker_zh(speaker: Speaker) -> str:
-    return "罗伯特·杰维斯" if speaker == Speaker.JERVIS else "约翰·米尔斯海默"
+    return "滴滴Researcher" if speaker == Speaker.JERVIS else "ManusResearcher"
 
 
 def _interaction_wrapper(opponent_name_zh: str, opponent_last: Optional[str]) -> str:
@@ -100,22 +115,56 @@ def _clean_model_output(text: str) -> str:
     return "\n".join(cleaned).strip()
 
 
-# The 6-turn debate sequence (3 rounds), Mearsheimer starts the challenge.
+# The 6-turn dialogue sequence (3 rounds), ManusResearcher speaks first.
 # Each turn will be wrapped with the opponent's immediately previous message to enforce interaction.
-DEBATE_TURNS: List[Tuple[Speaker, str]] = [
-    (Speaker.MEARSHEIMER, f"你是约翰·米尔斯海默。请先发难：用进攻性现实主义的核心假设，质疑“错误知觉是独立原因”的命题。要点化、锋利、给出1个反例或预测。\n\n请用markdown formatting增加层次感：**加粗核心论点**，分段阐述，降低阅读负担。{RESPONSE_LEN_HINT_ZH}"),
-    (Speaker.JERVIS, f"你是罗伯特·杰维斯。请直接回应对方最强的2个论点：指出其遗漏的因果链条，并给出1个具体机制（如安全困境/镜像图像）。\n\n请用markdown formatting增加层次感：**加粗核心论点**，分段阐述，降低阅读负担。{RESPONSE_LEN_HINT_ZH}"),
-    (Speaker.MEARSHEIMER, f"你是约翰·米尔斯海默。继续追击：指出对方机制解释不了的结构性规律，并攻击其方法论/可证伪性。\n\n请用markdown formatting增加层次感：**加粗核心论点**，分段阐述，降低阅读负担。{RESPONSE_LEN_HINT_ZH}"),
-    (Speaker.JERVIS, f"你是罗伯特·杰维斯。反击：用“同一结构下不同结果/同一信息下不同判断”说明认知变量的独立性，并承认1个结构约束但解释为何不足。\n\n请用markdown formatting增加层次感：**加粗核心论点**，分段阐述，降低阅读负担。{RESPONSE_LEN_HINT_ZH}"),
-    (Speaker.MEARSHEIMER, f"你是约翰·米尔斯海默。做最后陈词：用一句话定性对方理论的边界，再给出你的总判断与政策含义。\n\n请用markdown formatting增加层次感：**加粗核心论点**，分段阐述，降低阅读负担。{RESPONSE_LEN_HINT_ZH}"),
-    (Speaker.JERVIS, f"你是罗伯特·杰维斯。做最后陈词：承认1点对方批评成立，但明确你理论不可替代的核心洞见与对决策者的警示。\n\n请用markdown formatting增加层次感：**加粗核心论点**，分段阐述，降低阅读负担。{RESPONSE_LEN_HINT_ZH}"),
+DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
+    # Round 1: align on facts & key disputes
+    (Speaker.MEARSHEIMER, (
+        "你是ManusResearcher。第1轮请先发言：用统一框架把Manus案的“已确认事实脉络/信息不足点/关键争点”讲清楚。"
+        "要求：尽量可核验，不编造；明确标注“已确认/信息不足/推断”。"
+        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
+        f"{RESPONSE_LEN_HINT_ZH}"
+    )),
+    (Speaker.JERVIS, (
+        "你是滴滴Researcher。第1轮回应：用同一框架梳理滴滴案，并对照Manus案补齐“共同的监管逻辑/不同的信息状态”。"
+        "要求：唱和式补充，不要变成胜负评判；指出1-2个最关键的可比维度。"
+        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
+        f"{RESPONSE_LEN_HINT_ZH}"
+    )),
+    # Round 2: risk elements & governance moves
+    (Speaker.MEARSHEIMER, (
+        "你是ManusResearcher。第2轮：围绕“国家安全风险要素与治理抓手”做要素拆解（2-4条），并明确："
+        "1) 你这案里最像滴滴案的点；2) 最不像的点；3) 你希望对方补充核验的材料清单。"
+        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
+        f"{RESPONSE_LEN_HINT_ZH}"
+    )),
+    (Speaker.JERVIS, (
+        "你是滴滴Researcher。第2轮：用同一维度拆解滴滴案，并回应对方提出的“最像/最不像”判断："
+        "补充你的边界条件与反例，给出1个“如果换成不同数据类型/主体结构会如何”的可检验预测。"
+        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
+        f"{RESPONSE_LEN_HINT_ZH}"
+    )),
+    # Round 3: research agenda & falsifiable predictions
+    (Speaker.MEARSHEIMER, (
+        "你是ManusResearcher。第3轮：输出一个“研究议程”小结："
+        "给出2-3条可证伪的研究命题/预测（每条说明可用什么公开材料验证），并提出1个对政策制定者的含义。"
+        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
+        f"{RESPONSE_LEN_HINT_ZH}"
+    )),
+    (Speaker.JERVIS, (
+        "你是滴滴Researcher。第3轮：在承接对方研究议程的基础上，给出你的2-3条研究命题/预测，并用一句话总结："
+        "这两个案例共同揭示了什么样的国家安全治理范式。"
+        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
+        f"{RESPONSE_LEN_HINT_ZH}"
+    )),
 ]
 
 
 def _judge_system_prompt() -> str:
     return (
-        "你是客观公正的辩论裁判。你的目标是基于文本质量给出评分与胜负判断，"
-        "不偏袒任何一方，不引入外部事实核查。"
+        "你是CaseComparator（双案例对比摘要器）。你的目标不是评判胜负，而是把两位研究者的对谈"
+        "提炼成可用于写论文/政策备忘录的“异同对比+研究议程”。"
+        "不要引入外部事实核查；只基于对谈文本做归纳，明确区分“对谈中已确认事实/推断/待核验点”。"
     )
 
 
@@ -131,29 +180,20 @@ def _judge_user_prompt(topic: str, turns: List["Turn"]) -> str:
     transcript = "\n".join(transcript_lines).strip()
     return (
         f"主题：{topic}\n\n"
-        f"以下是三轮交锋全文：\n{transcript}\n\n"
-        "请你从3个维度评分（每项0-10分，可带0.5）：\n"
-        "1) 论证力度（主张-理由-反驳链条是否完整有力）\n"
-        "2) 贴题与回应度（是否紧扣题目、是否逐点回应对手）\n"
-        "3) 清晰与说服力（表达是否清楚、是否有抓手）\n\n"
+        f"以下是三轮对谈全文：\n{transcript}\n\n"
+        "请按模板输出“对比小结”，只基于对谈内容做归纳（不要引入外部事实核查）。\n"
         "输出必须严格按下面模板（不要加多余段落/说明），并用markdown增强可读性：\n"
         "- 只用 **加粗**（不要用表情、不要用代码块）\n"
         "- 分行、分段，降低阅读负担\n"
         "- 用 1/2/3/4 编号形成层次\n\n"
-        "1) **维度评分**\n"
-        "- **杰维斯**：论证x/10，回应x/10，清晰x/10，总分**x/30**\n"
-        "- **米尔斯海默**：论证x/10，回应x/10，清晰x/10，总分**x/30**\n\n"
-        "2) **胜者**\n"
-        "<杰维斯/米尔斯海默/平局>\n\n"
-        "3) **判词**\n"
-        "<120字以内，点出胜负关键>\n\n"
-        "4) **总结**\n"
-        "- **杰维斯**\n"
-        "  - 优点(strong)：<400字以内>\n"
-        "  - 缺点(weak)：<400字以内>\n"
-        "- **米尔斯海默**\n"
-        "  - 优点(strong)：<400字以内>\n"
-        "  - 缺点(weak)：<400字以内>\n"
+        "1) **相同点（3-6条）**\n"
+        "- ...\n\n"
+        "2) **不同点（3-6条）**\n"
+        "- ...\n\n"
+        "3) **关键争点与待核验清单（3-6条）**\n"
+        "- ...\n\n"
+        "4) **研究议程（可证伪命题/预测，3-6条）**\n"
+        "- 每条写明“如何用公开材料验证/推翻”\n"
     )
 
 
@@ -213,19 +253,19 @@ class DebateRunner:
         """Build system prompt combining the skill rules and role"""
         if speaker == Speaker.JERVIS:
             skill_text = self.jervis_skill
-            prefix = "你现在需要扮演罗伯特·杰维斯，严格遵循以下思维框架和表达方式：\n\n"
+            prefix = "你现在需要扮演滴滴Researcher，严格遵循以下思维框架和表达方式：\n\n"
         else:
             skill_text = self.mearsheimer_skill
-            prefix = "你现在需要扮演约翰·米尔斯海默，严格遵循以下思维框架和表达方式：\n\n"
+            prefix = "你现在需要扮演ManusResearcher，严格遵循以下思维框架和表达方式：\n\n"
 
         # If skill is empty, just use the basic role
         if not skill_text:
             if speaker == Speaker.JERVIS:
-                return "你是罗伯特·杰维斯，国际政治认知学派的代表学者，《知觉与错误知觉》作者。"
+                return "你是滴滴Researcher，专注滴滴数据安全案的案例研究者。"
             else:
-                return "你是约翰·米尔斯海默，进攻性现实主义代表学者。"
+                return "你是ManusResearcher，专注Manus案的案例研究者。"
 
-        return f"{prefix}{skill_text}\n\n接下来请根据用户的问题扮演这个角色进行辩论。"
+        return f"{prefix}{skill_text}\n\n接下来请根据用户的问题扮演这个角色进行案例研究对谈。"
 
     def create_new_run(self) -> str:
         """Create a new debate run and start background execution"""
@@ -247,7 +287,7 @@ class DebateRunner:
 
         try:
             last_text_by_speaker: Dict[Speaker, str] = {}
-            for i, (speaker, base_prompt) in enumerate(DEBATE_TURNS, 1):
+            for i, (speaker, base_prompt) in enumerate(DIALOGUE_TURNS, 1):
                 if run.status != RunStatus.RUNNING:
                     break
 
@@ -269,9 +309,9 @@ class DebateRunner:
                 # Ensure first round explicitly self-identifies (deterministic UX).
                 # Round 1 has two turns: i=1 (Mearsheimer) and i=2 (Jervis).
                 if i == 1:
-                    response_text = f"【我是约翰·米尔斯海默】\n\n{response_text}"
+                    response_text = f"【我是ManusResearcher】\n\n{response_text}"
                 elif i == 2:
-                    response_text = f"【我是罗伯特·杰维斯】\n\n{response_text}"
+                    response_text = f"【我是滴滴Researcher】\n\n{response_text}"
 
                 # Add turn
                 turn = Turn(
@@ -396,12 +436,12 @@ class DebateRunner:
                     judge_md = judge_text.strip()
                     run.judge_result = judge_md  # store for frontend display
             except Exception as e:
-                judge_md = f"裁判评分生成失败：{e}"
+                judge_md = f"对比小结生成失败：{e}"
                 run.judge_result = judge_md
 
         # Build markdown
         lines = []
-        lines.append("# 辩论记录：罗伯特·杰维斯 vs 约翰·米尔斯海默")
+        lines.append("# 案例研究对谈纪要：滴滴数据安全案 vs Manus案")
         lines.append("")
         lines.append(f"**主题**：{run.topic}")
         lines.append("")
@@ -427,7 +467,7 @@ class DebateRunner:
         if judge_md:
             lines.append("---")
             lines.append("")
-            lines.append("## 裁判评分")
+            lines.append("## 对比小结")
             lines.append("")
             lines.append(judge_md)
             lines.append("")
@@ -441,7 +481,7 @@ class DebateRunner:
         if run.status == RunStatus.DONE:
             lines.append("---")
             lines.append("")
-            lines.append("辩论完成")
+            lines.append("对谈完成")
 
         # Write to file
         try:
@@ -524,7 +564,7 @@ class DebateRunner:
 
         # Finally, prepend the debate transcript to the current question.
         full_question_lines: List[str] = []
-        full_question_lines.append("### 当前已经完成的三轮辩论全文（参考上下文）")
+        full_question_lines.append("### 当前已经完成的三轮对谈全文（参考上下文）")
         for t in run.turns:
             name = _speaker_zh(t.speaker)
             full_question_lines.append(f"**{name}**: {t.text}")

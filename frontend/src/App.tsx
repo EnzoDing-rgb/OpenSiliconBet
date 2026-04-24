@@ -5,6 +5,7 @@ import { TurnMessage } from './components/TurnMessage'
 import { MasterChat } from './components/MasterChat.tsx'
 import { DebateAudio } from './components/DebateAudio'
 import { speakerMeta } from './utils/avatars'
+import { markdownToSafeHtml } from './utils/markdownRender'
 import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown } from './api'
 import type { Turn, RunStatus } from './types'
 
@@ -18,75 +19,9 @@ function App() {
   const [chatOpen, setChatOpen] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
 
-  // Simple markdown render for judge result
-  const renderJudgeMarkdown = (text: string) => {
-    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
-    const out: string[] = []
-
-    const flushParagraph = (buf: string[]) => {
-      if (buf.length === 0) return
-      const content = buf.join(' ').trim()
-      if (content) out.push(`<p>${content}</p>`)
-      buf.length = 0
-    }
-
-    const esc = (s: string) =>
-      s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-
-    const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-
-    const para: string[] = []
-    let inUl = false
-    const closeUl = () => {
-      if (inUl) {
-        out.push('</ul>')
-        inUl = false
-      }
-    }
-
-    for (const raw of lines) {
-      const line = raw.trimRight()
-      const trimmed = line.trim()
-
-      if (!trimmed) {
-        closeUl()
-        flushParagraph(para)
-        continue
-      }
-
-      const h = trimmed.match(/^#{2,6}\s+(.+)$/)
-      if (h) {
-        closeUl()
-        flushParagraph(para)
-        out.push(`<h3>${mdInline(h[1])}</h3>`)
-        continue
-      }
-
-      const li = trimmed.match(/^(?:-|\d+\.)\s+(.+)$/)
-      if (li) {
-        flushParagraph(para)
-        if (!inUl) {
-          out.push('<ul>')
-          inUl = true
-        }
-        out.push(`<li>${mdInline(li[1])}</li>`)
-        continue
-      }
-
-      closeUl()
-      para.push(mdInline(trimmed))
-    }
-
-    closeUl()
-    flushParagraph(para)
-
-    return <div className="md-render" dangerouslySetInnerHTML={{ __html: out.join('') }} />
-  }
+  const renderCompareMarkdown = (text: string) => (
+    <div className="md-render compare-md" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(text) }} />
+  )
 
   const handleStart = useCallback(async () => {
     // Must be triggered by user gesture to allow autoplay audio
@@ -189,7 +124,7 @@ function App() {
           )}
         </div>
 
-        <DebateAudio runId={runId} enabled={audioEnabled} />
+        <DebateAudio runId={runId} enabled={audioEnabled} totalTurns={6} />
 
         {error && (
           <div className="error-box">
@@ -199,7 +134,7 @@ function App() {
 
         {isRunning && turns.length === 0 && (
           <div className="loading-box">
-            正在准备，请稍等第一位嘉宾开场...
+            正在准备，请稍等第一位研究者开场...
           </div>
         )}
 
@@ -225,7 +160,7 @@ function App() {
             })()}
 
             {isRunning && (
-              <div className="waiting-text">正在等待下一位嘉宾回应...</div>
+              <div className="waiting-text">正在等待下一位研究者回应...</div>
             )}
           </div>
         )}
@@ -234,7 +169,7 @@ function App() {
           <div className="judge-box">
             <h2 className="judge-title">对比小结</h2>
             <div className="judge-content">
-              {renderJudgeMarkdown(judgeResult)}
+              {renderCompareMarkdown(judgeResult)}
             </div>
           </div>
         )}
@@ -249,7 +184,7 @@ function App() {
             <button
               className="master-chat-drawer-toggle"
               onClick={() => setChatOpen(true)}
-              aria-label="展开与大师对话"
+              aria-label="展开与研究者对话"
             >
               与研究者对话
             </button>
@@ -261,7 +196,7 @@ function App() {
                 <button
                   className="master-chat-drawer-close"
                   onClick={() => setChatOpen(false)}
-                  aria-label="收起与大师对话"
+                  aria-label="收起与研究者对话"
                 >
                   收起
                 </button>

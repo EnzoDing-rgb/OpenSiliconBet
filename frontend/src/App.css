@@ -229,6 +229,40 @@ body {
   font-size: 15px;
 }
 
+.audio-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.audio-status-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.audio-pause-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.85);
+  background: rgba(248, 250, 252, 0.95);
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.audio-pause-btn:hover {
+  background: #fff;
+  border-color: rgba(100, 116, 139, 0.9);
+}
+
+.audio-paused-hint {
+  color: #64748b;
+  font-weight: 500;
+}
+
 .audio-error {
   color: #b91c1c;
 }
@@ -321,6 +355,40 @@ body {
 
 .judge-content li {
   margin: 4px 0;
+}
+
+.judge-content .compare-md h3,
+.judge-content .compare-md h4,
+.judge-content .compare-md h5,
+.judge-content .compare-md h6 {
+  margin: 22px 0 10px;
+}
+
+.judge-content .compare-md h3:first-child,
+.judge-content .compare-md h4:first-child,
+.judge-content .compare-md h5:first-child,
+.judge-content .compare-md h6:first-child {
+  margin-top: 0;
+}
+
+.judge-content .compare-md p {
+  margin: 8px 0 10px;
+}
+
+.judge-content .compare-md ul,
+.judge-content .compare-md ol {
+  margin: 6px 0 14px;
+}
+
+.judge-content .compare-md pre.md-fence {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .judge-line {

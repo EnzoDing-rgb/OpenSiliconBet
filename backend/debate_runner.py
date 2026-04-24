@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple, Optional
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
-from openai import OpenAI, APIError, APIConnectionError, AuthenticationError
+from openai import OpenAI, APIError, APIConnectionError, AuthenticationError, RateLimitError
 from .models import DebateRun, RunStatus, Turn, Speaker, ChatMessage
 
 # Load environment variables
@@ -25,6 +25,29 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
         return default
     v = v.strip()
     return v if v else default
+
+
+def _is_volcengine_quota_exhausted(exc: BaseException) -> bool:
+    """429 / AccountQuotaExceeded from Volcengine Ark (and similar OpenAI-compatible gateways)."""
+    if isinstance(exc, RateLimitError):
+        return True
+    if isinstance(exc, APIError):
+        status = getattr(exc, "status_code", None)
+        if status == 429:
+            return True
+        body = getattr(exc, "body", None)
+        if isinstance(body, dict):
+            err = body.get("error") or {}
+            if err.get("code") == "AccountQuotaExceeded":
+                return True
+        if body is not None and "AccountQuotaExceeded" in str(body):
+            return True
+    text = str(exc)
+    if "AccountQuotaExceeded" in text:
+        return True
+    if "429" in text and ("quota" in text.lower() or "AccountQuota" in text):
+        return True
+    return False
 
 # Skill file paths (relative to project root)
 PROJECT_ROOT = Path(os.path.dirname(__file__)).parent
@@ -61,7 +84,7 @@ CHAT_MAX_RESPONSE_TOKENS = 500
 
 
 def _speaker_zh(speaker: Speaker) -> str:
-    return "滴滴Researcher" if speaker == Speaker.JERVIS else "ManusResearcher"
+    return "滴滴 Researcher" if speaker == Speaker.JERVIS else "Manus Researcher"
 
 
 def _interaction_wrapper(opponent_name_zh: str, opponent_last: Optional[str]) -> str:
@@ -115,44 +138,44 @@ def _clean_model_output(text: str) -> str:
     return "\n".join(cleaned).strip()
 
 
-# The 6-turn dialogue sequence (3 rounds), ManusResearcher speaks first.
+# The 6-turn dialogue sequence (3 rounds), Manus Researcher speaks first.
 # Each turn will be wrapped with the opponent's immediately previous message to enforce interaction.
 DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
     # Round 1: align on facts & key disputes
     (Speaker.MEARSHEIMER, (
-        "你是ManusResearcher。第1轮请先发言：用统一框架把Manus案的“已确认事实脉络/信息不足点/关键争点”讲清楚。"
+        "你是Manus Researcher。第1轮请先发言：用统一框架把Manus案的“已确认事实脉络/信息不足点/关键争点”讲清楚。"
         "要求：尽量可核验，不编造；明确标注“已确认/信息不足/推断”。"
         "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
         f"{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.JERVIS, (
-        "你是滴滴Researcher。第1轮回应：用同一框架梳理滴滴案，并对照Manus案补齐“共同的监管逻辑/不同的信息状态”。"
+        "你是滴滴 Researcher。第1轮回应：用同一框架梳理滴滴案，并对照Manus案补齐“共同的监管逻辑/不同的信息状态”。"
         "要求：唱和式补充，不要变成胜负评判；指出1-2个最关键的可比维度。"
         "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
         f"{RESPONSE_LEN_HINT_ZH}"
     )),
     # Round 2: risk elements & governance moves
     (Speaker.MEARSHEIMER, (
-        "你是ManusResearcher。第2轮：围绕“国家安全风险要素与治理抓手”做要素拆解（2-4条），并明确："
+        "你是Manus Researcher。第2轮：围绕“国家安全风险要素与治理抓手”做要素拆解（2-4条），并明确："
         "1) 你这案里最像滴滴案的点；2) 最不像的点；3) 你希望对方补充核验的材料清单。"
         "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
         f"{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.JERVIS, (
-        "你是滴滴Researcher。第2轮：用同一维度拆解滴滴案，并回应对方提出的“最像/最不像”判断："
+        "你是滴滴 Researcher。第2轮：用同一维度拆解滴滴案，并回应对方提出的“最像/最不像”判断："
         "补充你的边界条件与反例，给出1个“如果换成不同数据类型/主体结构会如何”的可检验预测。"
         "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
         f"{RESPONSE_LEN_HINT_ZH}"
     )),
     # Round 3: research agenda & falsifiable predictions
     (Speaker.MEARSHEIMER, (
-        "你是ManusResearcher。第3轮：输出一个“研究议程”小结："
+        "你是Manus Researcher。第3轮：输出一个“研究议程”小结："
         "给出2-3条可证伪的研究命题/预测（每条说明可用什么公开材料验证），并提出1个对政策制定者的含义。"
         "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
         f"{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.JERVIS, (
-        "你是滴滴Researcher。第3轮：在承接对方研究议程的基础上，给出你的2-3条研究命题/预测，并用一句话总结："
+        "你是滴滴 Researcher。第3轮：在承接对方研究议程的基础上，给出你的2-3条研究命题/预测，并用一句话总结："
         "这两个案例共同揭示了什么样的国家安全治理范式。"
         "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
         f"{RESPONSE_LEN_HINT_ZH}"
@@ -205,13 +228,21 @@ class DebateRunner:
 
         # Initialize LLM client (OpenAI-compatible for Ark coding endpoint)
         self.protocol = "openai"  # For Ark https://ark.cn-beijing.volces.com/api/coding/v3 which is OpenAI-compatible
-        # Use hardcoded Ark config (overrides env)
-        self.api_key = ARK_API_KEY
-        self.base_url = ARK_BASE_URL
-        self.model = ARK_MODEL
+        primary_key = _env("ARK_API_KEY") or ARK_API_KEY
+        primary_base = _env("ARK_BASE_URL") or ARK_BASE_URL
+        primary_model = _env("ARK_MODEL") or ARK_MODEL
+        self.api_key = primary_key
+        self.base_url = primary_base
+        self.model = primary_model
 
         if not self.api_key:
             raise RuntimeError("Missing API_KEY")
+
+        self._primary_client: OpenAI
+        self._primary_model = primary_model
+        self._fallback_client: Optional[OpenAI] = None
+        self._fallback_model: Optional[str] = None
+        self._using_fallback = False
 
         if self.protocol == "anthropic":
             try:
@@ -229,10 +260,16 @@ class DebateRunner:
                 base_url=self.base_url,
             )
         else:
-            self.client = OpenAI(
-                api_key=self.api_key,
-                base_url=self.base_url,
-            )
+            self._primary_client = OpenAI(api_key=primary_key, base_url=primary_base)
+            self.client = self._primary_client
+
+            disabled = (_env("LLM_FALLBACK_DISABLED") or "").lower() in ("1", "true", "yes")
+            fb_base = _env("LLM_FALLBACK_BASE_URL", "http://127.0.0.1:30023/v1")
+            fb_key = _env("LLM_FALLBACK_API_KEY", "my-local-secret-key")
+            fb_model = _env("LLM_FALLBACK_MODEL", "qwen3.5")
+            if not disabled and fb_base and fb_key and fb_model:
+                self._fallback_client = OpenAI(api_key=fb_key, base_url=fb_base)
+                self._fallback_model = fb_model
 
         # In-memory storage for active runs
         self.runs: Dict[str, DebateRun] = {}
@@ -253,17 +290,17 @@ class DebateRunner:
         """Build system prompt combining the skill rules and role"""
         if speaker == Speaker.JERVIS:
             skill_text = self.jervis_skill
-            prefix = "你现在需要扮演滴滴Researcher，严格遵循以下思维框架和表达方式：\n\n"
+            prefix = "你现在需要扮演滴滴 Researcher，严格遵循以下思维框架和表达方式：\n\n"
         else:
             skill_text = self.mearsheimer_skill
-            prefix = "你现在需要扮演ManusResearcher，严格遵循以下思维框架和表达方式：\n\n"
+            prefix = "你现在需要扮演Manus Researcher，严格遵循以下思维框架和表达方式：\n\n"
 
         # If skill is empty, just use the basic role
         if not skill_text:
             if speaker == Speaker.JERVIS:
-                return "你是滴滴Researcher，专注滴滴数据安全案的案例研究者。"
+                return "你是滴滴 Researcher，专注滴滴数据安全案的案例研究者。"
             else:
-                return "你是ManusResearcher，专注Manus案的案例研究者。"
+                return "你是Manus Researcher，专注Manus案的案例研究者。"
 
         return f"{prefix}{skill_text}\n\n接下来请根据用户的问题扮演这个角色进行案例研究对谈。"
 
@@ -309,9 +346,9 @@ class DebateRunner:
                 # Ensure first round explicitly self-identifies (deterministic UX).
                 # Round 1 has two turns: i=1 (Mearsheimer) and i=2 (Jervis).
                 if i == 1:
-                    response_text = f"【我是ManusResearcher】\n\n{response_text}"
+                    response_text = f"【我是 Manus Researcher】\n\n{response_text}"
                 elif i == 2:
-                    response_text = f"【我是滴滴Researcher】\n\n{response_text}"
+                    response_text = f"【我是 滴滴 Researcher】\n\n{response_text}"
 
                 # Add turn
                 turn = Turn(
@@ -342,52 +379,73 @@ class DebateRunner:
             return await asyncio.to_thread(self._call_anthropic, system_prompt, user_prompt, max_tokens)
         return await asyncio.to_thread(self._call_openai, system_prompt, user_prompt, max_tokens)
 
-    def _call_openai(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=0.7,
-                max_tokens=max_tokens,
-            )
-            return response.choices[0].message.content
-        except AuthenticationError:
-            print("API Authentication failed")
+    def _openai_chat_with_quota_fallback(
+        self,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+    ) -> Optional[str]:
+        """Primary = Volcengine Ark; on 429 / AccountQuotaExceeded switch to local OpenAI-compatible (e.g. Qwen)."""
+        if self.protocol != "openai":
             return None
 
-    def _call_openai_messages(self, messages: List[Dict[str, str]], max_tokens: int) -> Optional[str]:
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+        def _create(client: OpenAI, model: str):
+            return client.chat.completions.create(
+                model=model,
                 messages=messages,
                 temperature=0.7,
                 max_tokens=max_tokens,
             )
+
+        if self._using_fallback:
+            if not self._fallback_client or not self._fallback_model:
+                print("[LLM] 已标记为后备模式，但未配置 LLM_FALLBACK_*")
+                return None
+            try:
+                response = _create(self._fallback_client, self._fallback_model)
+                return response.choices[0].message.content
+            except AuthenticationError:
+                print("[LLM] 后备模型鉴权失败")
+                return None
+            except Exception as e:
+                print(f"[LLM] 后备模型调用失败: {e}")
+                return None
+
+        try:
+            response = _create(self._primary_client, self._primary_model)
             return response.choices[0].message.content
         except AuthenticationError:
             print("API Authentication failed")
             return None
-        except APIConnectionError:
-            print("API Connection error")
+        except APIConnectionError as e:
+            print(f"API Connection error: {e}")
             return None
-        except APIError as e:
+        except (RateLimitError, APIError) as e:
+            if self._fallback_client and self._fallback_model and _is_volcengine_quota_exhausted(e):
+                print(f"[LLM] 火山引擎配额或限流，自动切换到本地后备模型 {self._fallback_model!r}（{e!s}）")
+                self._using_fallback = True
+                self.model = self._fallback_model
+                self.client = self._fallback_client
+                try:
+                    response = _create(self._fallback_client, self._fallback_model)
+                    return response.choices[0].message.content
+                except Exception as e2:
+                    print(f"[LLM] 本地后备模型调用失败: {e2}")
+                    return None
             print(f"API Error: {e}")
             return None
         except Exception as e:
             print(f"Unexpected LLM error: {e}")
             return None
-        except APIConnectionError:
-            print("API Connection error")
-            return None
-        except APIError as e:
-            print(f"API Error: {e}")
-            return None
-        except Exception as e:
-            print(f"Unexpected LLM error: {e}")
-            return None
+
+    def _call_openai(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        return self._openai_chat_with_quota_fallback(messages, max_tokens)
+
+    def _call_openai_messages(self, messages: List[Dict[str, str]], max_tokens: int) -> Optional[str]:
+        return self._openai_chat_with_quota_fallback(messages, max_tokens)
 
     def _call_anthropic(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
         try:
@@ -446,7 +504,12 @@ class DebateRunner:
         lines.append(f"**主题**：{run.topic}")
         lines.append("")
         lines.append(f"**生成时间**：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append(f"**模型**：{self.model}")
+        model_line = (
+            f"{self._primary_model} → {self._fallback_model}（火山配额/限流后已切换本地后备）"
+            if self._using_fallback and self._fallback_model
+            else self.model
+        )
+        lines.append(f"**模型**：{model_line}")
         lines.append("")
         lines.append("---")
         lines.append("")

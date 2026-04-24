@@ -7,13 +7,13 @@ export const speakerMeta: Record<
   { nameZh: string; subtitleZh: string; avatarSrc: string; accent: string }
 > = {
   jervis: {
-    nameZh: '滴滴Researcher',
+    nameZh: '滴滴 Researcher',
     subtitleZh: '平台治理与数据安全 · 案例研究者',
     avatarSrc: jervisImg,
     accent: '#3b82f6',
   },
   mearsheimer: {
-    nameZh: 'ManusResearcher',
+    nameZh: 'Manus Researcher',
     subtitleZh: '技术主权与跨境合规 · 案例研究者',
     avatarSrc: mearsheimerImg,
     accent: '#ef4444',

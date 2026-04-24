@@ -2,6 +2,7 @@ import './MasterChat.css';
 import { useState, useEffect, useRef } from 'react';
 import { postChat } from '../api';
 import type { Speaker, ChatMessage } from '../types';
+import { markdownToSafeHtml } from '../utils/markdownRender';
 
 interface MasterChatProps {
   runId: string;
@@ -64,77 +65,6 @@ export function MasterChat({ runId }: MasterChatProps) {
     }
   };
 
-  // Simple markdown render same as judge box
-  const renderMarkdown = (text: string) => {
-    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-    const out: string[] = [];
-    let para: string[] = [];
-    let inUl = false;
-    const closeUl = () => {
-      if (inUl) {
-        out.push('</ul>');
-        inUl = false;
-      }
-    };
-
-    const esc = (s: string) =>
-      s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
-    const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-    for (const raw of lines) {
-      const trimmedLine = raw.trimRight();
-      const trimmed = trimmedLine.trim();
-
-      if (!trimmed) {
-        closeUl();
-        if (para.length) {
-          out.push(`<p>${para.join(' ')}</p>`);
-          para = [];
-        }
-        continue;
-      }
-
-      const li = trimmed.match(/^(?:-|\d+\.)\s+(.+)$/);
-      if (li) {
-        closeUl();
-        if (!inUl) {
-          out.push('<ul>');
-          inUl = true;
-        }
-        out.push(`<li>${mdInline(li[1])}</li>`);
-        continue;
-      }
-
-      const h = trimmed.match(/^#{2,6}\s+(.+)$/);
-      if (h) {
-        closeUl();
-        flushParagraph();
-        out.push(`<h3>${mdInline(h[1])}</h3>`);
-        continue;
-      }
-
-      para.push(mdInline(trimmed));
-    }
-
-    closeUl();
-    flushParagraph();
-
-    function flushParagraph() {
-      if (para.length) {
-        out.push(`<p>${para.join(' ')}</p>`);
-        para = [];
-      }
-    }
-
-    return <div className="md-render" dangerouslySetInnerHTML={{ __html: out.join('\n') }} />;
-  };
-
   return (
     <div className="master-chat-container">
       <div className="speaker-tabs">
@@ -142,17 +72,17 @@ export function MasterChat({ runId }: MasterChatProps) {
           className={speaker === 'jervis' ? 'tab active' : 'tab'}
           onClick={() => setSpeaker('jervis')}
         >
-          滴滴Researcher
+          滴滴 Researcher
         </button>
         <button
           className={speaker === 'mearsheimer' ? 'tab active' : 'tab'}
           onClick={() => setSpeaker('mearsheimer')}
         >
-          ManusResearcher
+          Manus Researcher
         </button>
       </div>
 
-      <div className="chat-history" ref={bottomRef}>
+      <div className="chat-history">
         {chatHistory.map((msg, i) => (
           <div key={i} className={`chat-message ${msg.role}`}>
             <div className="chat-speaker">
@@ -160,18 +90,22 @@ export function MasterChat({ runId }: MasterChatProps) {
                 <>
                   国安学博士生
                   {msg.target_speaker && (
-                    <span className="target-chip">@{msg.target_speaker === 'jervis' ? '滴滴Researcher' : 'ManusResearcher'}</span>
+                    <span className="target-chip">@{msg.target_speaker === 'jervis' ? '滴滴 Researcher' : 'Manus Researcher'}</span>
                   )}
                 </>
               ) : (
-                msg.speaker === 'jervis' ? '滴滴Researcher' : 'ManusResearcher'
+                msg.speaker === 'jervis' ? '滴滴 Researcher' : 'Manus Researcher'
               )}
             </div>
-            <div className="chat-content">{renderMarkdown(msg.content)}</div>
+            <div
+              className="chat-content md-render"
+              dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(msg.content) }}
+            />
           </div>
         ))}
         {sending && <div className="chat-loading">正在生成回复...</div>}
         {error && <div className="chat-error">{error}</div>}
+        <div ref={bottomRef} />
       </div>
 
       <div className="chat-input-container">

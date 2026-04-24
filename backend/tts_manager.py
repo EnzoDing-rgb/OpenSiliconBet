@@ -3,6 +3,7 @@ import base64
 import json
 import re
 import threading
+import time
 from typing import Optional, Callable, List
 import dashscope
 from dashscope.audio.qwen_tts_realtime import QwenTtsRealtime, QwenTtsRealtimeCallback
@@ -115,12 +116,26 @@ class TtsSession:
         self.chunker = TextChunker()
         self._done = asyncio.Event()
         self._error: Optional[Exception] = None
+        self._phase_playing_sent = False
 
     def _get_voice_id(self) -> str:
         if self.speaker == Speaker.JERVIS:
             return VOICE_ID_JERVIS
         else:
             return VOICE_ID_MEARSHEIMER
+
+    async def _emit_phase(self, phase: str, message: Optional[str] = None) -> None:
+        sp = self.speaker.value if hasattr(self.speaker, "value") else str(self.speaker)
+        payload: dict = {
+            "type": "phase",
+            "phase": phase,
+            "turn_index": self.turn_index,
+            "round": self.round_num,
+            "speaker": sp,
+        }
+        if message:
+            payload["message"] = message
+        await self.websocket.send_text(json.dumps(payload))
 
     async def run(self) -> None:
         """Run the full session: chunk text → send to aliyun → forward audio to browser"""
@@ -134,6 +149,7 @@ class TtsSession:
             "turn_index": self.turn_index,
         }
         await self.websocket.send_text(json.dumps(meta))
+        await self._emit_phase("connecting", message="正在连接语音合成服务…")
 
         # 2. Setup callback for dashscope: forward audio to browser
         class Callback(QwenTtsRealtimeCallback):
@@ -156,6 +172,9 @@ class TtsSession:
                         recv_audio_b64 = response.get("delta")
                         if not recv_audio_b64:
                             return
+                        if not self.outer._phase_playing_sent:
+                            self.outer._phase_playing_sent = True
+                            asyncio.run_coroutine_threadsafe(self.outer._emit_phase("playing"), self.loop)
                         pcm_bytes = base64.b64decode(recv_audio_b64)
                         asyncio.run_coroutine_threadsafe(
                             self.outer.websocket.send_bytes(pcm_bytes),
@@ -198,6 +217,7 @@ class TtsSession:
                 response_format=dashscope.audio.qwen_tts_realtime.AudioFormat.PCM_24000HZ_MONO_16BIT,
                 mode="server_commit",
             )
+            await self._emit_phase("generating", message="正在合成语音…")
 
             # 4. Chunk text and send to ali yun
             chunks = self.chunker.push(self.full_text)
@@ -230,6 +250,7 @@ class TtsSession:
             return
 
         # 5. Done, notify browser
+        await self._emit_phase("completed", message="本段语音已生成完毕")
         await self.websocket.send_text(json.dumps({
             "type": "turn_done",
             "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
@@ -300,6 +321,7 @@ class TtsManager:
 
             # Stream turns as they appear while debate is running
             turn_index = 0
+            last_wait_phase = 0.0
             while True:
                 run = runner.get_run_status(run_id) if run_id else runner.get_current_run()
                 if not run:
@@ -332,6 +354,17 @@ class TtsManager:
 
                 if run.status == RunStatus.DONE:
                     break
+
+                if run.status == RunStatus.RUNNING:
+                    now = time.monotonic()
+                    if now - last_wait_phase >= 2.0:
+                        last_wait_phase = now
+                        await websocket.send_text(json.dumps({
+                            "type": "phase",
+                            "phase": "waiting_content",
+                            "turn_index": turn_index,
+                            "message": "正在等待下一位研究者的文本生成…",
+                        }))
 
                 await asyncio.sleep(0.2)
 

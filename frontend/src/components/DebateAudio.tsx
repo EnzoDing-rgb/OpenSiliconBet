@@ -126,7 +126,7 @@ export function DebateAudio({ runId, enabled }: { runId: string | null; enabled:
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
     const wsHost = window.location.hostname || 'localhost'
-    const wsPort = '8000'
+    const wsPort = '9000'
 
     const ws = new WebSocket(`${wsProtocol}://${wsHost}:${wsPort}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
     ws.binaryType = 'arraybuffer'

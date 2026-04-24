@@ -66,11 +66,11 @@ ARK_MODEL = "ark-code-latest"
 
 ### 3. 启动服务
 
-**启动后端**（端口 8000，绑定 0.0.0.0 允许远程访问）：
+**启动后端**（端口 9000，绑定 0.0.0.0 允许远程访问）：
 ```bash
 # 在项目根目录，确保已经激活虚拟环境
 # source .venv/bin/activate
-uvicorn backend.app:app --reload --port 8000 --host 0.0.0.0
+uvicorn backend.app:app --reload --port 9000 --host 0.0.0.0
 ```
 
 **启动前端**（另开终端）：
@@ -118,7 +118,7 @@ npm run dev -- --host 0.0.0.0
 
 **Mac 端**（在你的 Mac 本地终端执行端口转发）：
 ```bash
-ssh -L 5173:localhost:5173 -L 8000:localhost:8000 fengde@100.90.186.53
+ssh -L 5173:localhost:5173 -L 9000:localhost:9000 fengde@100.90.186.53
 ```
 
 保持这个 SSH 连接打开，然后在**Mac Chrome**访问：

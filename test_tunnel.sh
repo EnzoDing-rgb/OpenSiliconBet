@@ -47,20 +47,24 @@ fi
 echo -e "${GREEN}✅ Tunnel URL: $PUBLIC_URL${NC}"
 echo ""
 
-# Test 1: Local 127.0.0.1
+# Test 1: Local 127.0.0.1 (no proxy)
 echo "--- Test 1: http://127.0.0.1:5173 ---"
-curl -s -o /dev/null -w "HTTP_CODE: %{http_code}  SIZE: %{size_download}  TIME: %{time_total}s\n" \
-     --connect-timeout 10 --max-time 15 \
-     http://127.0.0.1:5173/ 2>/dev/null
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+     -u all_proxy -u ALL_PROXY \
+     curl -s -o /dev/null -w "HTTP_CODE: %{http_code}  SIZE: %{size_download}  TIME: %{time_total}s\n" \
+          --connect-timeout 10 --max-time 15 \
+          http://127.0.0.1:5173/ 2>/dev/null
 
-# Test 2: Cloudflare Public URL (with retries)
+# Test 2: Cloudflare Public URL (with retries, no proxy)
 echo ""
 echo "--- Test 2: $PUBLIC_URL ---"
 CF_OK=0
 for i in $(seq 1 12); do
-    RESULT=$(curl -s -o /dev/null -w "%{http_code}" \
-             --connect-timeout 10 --max-time 15 \
-             "$PUBLIC_URL/" 2>/dev/null || echo "000")
+    RESULT=$(env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+               -u all_proxy -u ALL_PROXY \
+               curl -s -o /dev/null -w "%{http_code}" \
+               --connect-timeout 10 --max-time 15 \
+               "$PUBLIC_URL/" 2>/dev/null || echo "000")
     echo "Attempt $i: HTTP $RESULT"
     if [[ "$RESULT" == "200" ]] || [[ "$RESULT" == "301" ]] || [[ "$RESULT" == "302" ]]; then
         CF_OK=1
@@ -74,7 +78,9 @@ if [[ "$CF_OK" == "1" ]]; then
     echo -e "${GREEN}✅ Public URL is reachable!${NC}"
     echo ""
     echo "Fetching page content (first 500 bytes):"
-    curl -s --max-time 10 "$PUBLIC_URL/" 2>/dev/null | head -c 500
+    env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+        -u all_proxy -u ALL_PROXY \
+        curl -s --max-time 10 "$PUBLIC_URL/" 2>/dev/null | head -c 500
     echo ""
 else
     echo -e "${RED}❌ Public URL returned non-200 responses${NC}"

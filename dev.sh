@@ -470,7 +470,8 @@ if [[ "${TUNNEL_MODE}" == "1" ]]; then
 
   # Run cloudflared without HTTP proxies — they break the QUIC/TLS handshake to Cloudflare edge.
   # SOCKS proxies are fine, but http(s)_proxy interferes with the tunnel control plane.
-  cf_cmd="cloudflared tunnel --no-autoupdate --protocol quic"
+  # Try http2 first because QUIC can have UDP blocking issues.
+  cf_cmd="cloudflared tunnel --no-autoupdate --protocol http2"
   if [[ "${PROD_MODE}" == "1" ]]; then
     cf_cmd="${cf_cmd} --url http://127.0.0.1:${BACKEND_PORT}"
   else

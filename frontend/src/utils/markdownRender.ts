@@ -25,7 +25,29 @@ export function markdownToSafeHtml(markdown: string): string {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;')
 
-  const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  const escAttr = (s: string) => esc(s).replace(/`/g, '&#096;')
+
+  const mdInline = (s: string) => {
+    const codeSpans: string[] = []
+    const withoutCode = s.replace(/`([^`]+)`/g, (_, code: string) => {
+      const token = `\u0000CODE${codeSpans.length}\u0000`
+      codeSpans.push(`<code class="md-inline-code">${esc(code)}</code>`)
+      return token
+    })
+
+    let html = esc(withoutCode)
+    html = html.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+)\)/g,
+      (_, label: string, url: string) =>
+        `<a href="${escAttr(url)}" target="_blank" rel="noreferrer">${label}</a>`
+    )
+    html = html
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[^\*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+      .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>')
+
+    return html.replace(/\u0000CODE(\d+)\u0000/g, (_, idx: string) => codeSpans[Number(idx)] ?? '')
+  }
 
   const out: string[] = []
   const para: string[] = []
@@ -33,23 +55,43 @@ export function markdownToSafeHtml(markdown: string): string {
   let inFence = false
   const fenceBuf: string[] = []
 
-  let inUl = false
-  let inOl = false
+  let listType: 'ul' | 'ol' | null = null
+  let listItem: string[] = []
+  let inBlockquote = false
 
-  const closeLists = () => {
-    if (inUl) {
-      out.push('</ul>')
-      inUl = false
+  const flushListItem = () => {
+    if (listItem.length === 0) return
+    out.push(`<li>${listItem.join('<br />')}</li>`)
+    listItem = []
+  }
+
+  const closeList = () => {
+    if (listType) {
+      flushListItem()
+      out.push(`</${listType}>`)
+      listType = null
     }
-    if (inOl) {
-      out.push('</ol>')
-      inOl = false
+  }
+
+  const openList = (nextType: 'ul' | 'ol') => {
+    if (listType === nextType) {
+      flushListItem()
+      return
     }
+    closeList()
+    out.push(`<${nextType} class="md-${nextType}">`)
+    listType = nextType
+  }
+
+  const closeBlockquote = () => {
+    if (!inBlockquote) return
+    out.push('</blockquote>')
+    inBlockquote = false
   }
 
   const flushParagraph = () => {
     if (para.length === 0) return
-    const content = para.join(' ').trim()
+    const content = para.join('<br />').trim()
     if (content) out.push(`<p>${content}</p>`)
     para.length = 0
   }
@@ -68,7 +110,8 @@ export function markdownToSafeHtml(markdown: string): string {
     // Fenced code blocks (often emitted by models even when not "real code")
     if (trimmed.startsWith('```')) {
       if (!inFence) {
-        closeLists()
+        closeList()
+        closeBlockquote()
         flushParagraph()
         inFence = true
       } else {
@@ -83,15 +126,38 @@ export function markdownToSafeHtml(markdown: string): string {
     }
 
     if (!trimmed) {
-      closeLists()
+      closeList()
+      closeBlockquote()
       flushParagraph()
+      continue
+    }
+
+    const hr = trimmed.match(/^([-*_])(?:\s*\1){2,}$/)
+    if (hr) {
+      closeList()
+      closeBlockquote()
+      flushParagraph()
+      out.push('<hr class="md-hr" />')
+      continue
+    }
+
+    const bq = trimmed.match(/^>\s?(.*)$/)
+    if (bq) {
+      closeList()
+      flushParagraph()
+      if (!inBlockquote) {
+        out.push('<blockquote class="md-blockquote">')
+        inBlockquote = true
+      }
+      if (bq[1].trim()) out.push(`<p>${mdInline(bq[1].trim())}</p>`)
       continue
     }
 
     // Allow `### 标题` or `###标题` (no space after #) — models often omit the space.
     const hm = trimmed.match(/^(#{1,6})\s*(.+)$/)
     if (hm) {
-      closeLists()
+      closeList()
+      closeBlockquote()
       flushParagraph()
       const level = hm[1].length
       const tagLevel = Math.min(6, Math.max(3, level))
@@ -102,35 +168,29 @@ export function markdownToSafeHtml(markdown: string): string {
 
     const ol = trimmed.match(/^(\d+)\.\s+(.+)$/)
     if (ol) {
+      closeBlockquote()
       flushParagraph()
-      if (inUl) {
-        out.push('</ul>')
-        inUl = false
-      }
-      if (!inOl) {
-        out.push('<ol class="md-ol">')
-        inOl = true
-      }
-      out.push(`<li>${mdInline(ol[2])}</li>`)
+      openList('ol')
+      listItem.push(mdInline(ol[2]))
       continue
     }
 
     const ul = trimmed.match(/^[-*]\s+(.+)$/)
     if (ul) {
+      closeBlockquote()
       flushParagraph()
-      if (inOl) {
-        out.push('</ol>')
-        inOl = false
-      }
-      if (!inUl) {
-        out.push('<ul class="md-ul">')
-        inUl = true
-      }
-      out.push(`<li>${mdInline(ul[1])}</li>`)
+      openList('ul')
+      listItem.push(mdInline(ul[1]))
       continue
     }
 
-    closeLists()
+    if (listType && /^\s{2,}\S/.test(raw)) {
+      listItem.push(mdInline(trimmed))
+      continue
+    }
+
+    closeList()
+    closeBlockquote()
     para.push(mdInline(trimmed))
   }
 
@@ -138,7 +198,8 @@ export function markdownToSafeHtml(markdown: string): string {
     // Unclosed fence: still render as code for readability
     flushFence()
   }
-  closeLists()
+  closeList()
+  closeBlockquote()
   flushParagraph()
 
   return out.join('')

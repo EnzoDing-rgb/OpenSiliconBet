@@ -82,4 +82,35 @@ describe('markdownToSafeHtml', () => {
     expect(html).toContain('<pre')
     expect(html).toContain('only')
   })
+
+  it('preserves intentional paragraph line breaks', () => {
+    const html = markdownToSafeHtml('第一行\n第二行')
+    expect(html).toContain('第一行<br />第二行')
+  })
+
+  it('renders list continuation lines inside the same item', () => {
+    const html = markdownToSafeHtml('- 第一项\n  解释第一项\n- 第二项')
+    expect(html).toContain('第一项<br />解释第一项')
+    expect(html.match(/<li>/g)?.length).toBe(2)
+  })
+
+  it('renders blockquotes and horizontal rules', () => {
+    const html = markdownToSafeHtml('> 核心判断\n\n---\n\n正文')
+    expect(html).toContain('<blockquote')
+    expect(html).toContain('核心判断')
+    expect(html).toContain('<hr')
+    expect(html).toContain('正文')
+  })
+
+  it('renders safe links and inline code', () => {
+    const html = markdownToSafeHtml('访问 [Cloudflare](https://cloudflare.com) 并运行 `./dev.sh --tunnel`')
+    expect(html).toContain('href="https://cloudflare.com"')
+    expect(html).toContain('<code class="md-inline-code">./dev.sh --tunnel</code>')
+  })
+
+  it('does not render unsafe link schemes or raw HTML', () => {
+    const html = markdownToSafeHtml('[bad](javascript:alert(1)) <script>x</script>')
+    expect(html).not.toContain('href="javascript:')
+    expect(html).toContain('&lt;script&gt;')
+  })
 })

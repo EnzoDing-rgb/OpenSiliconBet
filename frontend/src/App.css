@@ -334,61 +334,132 @@ body {
   text-align: left;
 }
 
-.judge-content h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 12px 0 6px;
+.md-render {
+  overflow-wrap: anywhere;
 }
 
-.judge-content strong {
-  font-weight: 600;
+.md-render h3,
+.md-render h4,
+.md-render h5,
+.md-render h6 {
+  color: #0f172a;
+  font-weight: 750;
+  line-height: 1.35;
+  margin: 18px 0 8px;
 }
 
-.judge-content p {
-  margin: 6px 0;
-}
-
-.judge-content ul {
-  margin: 6px 0 8px;
-  padding-left: 18px;
-}
-
-.judge-content li {
-  margin: 4px 0;
-}
-
-.judge-content .compare-md h3,
-.judge-content .compare-md h4,
-.judge-content .compare-md h5,
-.judge-content .compare-md h6 {
-  margin: 22px 0 10px;
-}
-
-.judge-content .compare-md h3:first-child,
-.judge-content .compare-md h4:first-child,
-.judge-content .compare-md h5:first-child,
-.judge-content .compare-md h6:first-child {
+.md-render h3:first-child,
+.md-render h4:first-child,
+.md-render h5:first-child,
+.md-render h6:first-child {
   margin-top: 0;
 }
 
-.judge-content .compare-md p {
+.md-render h3 {
+  font-size: 1.08em;
+}
+
+.md-render h4,
+.md-render h5,
+.md-render h6 {
+  font-size: 1em;
+}
+
+.md-render p {
   margin: 8px 0 10px;
 }
 
-.judge-content .compare-md ul,
-.judge-content .compare-md ol {
-  margin: 6px 0 14px;
+.md-render p:first-child {
+  margin-top: 0;
 }
 
-.judge-content .compare-md pre.md-fence {
-  margin: 10px 0 14px;
+.md-render p:last-child {
+  margin-bottom: 0;
+}
+
+.md-render strong {
+  font-weight: 700;
+}
+
+.md-render em {
+  color: #334155;
+}
+
+.md-render a {
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md-render ul,
+.md-render ol {
+  margin: 8px 0 14px;
+  padding-left: 1.35em;
+}
+
+.md-render li {
+  margin: 5px 0;
+  padding-left: 0.1em;
+}
+
+.md-render .md-blockquote {
+  margin: 12px 0 14px;
+  padding: 10px 14px;
+  border-left: 4px solid rgba(37, 99, 235, 0.45);
+  border-radius: 10px;
+  background: rgba(239, 246, 255, 0.72);
+  color: #334155;
+}
+
+.md-render .md-blockquote p {
+  margin: 4px 0;
+}
+
+.md-render .md-hr {
+  height: 1px;
+  margin: 16px 0;
+  border: 0;
+  background: rgba(148, 163, 184, 0.45);
+}
+
+.md-render .md-inline-code {
+  display: inline;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+  font-size: 0.92em;
+}
+
+.md-render pre.md-fence {
+  margin: 12px 0 14px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.04);
+  background: rgba(15, 23, 42, 0.06);
   border: 1px solid rgba(148, 163, 184, 0.35);
   overflow: auto;
   font-size: 14px;
   line-height: 1.55;
+}
+
+.md-render pre.md-fence code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  white-space: pre;
+}
+
+.compare-md {
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.compare-md h3,
+.compare-md h4,
+.compare-md h5,
+.compare-md h6 {
+  margin-top: 24px;
 }
 
 .judge-line {

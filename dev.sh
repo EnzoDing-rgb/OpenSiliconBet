@@ -7,6 +7,55 @@ NC='\033[0m' # No Color
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Clean up all previous processes, ports, and leftovers
+cleanup_all() {
+  echo "🧹 Cleaning up all previous processes and占用..."
+
+  # Kill any cloudflared processes started by this script
+  pkill -f "cloudflared.*national_security" 2>/dev/null || true
+  pkill -9 -f "cloudflared" 2>/dev/null || true
+
+  # Kill any uvicorn/vite processes on our ports
+  local ports=("9000" "5173" "20242")
+  for port in "${ports[@]}"; do
+    if command -v lsof >/dev/null 2>&1; then
+      local pids
+      pids="$(lsof -t -i:"$port" 2>/dev/null || true)"
+      if [[ -n "$pids" ]]; then
+        kill -9 $pids >/dev/null 2>&1 || true
+      fi
+    fi
+    if command -v fuser >/dev/null 2>&1; then
+      fuser -k -9 "${port}/tcp" >/dev/null 2>&1 || true
+    fi
+  done
+
+  # Clean up log files
+  rm -f "${ROOT_DIR}/.backend.log" "${ROOT_DIR}/.frontend.log" "${ROOT_DIR}/.tunnel.log"
+
+  # Also clean up any leftover child processes from previous runs
+  if [[ -f "${ROOT_DIR}/.frontend.pid" ]]; then
+    kill -9 $(<"${ROOT_DIR}/.frontend.pid") 2>/dev/null || true
+    rm -f "${ROOT_DIR}/.frontend.pid"
+  fi
+  if [[ -f "${ROOT_DIR}/.backend.pid" ]]; then
+    kill -9 $(<"${ROOT_DIR}/.backend.pid") 2>/dev/null || true
+    rm -f "${ROOT_DIR}/.backend.pid"
+  fi
+  if [[ -f "${ROOT_DIR}/.tunnel.pid" ]]; then
+    kill -9 $(<"${ROOT_DIR}/.tunnel.pid") 2>/dev/null || true
+    rm -f "${ROOT_DIR}/.tunnel.pid"
+  fi
+
+  # Give OS time to release sockets
+  sleep 0.5
+  echo "✅ Cleanup complete."
+  echo
+}
+
+# Run cleanup at startup
+cleanup_all
+
 TUNNEL_MODE="0"          # Quick Tunnel (trycloudflare.com)
 PROD_MODE="0"            # Serve built frontend via FastAPI (single-port)
 NAMED_TUNNEL_NAME=""     # Cloudflare named tunnel (requires pre-created tunnel)
@@ -419,11 +468,17 @@ if [[ "${TUNNEL_MODE}" == "1" ]]; then
     fi
   fi
 
+  # Run cloudflared without HTTP proxies — they break the QUIC/TLS handshake to Cloudflare edge.
+  # SOCKS proxies are fine, but http(s)_proxy interferes with the tunnel control plane.
+  cf_cmd="cloudflared tunnel --no-autoupdate --protocol quic"
   if [[ "${PROD_MODE}" == "1" ]]; then
-    cloudflared tunnel --url "http://127.0.0.1:${BACKEND_PORT}" >"${tunnel_log}" 2>&1 &
+    cf_cmd="${cf_cmd} --url http://127.0.0.1:${BACKEND_PORT}"
   else
-    cloudflared tunnel --url "http://127.0.0.1:${FRONTEND_PORT}" >"${tunnel_log}" 2>&1 &
+    cf_cmd="${cf_cmd} --url http://127.0.0.1:${FRONTEND_PORT}"
   fi
+  env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+      -u all_proxy -u ALL_PROXY \
+      ${cf_cmd} >"${tunnel_log}" 2>&1 &
   tunnel_pid="$!"
 
   public_url=""
@@ -489,7 +544,9 @@ if [[ -n "${NAMED_TUNNEL_NAME}" ]]; then
     exit 1
   fi
   echo "Starting named tunnel: ${NAMED_TUNNEL_NAME}"
-  cloudflared tunnel run "${NAMED_TUNNEL_NAME}" >>"${ROOT_DIR}/.tunnel.log" 2>&1 &
+  env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+      -u all_proxy -u ALL_PROXY \
+      cloudflared tunnel run "${NAMED_TUNNEL_NAME}" >>"${ROOT_DIR}/.tunnel.log" 2>&1 &
   tunnel_pid="$!"
 fi
 

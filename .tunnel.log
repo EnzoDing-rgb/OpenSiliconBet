@@ -1,27 +1,36 @@
-2026-04-22T07:34:16Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
-2026-04-22T07:34:16Z INF Requesting new quick Tunnel on trycloudflare.com...
-2026-04-22T07:34:19Z INF +--------------------------------------------------------------------------------------------+
-2026-04-22T07:34:19Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
-2026-04-22T07:34:19Z INF |  https://dave-dealtime-equipped-table.trycloudflare.com                                    |
-2026-04-22T07:34:19Z INF +--------------------------------------------------------------------------------------------+
-2026-04-22T07:34:19Z INF Version 2026.3.0 (Checksum 4a9e50e6d6d798e90fcd01933151a90bf7edd99a0a55c28ad18f2e16263a5c30)
-2026-04-22T07:34:19Z INF GOOS: linux, GOVersion: go1.24.13, GoArch: amd64
-2026-04-22T07:34:19Z INF Settings: map[cred-file:/home/fengde/.cloudflared/d7052ef8-4038-46de-881f-1ff4bb2ad688.json credentials-file:/home/fengde/.cloudflared/d7052ef8-4038-46de-881f-1ff4bb2ad688.json ha-connections:1 p:http2 protocol:http2 url:http://127.0.0.1:5173]
-2026-04-22T07:34:19Z INF Autoupdate frequency is set autoupdateFreq=86400000
-2026-04-22T07:34:19Z INF Generated Connector ID: 23bacf33-4acf-4d10-a712-4afc233adb86
-2026-04-22T07:34:19Z INF Initial protocol http2
-2026-04-22T07:34:19Z INF ICMP proxy will use 192.168.31.206 as source for IPv4
-2026-04-22T07:34:19Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
-2026-04-22T07:34:19Z WRN The user running cloudflared process has a GID (group ID) that is not within ping_group_range. You might need to add that user to a group within that range, or instead update the range to encompass a group the user is already in by modifying /proc/sys/net/ipv4/ping_group_range. Otherwise cloudflared will not be able to ping this network error="Group ID 1000 is not between ping group 1 to 0"
-2026-04-22T07:34:19Z WRN ICMP proxy feature is disabled error="cannot create ICMPv4 proxy: Group ID 1000 is not between ping group 1 to 0 nor ICMPv6 proxy: socket: permission denied"
-2026-04-22T07:34:20Z INF ICMP proxy will use 192.168.31.206 as source for IPv4
-2026-04-22T07:34:20Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
-2026-04-22T07:34:20Z INF Starting metrics server on 127.0.0.1:20242/metrics
-2026-04-22T07:34:22Z INF Registered tunnel connection connIndex=0 connection=af10ee83-713c-447f-9432-24cbb3650936 event=0 ip=198.41.200.33 location=lax01 protocol=http2
-2026-04-22T08:13:03Z INF Initiating graceful shutdown due to signal terminated ...
-2026-04-22T08:13:03Z INF Unregistered tunnel connection connIndex=0 event=0 ip=198.41.200.33
-2026-04-22T08:13:03Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.33
-2026-04-22T08:13:03Z ERR Connection terminated connIndex=0
-2026-04-22T08:13:03Z ERR no more connections active and exiting
-2026-04-22T08:13:03Z INF Tunnel server stopped
-2026-04-22T08:13:03Z INF Metrics server stopped
+2026-04-25T04:22:51Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2026-04-25T04:22:51Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-04-25T04:22:54Z INF +--------------------------------------------------------------------------------------------+
+2026-04-25T04:22:54Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-04-25T04:22:54Z INF |  https://specials-vegetables-var-medium.trycloudflare.com                                  |
+2026-04-25T04:22:54Z INF +--------------------------------------------------------------------------------------------+
+2026-04-25T04:22:54Z INF Version 2026.3.0 (Checksum 4a9e50e6d6d798e90fcd01933151a90bf7edd99a0a55c28ad18f2e16263a5c30)
+2026-04-25T04:22:54Z INF GOOS: linux, GOVersion: go1.24.13, GoArch: amd64
+2026-04-25T04:22:54Z INF Settings: map[cred-file:/home/fengde/.cloudflared/d7052ef8-4038-46de-881f-1ff4bb2ad688.json credentials-file:/home/fengde/.cloudflared/d7052ef8-4038-46de-881f-1ff4bb2ad688.json ha-connections:1 p:http2 protocol:http2 url:http://127.0.0.1:5173]
+2026-04-25T04:22:54Z INF Autoupdate frequency is set autoupdateFreq=86400000
+2026-04-25T04:22:54Z INF Generated Connector ID: e8473a6f-d7ad-4d4e-8854-d76fa6f7c084
+2026-04-25T04:22:54Z INF Initial protocol http2
+2026-04-25T04:22:54Z INF ICMP proxy will use 192.168.31.206 as source for IPv4
+2026-04-25T04:22:54Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
+2026-04-25T04:22:54Z WRN The user running cloudflared process has a GID (group ID) that is not within ping_group_range. You might need to add that user to a group within that range, or instead update the range to encompass a group the user is already in by modifying /proc/sys/net/ipv4/ping_group_range. Otherwise cloudflared will not be able to ping this network error="Group ID 1000 is not between ping group 1 to 0"
+2026-04-25T04:22:54Z WRN ICMP proxy feature is disabled error="cannot create ICMPv4 proxy: Group ID 1000 is not between ping group 1 to 0 nor ICMPv6 proxy: socket: permission denied"
+2026-04-25T04:22:54Z INF ICMP proxy will use 192.168.31.206 as source for IPv4
+2026-04-25T04:22:54Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
+2026-04-25T04:22:54Z INF Starting metrics server on 127.0.0.1:20242/metrics
+2026-04-25T04:22:54Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:22:54Z ERR Serve tunnel error error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:22:54Z INF Retrying connection in up to 2s connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:22:55Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.4
+2026-04-25T04:22:55Z ERR Serve tunnel error error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.4
+2026-04-25T04:22:55Z INF Retrying connection in up to 4s connIndex=0 event=0 ip=198.18.0.4
+2026-04-25T04:22:55Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:22:55Z ERR Serve tunnel error error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:22:55Z INF Retrying connection in up to 8s connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:23:00Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.4
+2026-04-25T04:23:00Z ERR Serve tunnel error error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.4
+2026-04-25T04:23:00Z INF Retrying connection in up to 16s connIndex=0 event=0 ip=198.18.0.4
+2026-04-25T04:23:11Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:23:11Z ERR Serve tunnel error error="TLS handshake with edge error: EOF" connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:23:11Z INF Retrying connection in up to 32s connIndex=0 event=0 ip=198.18.0.10
+2026-04-25T04:23:28Z INF Initiating graceful shutdown due to signal terminated ...
+2026-04-25T04:23:28Z INF Tunnel server stopped

@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 from .models import StartDebateResponse, DebateStatusResponse, Speaker, ChatMessage
@@ -124,4 +126,20 @@ async def websocket_debate_audio(websocket: WebSocket):
     """
     await websocket.accept()
     await tts_manager.handle_connection(websocket, runner)
+
+
+# ---- Production: serve frontend dist (single-port deployment) ----
+# We only mount if the build output exists, so local dev remains unchanged.
+_FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+_FRONTEND_DIST = os.path.abspath(_FRONTEND_DIST)
+if os.path.isdir(_FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=_FRONTEND_DIST, html=True), name="frontend")
+
+    @app.get("/{full_path:path}")
+    async def spa_fallback(full_path: str):
+        # Let StaticFiles handle real assets; for client-side routes return index.html
+        index_path = os.path.join(_FRONTEND_DIST, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+        return {"error": "frontend build not found"}
 

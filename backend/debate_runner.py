@@ -13,11 +13,18 @@ from .models import DebateRun, RunStatus, Turn, Speaker, ChatMessage
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-# Hardcoded API config (as requested)
-# 调用一下火山的模型
-ARK_API_KEY = "ark-da654523-f2ad-42e4-9a13-c33d664f9fc5-d83b0"
-ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/coding/v3"
-ARK_MODEL = "ark-code-latest"
+# API config (MUST come from environment variables; do not hardcode secrets)
+# Preferred env names:
+# - API_PROTOCOL: openai | anthropic
+# - API_BASE_URL
+# - API_KEY
+# - MODEL
+#
+# Backward-compatible aliases (optional):
+# - ARK_API_KEY, ARK_BASE_URL, ARK_MODEL
+ARK_API_KEY: str = ""
+ARK_BASE_URL: str = ""
+ARK_MODEL: str = ""
 
 def _env(name: str, default: Optional[str] = None) -> Optional[str]:
     v = os.getenv(name)
@@ -227,16 +234,27 @@ class DebateRunner:
         self.mearsheimer_skill = self._read_skill(MEARSHEIMER_SKILL_PATH)
 
         # Initialize LLM client (OpenAI-compatible for Ark coding endpoint)
-        self.protocol = "openai"  # For Ark https://ark.cn-beijing.volces.com/api/coding/v3 which is OpenAI-compatible
-        primary_key = _env("ARK_API_KEY") or ARK_API_KEY
-        primary_base = _env("ARK_BASE_URL") or ARK_BASE_URL
-        primary_model = _env("ARK_MODEL") or ARK_MODEL
+        self.protocol = _env("API_PROTOCOL", "openai")  # openai (default) or anthropic
+
+        # Prefer generic env names; fall back to ARK_* aliases for compatibility.
+        primary_key = _env("API_KEY") or _env("ARK_API_KEY") or ARK_API_KEY
+        primary_base = _env("API_BASE_URL") or _env("ARK_BASE_URL") or ARK_BASE_URL
+        primary_model = _env("MODEL") or _env("ARK_MODEL") or ARK_MODEL
+
+        # Sensible defaults when base/model omitted.
+        if not primary_base:
+            primary_base = "https://ark.cn-beijing.volces.com/api/coding/v3"
+        if not primary_model:
+            primary_model = "ark-code-latest"
+
         self.api_key = primary_key
         self.base_url = primary_base
         self.model = primary_model
 
         if not self.api_key:
-            raise RuntimeError("Missing API_KEY")
+            raise RuntimeError(
+                "Missing API key. Set API_KEY (preferred) or ARK_API_KEY in environment/.env."
+            )
 
         self._primary_client: OpenAI
         self._primary_model = primary_model

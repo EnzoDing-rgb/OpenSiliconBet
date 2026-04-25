@@ -98,10 +98,8 @@ export function DebateAudio({
     pendingAckRef.current = null
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const wsHost = window.location.hostname || 'localhost'
-    const wsPort = '9000'
-
-    const ws = new WebSocket(`${wsProtocol}://${wsHost}:${wsPort}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
+    const wsHost = window.location.host || 'localhost'
+    const ws = new WebSocket(`${wsProtocol}://${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
     ws.binaryType = 'arraybuffer'
     wsRef.current = ws
 

@@ -123,6 +123,9 @@ FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 VENV_DIR="${VENV_DIR:-$ROOT_DIR/.venv}"
 
+# Prefer python3 across environments (some distros don't ship `python`)
+PYTHON_CMD="${PYTHON_BIN}"
+
 if [[ -z "${NAMED_TUNNEL_NAME}" ]]; then
   NAMED_TUNNEL_NAME="${TUNNEL_NAME:-}"
 fi
@@ -149,7 +152,7 @@ tunnel_id_for_name() {
   local name="$1"
   local tunnel_json
   tunnel_json="$(cloudflared tunnel list --output json 2>/dev/null || true)"
-  TUNNEL_LIST_JSON="${tunnel_json}" python - "$name" <<'PY'
+  TUNNEL_LIST_JSON="${tunnel_json}" "${PYTHON_CMD}" - "$name" <<'PY'
 import json
 import os
 import sys
@@ -267,7 +270,7 @@ is_fake_ip() {
 }
 
 detect_argotunnel_fake_ip() {
-  python - <<'PY'
+  "${PYTHON_CMD}" - <<'PY'
 import socket
 hosts = ["region1.v2.argotunnel.com", "api.trycloudflare.com"]
 for host in hosts:
@@ -285,7 +288,7 @@ PY
 }
 
 write_argotunnel_hosts_block() {
-  python - <<'PY'
+  "${PYTHON_CMD}" - <<'PY'
 import json
 import urllib.request
 
@@ -361,9 +364,15 @@ fi
 # shellcheck disable=SC1091
 source "${VENV_DIR}/bin/activate"
 
+# Always use the venv interpreter for python module entrypoints (pip/uvicorn/etc).
+PYTHON_RUN="${VENV_DIR}/bin/python"
+if [[ -x "${VENV_DIR}/bin/python3" ]]; then
+  PYTHON_RUN="${VENV_DIR}/bin/python3"
+fi
+
 # Install deps silently
-python -m pip install --upgrade pip >/dev/null
-pip install -r "${ROOT_DIR}/backend/requirements.txt" >/dev/null
+"${PYTHON_RUN}" -m pip install --upgrade pip >/dev/null
+"${PYTHON_RUN}" -m pip install -r "${ROOT_DIR}/backend/requirements.txt" >/dev/null
 if [[ ! -d "${ROOT_DIR}/frontend/node_modules" ]]; then
   (cd "${ROOT_DIR}/frontend" && npm install >/dev/null)
 fi
@@ -377,7 +386,7 @@ fi
 # Start backend in background, logs to .backend.log
 echo "Starting backend on ${BACKEND_HOST}:${BACKEND_PORT}"
 : >"${ROOT_DIR}/.backend.log"
-(cd "${ROOT_DIR}" && uvicorn backend.app:app \
+(cd "${ROOT_DIR}" && "${PYTHON_RUN}" -m uvicorn backend.app:app \
   --host "${BACKEND_HOST}" \
   --port "${BACKEND_PORT}") \
   >>"${ROOT_DIR}/.backend.log" 2>&1 &
@@ -414,7 +423,7 @@ fi
 echo
 
 linux_ip="$(
-  python - <<'PY'
+  "${PYTHON_CMD}" - <<'PY'
 import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 try:
@@ -486,7 +495,7 @@ if [[ "${TUNNEL_MODE}" == "1" ]]; then
   tunnel_ready="0"
   for i in {1..180}; do
     public_url="$( 
-      python - <<'PY' "${tunnel_log}"
+      "${PYTHON_CMD}" - <<'PY' "${tunnel_log}"
 import re, sys
 path = sys.argv[1]
 try:
@@ -499,7 +508,7 @@ print(m[-1] if m else "")
 PY
     )"
     tunnel_ready="$(
-      python - <<'PY' "${tunnel_log}"
+      "${PYTHON_CMD}" - <<'PY' "${tunnel_log}"
 import re, sys
 path = sys.argv[1]
 try:

@@ -6,10 +6,10 @@
 ## Skill存储路径（已由女娲蒸馏生成在本项目内）
 ```
 # 罗伯特·杰维斯 - 作者本人，认知学派
-debate_book/.agents/skills/robert-jervis-perspective/SKILL.md
+national_security/.agents/skills/robert-jervis-perspective/SKILL.md
 
 # 约翰·米尔斯海默 - 批判者，进攻性现实主义
-debate_book/.agents/skills/john-mearsheimer-perspective/SKILL.md
+national_security/.agents/skills/john-mearsheimer-perspective/SKILL.md
 ```
 
 ## 系统需求
@@ -56,7 +56,7 @@ prompt = """你是约翰·米尔斯海默，请做最后总结，你是否承认
 
 ## 代码结构建议
 ```
-debate_book/
+national_security/
 ├── prompt.md          # 这个文件
 ├── debate.py          # 主程序
 ├── .env.example       # 环境变量示例

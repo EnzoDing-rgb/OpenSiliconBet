@@ -180,7 +180,7 @@ curl -fsS http://127.0.0.1:9000/
 ## 目录结构
 
 ```
-debate_book/
+national_security/
 ├── backend/              # Python FastAPI 后端
 │   ├── app.py           # FastAPI 入口
 │   ├── debate_runner.py # 辩论流程控制 + LLM 调用

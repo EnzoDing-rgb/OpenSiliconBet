@@ -2,7 +2,7 @@
 
 ## 项目背景
 
-本项目 `debate_book` 目标：构建一个浏览器交互辩论系统，让蒸馏好的两位国际政治学者围绕《知觉与错误知觉》核心命题 "**错误知觉是国际冲突的独立原因吗？**" 进行3轮公开辩论。
+本项目 `national_security` 目标：构建一个浏览器交互辩论系统，让蒸馏好的两位国际政治学者围绕《知觉与错误知觉》核心命题 "**错误知觉是国际冲突的独立原因吗？**" 进行3轮公开辩论。
 
 两位学者的Skill需要通过女娲造人术（huashu-nuwa）蒸馏生成，存放在本项目 `.agents/skills/` 目录下。
 
@@ -23,7 +23,7 @@
 ## 输出位置（本项目内）
 
 ```
-debate_book/.agents/skills/
+national_security/.agents/skills/
 ├── robert-jervis-perspective/
 │   └── SKILL.md
 └── john-mearsheimer-perspective/

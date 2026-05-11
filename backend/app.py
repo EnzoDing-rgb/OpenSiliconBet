@@ -15,15 +15,37 @@ from .tts_manager import init_tts, TtsManager
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Get TTS config from environment
-api_key = os.getenv("DASHSCOPE_API_KEY", "")
-voice_jervis = os.getenv("VOICE_ID_JERVIS", "")
-voice_mearsheimer = os.getenv("VOICE_ID_MEARSHEIMER", "")
+api_key = os.getenv("DASHSCOPE_API_KEY", "").strip()
+
+
+def _speaker_voice_map() -> dict[str, str]:
+    """五角色音色；未单独配置时退回 VOICE_ID_DEFAULT / VOICE_ID_MEARSHEIMER / VOICE_ID_JERVIS（旧 .env）。"""
+    default = (
+        os.getenv("VOICE_ID_DEFAULT", "").strip()
+        or os.getenv("VOICE_ID_MEARSHEIMER", "").strip()
+        or os.getenv("VOICE_ID_JERVIS", "").strip()
+    )
+
+    def one(env_name: str) -> str:
+        v = os.getenv(env_name, "").strip()
+        return v or default
+
+    return {
+        "lex": one("VOICE_ID_LEX"),
+        "wuwei": one("VOICE_ID_WUWEI"),
+        "liptan": one("VOICE_ID_LIPTAN"),
+        "cook": one("VOICE_ID_COOK"),
+        "jensen": one("VOICE_ID_JENSEN"),
+    }
+
+
+_speaker_voices = _speaker_voice_map()
 tts_model = os.getenv("TTS_MODEL", "qwen3-tts-vc-realtime-2026-01-15")
 tts_ws_url = os.getenv("TTS_WS_URL", "wss://dashscope.aliyuncs.com/api-ws/v1/realtime")
 
-# Initialize TTS
-if api_key and voice_jervis and voice_mearsheimer:
-    init_tts(api_key, voice_jervis, voice_mearsheimer, tts_model, tts_ws_url)
+# Initialize TTS（至少有一个非空 voice id 即可全员复用）
+if api_key and any(_speaker_voices.values()):
+    init_tts(api_key, _speaker_voices, tts_model, tts_ws_url)
 
 tts_manager = TtsManager()
 

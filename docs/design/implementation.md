@@ -13,14 +13,14 @@
 - **阶段 2.5（必选）**：黄仁勋独白播完后 Lex 固定句：「好，观众朋友们，我们现在进入观众提问环节。」再开阶段 3；不可叠播、不可省略。
 - **Baton**：`@` → **NextSpeakerSelector**（隐式挑衅）→ **LRS**；不用 Lex 点名接棒。
 - **TTS**：SSE 文本可流式；**禁止**半句切块喂 TTS；整轮完稿后整段合成 + **播放锁**（`onended` / `audio_finished`）。
-- **音色**：独立克隆就绪前 **全员 `VOICE_ID_MEARSHEIMER`**，`tts_manager` 保留 per-speaker 映射位。
-- **现状**：栈上仍为 `JERVIS`/`MEARSHEIMER` + `DIALOGUE_TURNS`；v2 未接线。
+- **音色**：独立克隆就绪前 **五键可同一 `VOICE_ID_DEFAULT` / `VOICE_ID_MEARSHEIMER`**，`tts_manager` 按 `lex|wuwei|liptan|cook|jensen` 查表。
+- **现状**：`Speaker` 五枚举 + 论坛 6 段 `DIALOGUE_TURNS` + `baton` eligible pool 已接线；**v2 Director / 0.5 / 2.5** 仍待实现。
 
 ### 1.1 与 Cursor Plan 同步的 TODO 清单
 
 | 状态 | 项 |
 |------|-----|
-| 待办 | 用户填 [`../background/deep-research.md`](../background/deep-research.md) 留白 → review |
+| 已完成 | [`../background/deep-research.md`](../background/deep-research.md) 留白已填 + **事实口径总注**（编辑用） |
 | 已完成 | [`../characters/wuwei-riscv-perspective-SKILL.md`](../characters/wuwei-riscv-perspective-SKILL.md)（可持续迭代） |
 | 已完成 | [`../characters/liptan-x86-perspective-SKILL.md`](../characters/liptan-x86-perspective-SKILL.md) |
 | 已完成 | [`../characters/timcook-arm-perspective-SKILL.md`](../characters/timcook-arm-perspective-SKILL.md) |
@@ -30,7 +30,7 @@
 | 已完成 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md)（阶段 2 **必注弹药**；见 §4 B、§6 **D.6b**） |
 | 待办 | `backend/free_qa.py` + `FreeQAPanel`；Summary + Intent；五人窗 |
 | 待办 | `scripts/pregen_lex_opening.py` + `public/audio` 两 mp3 + `OpeningPlayer.tsx` |
-| 待办 | Speaker 五枚举；`models` / `types` / `DebateAudio` / TTS 全栈对齐 |
+| 已完成 | Speaker 五枚举；`models` / `types` / `DebateAudio` / `tts_manager` / `baton` eligible pool + pytest |
 | 待办 | `debate_runner`：v2 Director；6 guest turns 收口；2.5 Lex 转场；baton + D.0 |
 | 待办 | `avatars`、顶栏、阶段 2 CSS、`SpeakerWindow`、当前说话人高亮 |
 | 待办 | smoke：OpeningPlayer + Director + free_qa + 回合级 TTS；可选 browser |
@@ -48,7 +48,7 @@
 | 架构入口 | 本目录 `design/`；旧双人长文 → [`../_archieved_mds/architecture-legacy-didi-manus.md`](../_archieved_mds/architecture-legacy-didi-manus.md) |
 | Jensen 弹药 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) — 阶段 2 **强制**并入 prompt（已在仓） |
 | 仍缺实现 | `scripts/pregen_lex_opening.py`、两轨 mp3、`OpeningPlayer.tsx`、`free_qa.py`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`、五 speaker + v2 Director + 三级 baton + 回合级 TTS |
-| 运行栈 | `app.py` + `tts_manager.py` 仍双 voice；过渡期 **全员 `VOICE_ID_MEARSHEIMER`** |
+| 运行栈 | `app.py` + `tts_manager.py`：`VOICE_ID_{LEX,WUWEI,...}` 或 **`VOICE_ID_DEFAULT` / `VOICE_ID_MEARSHEIMER`** 全员回退 |
 
 ---
 

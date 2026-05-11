@@ -3,20 +3,22 @@ import { useState, useEffect, useRef } from 'react';
 import { postChat } from '../api';
 import type { Speaker, ChatMessage } from '../types';
 import { markdownToSafeHtml } from '../utils/markdownRender';
+import { speakerLabelZh } from '../utils/avatars';
+
+const CHAT_SPEAKERS: Speaker[] = ['lex', 'wuwei', 'liptan', 'cook', 'jensen'];
 
 interface MasterChatProps {
   runId: string;
 }
 
 export function MasterChat({ runId }: MasterChatProps) {
-  const [speaker, setSpeaker] = useState<Speaker>('jervis');
+  const [speaker, setSpeaker] = useState<Speaker>('wuwei');
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when chat updates
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -42,7 +44,6 @@ export function MasterChat({ runId }: MasterChatProps) {
     setMessage('');
     try {
       const reply = await postChat(runId, speaker, trimmed);
-      // server already updated chat history in memory, we just fetch it from response
       setChatHistory(reply.chat_history);
     } catch (err: unknown) {
       console.error('Chat error', err);
@@ -53,8 +54,6 @@ export function MasterChat({ runId }: MasterChatProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter (without Shift) → send; Shift+Enter → newline
-    // Guard IME composition (e.g., Chinese Pinyin) to avoid accidental sends.
     const native = e.nativeEvent as KeyboardEvent
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isComposing = (native as any).isComposing || (native as any).keyCode === 229
@@ -65,37 +64,40 @@ export function MasterChat({ runId }: MasterChatProps) {
     }
   };
 
+  const labelForMsgSpeaker = (s: ChatMessage['speaker'], target?: Speaker) => {
+    if (s === 'user') {
+      return (
+        <>
+          观众
+          {target && (
+            <span className="target-chip">@{speakerLabelZh(target)}</span>
+          )}
+        </>
+      );
+    }
+    return speakerLabelZh(s as Speaker);
+  };
+
   return (
     <div className="master-chat-container">
       <div className="speaker-tabs">
-        <button
-          className={speaker === 'jervis' ? 'tab active' : 'tab'}
-          onClick={() => setSpeaker('jervis')}
-        >
-          滴滴 Researcher
-        </button>
-        <button
-          className={speaker === 'mearsheimer' ? 'tab active' : 'tab'}
-          onClick={() => setSpeaker('mearsheimer')}
-        >
-          Manus Researcher
-        </button>
+        {CHAT_SPEAKERS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={speaker === s ? 'tab active' : 'tab'}
+            onClick={() => setSpeaker(s)}
+          >
+            {speakerLabelZh(s)}
+          </button>
+        ))}
       </div>
 
       <div className="chat-history">
         {chatHistory.map((msg, i) => (
           <div key={i} className={`chat-message ${msg.role}`}>
             <div className="chat-speaker">
-              {msg.role === 'user' ? (
-                <>
-                  国安学博士生
-                  {msg.target_speaker && (
-                    <span className="target-chip">@{msg.target_speaker === 'jervis' ? '滴滴 Researcher' : 'Manus Researcher'}</span>
-                  )}
-                </>
-              ) : (
-                msg.speaker === 'jervis' ? '滴滴 Researcher' : 'Manus Researcher'
-              )}
+              {labelForMsgSpeaker(msg.speaker, msg.target_speaker)}
             </div>
             <div
               className="chat-content md-render"
@@ -118,7 +120,7 @@ export function MasterChat({ runId }: MasterChatProps) {
         />
         <button
           className="send-button"
-          onClick={handleSend}
+          onClick={() => void handleSend()}
           disabled={sending || !message.trim()}
         >
           发送
@@ -126,7 +128,7 @@ export function MasterChat({ runId }: MasterChatProps) {
       </div>
 
       <div className="chat-hint">
-        你可以追问某个论点 / 要求举例 / 请求更清晰的定义
+        可选择嘉宾标签后追问；口径以共享事实档案与角色 SKILL 为准。
       </div>
     </div>
   );

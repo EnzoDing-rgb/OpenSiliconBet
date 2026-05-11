@@ -15,9 +15,14 @@ from .models import DebateRun, Turn, Speaker, RunStatus
 # ========== Configuration ==========
 # Get from environment variable
 DASHSCOPE_API_KEY = None
-# Voice ids from voice cloning
-VOICE_ID_JERVIS = None
-VOICE_ID_MEARSHEIMER = None
+# speaker.value -> DashScope voice id（过渡期可五键同一克隆）
+VOICE_BY_SPEAKER: dict[str, Optional[str]] = {
+    Speaker.LEX.value: None,
+    Speaker.WUWEI.value: None,
+    Speaker.LIPTAN.value: None,
+    Speaker.COOK.value: None,
+    Speaker.JENSEN.value: None,
+}
 # TTS model (must match voice cloning target_model)
 TTS_MODEL = "qwen3-tts-vc-realtime-2026-01-15"
 # Aliyun websocket url (for China region)
@@ -30,16 +35,15 @@ FLUSH_PUNCT = r"[。！？；\n]"
 
 def init_tts(
     api_key: str,
-    voice_jervis: str,
-    voice_mearsheimer: str,
+    speaker_voices: dict[str, str],
     model: str = "qwen3-tts-vc-realtime-2026-01-15",
     url: str = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime",
 ) -> None:
-    """Initialize TTS config, call this once at startup"""
-    global DASHSCOPE_API_KEY, VOICE_ID_JERVIS, VOICE_ID_MEARSHEIMER, TTS_MODEL, TTS_WS_URL
+    """Initialize TTS config, call this once at startup. speaker_voices keys: lex,wuwei,liptan,cook,jensen."""
+    global DASHSCOPE_API_KEY, VOICE_BY_SPEAKER, TTS_MODEL, TTS_WS_URL
     DASHSCOPE_API_KEY = api_key
-    VOICE_ID_JERVIS = voice_jervis
-    VOICE_ID_MEARSHEIMER = voice_mearsheimer
+    for k in (Speaker.LEX.value, Speaker.WUWEI.value, Speaker.LIPTAN.value, Speaker.COOK.value, Speaker.JENSEN.value):
+        VOICE_BY_SPEAKER[k] = (speaker_voices.get(k) or "").strip() or None
     TTS_MODEL = model
     TTS_WS_URL = url
     dashscope.api_key = api_key
@@ -119,10 +123,11 @@ class TtsSession:
         self._phase_playing_sent = False
 
     def _get_voice_id(self) -> str:
-        if self.speaker == Speaker.JERVIS:
-            return VOICE_ID_JERVIS
-        else:
-            return VOICE_ID_MEARSHEIMER
+        key = self.speaker.value if isinstance(self.speaker, Speaker) else str(self.speaker)
+        vid = VOICE_BY_SPEAKER.get(key) if VOICE_BY_SPEAKER else None
+        if not vid:
+            raise RuntimeError(f"No DashScope voice id configured for speaker={key!r}")
+        return vid
 
     async def _emit_phase(self, phase: str, message: Optional[str] = None) -> None:
         sp = self.speaker.value if hasattr(self.speaker, "value") else str(self.speaker)
@@ -308,7 +313,7 @@ class TtsManager:
                 # Minimal E2E: single fixed sentence
                 session = TtsSession(
                     websocket=websocket,
-                    speaker=Speaker.JERVIS,
+                    speaker=Speaker.LEX,
                     full_text="你好，这是实时语音合成链路的最小自测。",
                     round_num=1,
                     turn_index=0,

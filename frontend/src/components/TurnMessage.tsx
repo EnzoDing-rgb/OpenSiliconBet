@@ -8,16 +8,16 @@ interface TurnMessageProps {
 }
 
 export function TurnMessage({ turn }: TurnMessageProps) {
-  const isJervis = turn.speaker === 'jervis';
-  const alignRight = !isJervis;
+  const meta = speakerMeta[turn.speaker]
+  const bubbleClass = `message-bubble speaker-${turn.speaker}`
 
   return (
-    <div className={`turn-container ${alignRight ? 'align-right' : ''}`}>
-      <div className="avatar-small-wrap" style={{ ['--accent' as string]: speakerMeta[turn.speaker].accent }}>
-        <img className="avatar-small-img" src={getAvatarSrc(turn.speaker)} alt={speakerMeta[turn.speaker].nameZh} />
+    <div className="turn-container">
+      <div className="avatar-small-wrap" style={{ ['--accent' as string]: meta.accent }}>
+        <img className="avatar-small-img" src={getAvatarSrc(turn.speaker)} alt={meta.nameZh} />
       </div>
-      <div className={`message-bubble ${isJervis ? 'jervis' : 'mearsheimer'}`}>
-        <div className="speaker-name">{speakerMeta[turn.speaker].nameZh}</div>
+      <div className={bubbleClass}>
+        <div className="speaker-name sr-only">{meta.nameZh}</div>
         <div
           className="message-text md-render"
           dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(turn.text) }}

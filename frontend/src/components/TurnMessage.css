@@ -33,8 +33,17 @@
   border-radius: 14px;
 }
 
-.speaker-name {
-  font-size: 14px;
+/* 头像 + 色条已标识嘉宾；姓名仅给读屏，避免与正文开头自称叠字 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .message-text {
@@ -52,12 +61,24 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.message-bubble.jervis {
+.message-bubble.speaker-lex {
+  border-left: 4px solid #64748b;
+}
+
+.message-bubble.speaker-wuwei {
+  border-left: 4px solid #22c55e;
+}
+
+.message-bubble.speaker-liptan {
   border-left: 4px solid #3b82f6;
 }
 
-.message-bubble.mearsheimer {
-  border-right: 4px solid #ef4444;
+.message-bubble.speaker-cook {
+  border-left: 4px solid #a855f7;
+}
+
+.message-bubble.speaker-jensen {
+  border-left: 4px solid #eab308;
 }
 
 .speaker-name {

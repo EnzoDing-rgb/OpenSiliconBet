@@ -8,7 +8,7 @@ RISC-V 三国杀 · 阶段 1 传棒（纯逻辑，无 I/O）。
 from __future__ import annotations
 
 import re
-from typing import Dict, Iterable, Mapping, Optional, Tuple
+from typing import AbstractSet, Dict, Iterable, Mapping, Optional, Tuple
 
 # 阶段 1 仅三阵营在席传棒（Lex / Jensen 不参与此池）
 PHASE1_GUESTS: Tuple[str, ...] = ("wuwei", "liptan", "cook")
@@ -81,34 +81,49 @@ def _lrs_pick(last_spoken_at: Mapping[str, float], pool: Iterable[str], tie_orde
     return min(pool_list, key=key)
 
 
+def _normalize_pool(eligible: Optional[AbstractSet[str]]) -> Tuple[str, ...]:
+    """eligible ∩ PHASE1_GUESTS，按 PHASE1_GUESTS 顺序稳定排列。"""
+    if eligible is None:
+        return PHASE1_GUESTS
+    el = frozenset(eligible) & frozenset(PHASE1_GUESTS)
+    if not el:
+        raise ValueError("eligible ∩ PHASE1_GUESTS is empty")
+    return tuple(g for g in PHASE1_GUESTS if g in el)
+
+
 def resolve_next_phase1_guest(
     completed_text: str,
     current_speaker: str,
     *,
     implicit_next: Optional[str],
     last_spoken_at: Mapping[str, float],
+    eligible: Optional[AbstractSet[str]] = None,
 ) -> str:
     """
     返回下一发言的 **阶段 1 嘉宾** id（wuwei|liptan|cook）。
 
-    优先级：显式 @（有效且 ≠ current）→ implicit_next（∈ 池且 ≠ current）→ LRS。
+    优先级：显式 @（**在 eligible pool 内**、且 ≠ current）→ implicit_next（∈ pool 且 ≠ current）→ LRS（仅在 pool 上）。
+
+    若 @ 指向已满员（不在 pool）的嘉宾，视为无效 @，走隐式 / LRS（见 docs/design/implementation.md §6.1）。
 
     implicit_next 应由上游 NextSpeakerSelector LLM 产出并已归一；非法则视为 None。
     """
     if current_speaker not in PHASE1_GUESTS:
         raise ValueError(f"current_speaker must be one of {PHASE1_GUESTS}, got {current_speaker!r}")
 
+    pool = _normalize_pool(eligible)
+
     explicit = parse_explicit_baton_target(completed_text)
-    if explicit is not None and explicit != current_speaker:
+    if explicit is not None and explicit in pool and explicit != current_speaker:
         return explicit
 
-    imp = implicit_next if implicit_next in PHASE1_GUESTS else None
+    imp = implicit_next if implicit_next in pool else None
     if imp is not None and imp != current_speaker:
         return imp
 
-    nxt = _lrs_pick(last_spoken_at, PHASE1_GUESTS, PHASE1_GUESTS)
+    nxt = _lrs_pick(last_spoken_at, pool, PHASE1_GUESTS)
     if nxt == current_speaker:
-        for g in PHASE1_GUESTS:
+        for g in pool:
             if g != current_speaker:
                 return g
     return nxt

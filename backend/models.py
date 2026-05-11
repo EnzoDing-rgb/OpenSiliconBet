@@ -10,8 +10,13 @@ class RunStatus(str, Enum):
 
 
 class Speaker(str, Enum):
-    JERVIS = "jervis"
-    MEARSHEIMER = "mearsheimer"
+    """论坛五角色（与 baton 别名、前端 types 一致，小写值）。"""
+
+    LEX = "lex"
+    WUWEI = "wuwei"
+    LIPTAN = "liptan"
+    COOK = "cook"
+    JENSEN = "jensen"
 
 
 class Turn(BaseModel):
@@ -23,8 +28,8 @@ class Turn(BaseModel):
 
 class ChatMessage(BaseModel):
     role: str  # "user" | "assistant"
-    speaker: str  # "user" | Speaker enum (jervis/mearsheimer)
-    target_speaker: Optional[str] = None  # if user asks specifically to one master
+    speaker: str  # "user" | lex|wuwei|liptan|cook|jensen
+    target_speaker: Optional[str] = None
     content: str
     created_at: float
 

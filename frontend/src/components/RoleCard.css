@@ -33,6 +33,35 @@
   text-align: right;
 }
 
+/* 圆桌：紧凑卡片，信息在头像下方 */
+.role-card--seat {
+  flex-direction: column;
+  text-align: center;
+  padding: 14px 12px 16px;
+  gap: 10px;
+  max-width: 148px;
+}
+
+.role-card--seat.left,
+.role-card--seat.right {
+  flex-direction: column;
+  text-align: center;
+}
+
+.role-card--seat .avatar-wrap {
+  width: 88px;
+  height: 88px;
+}
+
+.role-card--seat .name {
+  font-size: 16px;
+}
+
+.role-card--seat .school {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .avatar-wrap {
   width: 128px;
   height: 128px;

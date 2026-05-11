@@ -1,4 +1,4 @@
-export type Speaker = "jervis" | "mearsheimer";
+export type Speaker = "lex" | "wuwei" | "liptan" | "cook" | "jensen";
 export type RunStatus = "running" | "done" | "error";
 
 export interface Turn {

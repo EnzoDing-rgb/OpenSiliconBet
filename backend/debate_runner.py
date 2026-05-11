@@ -73,14 +73,21 @@ def _skill_path(env_name: str, default_rel: Path) -> Path:
     return default_rel
 
 
-JERVIS_SKILL_PATH = _skill_path("DIDI_SKILL_PATH", PROJECT_ROOT / "docs" / "didi-case-research-SKILL.md")
-MEARSHEIMER_SKILL_PATH = _skill_path("MANUS_SKILL_PATH", PROJECT_ROOT / "docs" / "manus-case-research-SKILL.md")
+DEEP_RESEARCH_PATH = _skill_path("DEEP_RESEARCH_PATH", PROJECT_ROOT / "docs" / "background" / "deep-research.md")
+WUWEI_SKILL_PATH = _skill_path("WUWEI_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "wuwei-riscv-perspective-SKILL.md")
+LIPTAN_SKILL_PATH = _skill_path("LIPTAN_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "liptan-x86-perspective-SKILL.md")
+COOK_SKILL_PATH = _skill_path("COOK_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "timcook-arm-perspective-SKILL.md")
+JENSEN_SKILL_PATH = _skill_path("JENSEN_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "jensen-huang-perspective-SKILL.md")
+LEX_SKILL_PATH = _skill_path("LEX_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "lex-fridman-host-perspective-SKILL.md")
 
-# Dialogue topic
-DEBATE_TOPIC = "滴滴数据安全案 vs Manus案：国家安全与数据/技术跨境治理的对比研究"
+# Dialogue topic（论坛交锋 demo）
+DEBATE_TOPIC = "RISC-V vs x86 vs ARM：Agent 时代的指令集与算力格局（中科院公众科学日分会场 · 论坛交锋）"
 
 MAX_RESPONSE_TOKENS = 400
-RESPONSE_LEN_HINT_ZH = "严格控制在150字以内。"
+# 与宪章 GLOBAL 对齐：可见中文正文约 200 字（宁少勿灌水）
+RESPONSE_LEN_HINT_ZH = "中文可见正文约 200 字以内；宁少勿堆字，密度优先。"
+FORUM_LLM_TEMPERATURE = 0.88
+DEFAULT_LLM_TEMPERATURE = 0.72
 DISPLAY_DELAY_SECONDS_PER_TURN = 7.0
 
 # Judge output needs to be longer than debater turns; otherwise it gets cut off.
@@ -91,16 +98,107 @@ CHAT_MAX_RESPONSE_TOKENS = 500
 
 
 def _speaker_zh(speaker: Speaker) -> str:
-    return "滴滴 Researcher" if speaker == Speaker.JERVIS else "Manus Researcher"
+    return {
+        Speaker.LEX: "Lex Fridman（主持人）",
+        Speaker.WUWEI: "吴伟（RISC-V）",
+        Speaker.LIPTAN: "陈立武（x86 / Intel）",
+        Speaker.COOK: "蒂姆·库克（ARM / Apple）",
+        Speaker.JENSEN: "黄仁勋（NVIDIA）",
+    }[speaker]
 
 
 def _interaction_wrapper(opponent_name_zh: str, opponent_last: Optional[str]) -> str:
     if not opponent_last:
         return ""
     return (
-        f"\n\n【对方刚刚的发言（请逐点回应，不要忽略）】\n"
+        f"\n\n【上一位刚说完的原话（接着往下接，像在圆桌上抢话 / 接话，别像在写纪要）】\n"
         f"{opponent_name_zh}：\n{opponent_last}\n"
     )
+
+
+ORAL_FORUM_CONTRACT_ZH = """
+【本场表达契约 — 现场圆桌 + 语音给观众听】
+- 场合是**公众科学日分会场**：台下是真观众，你的话会走 **TTS 念出来**——要像**对着人和麦克风聊天**，有停顿、有口气；不要咨询备忘录、PR one-pager、研报「执行摘要」体。
+- **禁止**在正文里出现传棒符号：`@人名`、`@无`、`→@`、`→ @` 等（接话顺序由系统安排）；想点名就口语直呼「老陈」「库克这边」之类自然带过即可。
+- **禁止**公文编号腔：不要写「Q1/Q2」「第1条」「1）共识」这种；宁可短句、偶尔自我打断「不对，我换个说法」。
+- **少用** markdown 大标题层级；**加粗**最多一两处真正要敲黑板的地方；不要为排版而排版。
+- 事实底盘在 system 里已给：心里有数即可，**口语里不必句句挂「§几」**；拿不准就说「这块我还得回去核一下」。
+"""
+
+
+_FORUM_HEAD_ALIASES: Dict[Speaker, Tuple[str, ...]] = {
+    Speaker.WUWEI: ("吴伟",),
+    Speaker.LIPTAN: ("陈立武",),
+    Speaker.COOK: ("蒂姆·库克", "库克"),
+    Speaker.JENSEN: ("黄仁勋", "Jensen"),
+    Speaker.LEX: ("Lex", "Lex Fridman"),
+}
+
+
+def _strip_redundant_speaker_head(text: str, speaker: Speaker) -> str:
+    """UI 已显示嘉宾名时，去掉正文开头重复的「吴伟：」或单独一行姓名。"""
+    aliases = _FORUM_HEAD_ALIASES.get(speaker)
+    if not aliases or not text:
+        return text
+    t = text
+    for _ in range(3):
+        raw = t.replace("\r\n", "\n").lstrip()
+        if not raw:
+            return t
+        first_line, sep, rest = raw.partition("\n")
+        fl = first_line.strip()
+        matched = False
+        for a in aliases:
+            for wrap in (False, True):
+                core = f"【{a}】" if wrap else a
+                for suf in ("", "：", ":", "，", ",", "。", ".", "——", "—"):
+                    if fl == core + suf:
+                        matched = True
+                        break
+                if matched:
+                    break
+            if matched:
+                break
+        if matched:
+            t = rest.lstrip()
+            continue
+        # 同一行重复两次短名，如「吴伟 吴伟」
+        bits = fl.split()
+        if len(bits) >= 2 and bits[0] == bits[1] and bits[0] in aliases:
+            t = rest.lstrip()
+            continue
+        break
+    return t
+
+
+def _clean_forum_live(text: str, *, speaker: Optional[Speaker] = None) -> str:
+    """去掉自述头、末尾 @ 传棒等不适合 TTS/现场感的痕迹。"""
+    if not text:
+        return text
+    t = text.replace("\r\n", "\n").strip()
+    # 去掉开头的「我是…」类标签（可出现多次）
+    for _ in range(4):
+        nt = re.sub(r"^【我是[^】]+】\s*", "", t, flags=re.MULTILINE).strip()
+        if nt == t:
+            break
+        t = nt
+    # 去掉末尾单独一行「→ @xxx」「@xxx」
+    lines = t.split("\n")
+    while lines:
+        last = lines[-1].strip()
+        if not last:
+            lines.pop()
+            continue
+        if re.match(r"^[→＞>]?\s*@\S+\s*$", last) or re.match(r"^@\S+\s*$", last):
+            lines.pop()
+            continue
+        break
+    t = "\n".join(lines).strip()
+    # 去掉文末同一行里夹着的 →@xxx
+    t = re.sub(r"[ \t]*[→＞>]\s*@\S+\s*$", "", t).strip()
+    if speaker is not None:
+        t = _strip_redundant_speaker_head(t, speaker)
+    return t
 
 
 _DISCLAIMER_LINE_RE = re.compile(
@@ -145,56 +243,48 @@ def _clean_model_output(text: str) -> str:
     return "\n".join(cleaned).strip()
 
 
-# The 6-turn dialogue sequence (3 rounds), Manus Researcher speaks first.
-# Each turn will be wrapped with the opponent's immediately previous message to enforce interaction.
+# 阶段 1 论坛交锋：每人 2 段、共 6 段（顺序：吴伟→陈立武→库克×2 轮）。口吻：现场口语 + TTS，非纪要体。
 DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
-    # Round 1: align on facts & key disputes
-    (Speaker.MEARSHEIMER, (
-        "你是Manus Researcher。第1轮请先发言：用统一框架把Manus案的“已确认事实脉络/信息不足点/关键争点”讲清楚。"
-        "要求：尽量可核验，不编造；明确标注“已确认/信息不足/推断”。"
-        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
-        f"{RESPONSE_LEN_HINT_ZH}"
+    (Speaker.WUWEI, (
+        "你是吴伟，圆桌**开场第一段**。台下是公众科学日分会场观众，左右还有两位同行在听。\n"
+        "像对着人和麦克风聊天：先把「Agent 时代 RISC-V 的机会」摊开，**一两个点**就够，可以带半句「我猜你们接下来要杠我哪」。\n"
+        "事实别编；拿不准就说「这块我还得回去核一下」。不要人身攻击。"
+        f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
-    (Speaker.JERVIS, (
-        "你是滴滴 Researcher。第1轮回应：用同一框架梳理滴滴案，并对照Manus案补齐“共同的监管逻辑/不同的信息状态”。"
-        "要求：唱和式补充，不要变成胜负评判；指出1-2个最关键的可比维度。"
-        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
-        f"{RESPONSE_LEN_HINT_ZH}"
+    (Speaker.LIPTAN, (
+        "你是陈立武，接着吴伟**刚才那段话**往下接——先用**一句口语**接住（顶一句、笑一下、认一半都行），"
+        "再从 **x86 / Intel、存量系统、工艺与产品节奏** 里挑你最有把握的角度聊，别写成「Q1/Q2」那种答辩稿。"
+        f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
-    # Round 2: risk elements & governance moves
-    (Speaker.MEARSHEIMER, (
-        "你是Manus Researcher。第2轮：围绕“国家安全风险要素与治理抓手”做要素拆解（2-4条），并明确："
-        "1) 你这案里最像滴滴案的点；2) 最不像的点；3) 你希望对方补充核验的材料清单。"
-        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
-        f"{RESPONSE_LEN_HINT_ZH}"
+    (Speaker.COOK, (
+        "你是库克，接着现场气氛往下聊：别端「公关声明」腔，可以有一句「我直说」式的坦白。"
+        "从 **ARM / Apple 的功耗与整合、IP 模式** 里挑你能站得住的两句硬话，顺带对另外两路各**半句**「我懂你的压力，但…」。"
+        f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
-    (Speaker.JERVIS, (
-        "你是滴滴 Researcher。第2轮：用同一维度拆解滴滴案，并回应对方提出的“最像/最不像”判断："
-        "补充你的边界条件与反例，给出1个“如果换成不同数据类型/主体结构会如何”的可检验预测。"
-        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
-        f"{RESPONSE_LEN_HINT_ZH}"
+    (Speaker.WUWEI, (
+        "你是吴伟，**第二轮**：接着前面已经聊出来的火药味，往 **设计自由度 vs 生态碎片化** 上收一收，"
+        "可以抛一个**可检验的预测**，但用口语说出来，别列「待核验清单」。"
+        f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
-    # Round 3: research agenda & falsifiable predictions
-    (Speaker.MEARSHEIMER, (
-        "你是Manus Researcher。第3轮：输出一个“研究议程”小结："
-        "给出2-3条可证伪的研究命题/预测（每条说明可用什么公开材料验证），并提出1个对政策制定者的含义。"
-        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
-        f"{RESPONSE_LEN_HINT_ZH}"
+    (Speaker.LIPTAN, (
+        "你是陈立武，**第二轮**：从 **软件栈 / 数据中心 CPU-GPU 配比** 里抓一个你最有手感的点，"
+        "用**讲故事**的方式讲出来——可以反问一句，但不要写成「对方过度简化」的八股标题。"
+        f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
-    (Speaker.JERVIS, (
-        "你是滴滴 Researcher。第3轮：在承接对方研究议程的基础上，给出你的2-3条研究命题/预测，并用一句话总结："
-        "这两个案例共同揭示了什么样的国家安全治理范式。"
-        "\n\n请用markdown formatting增强可读性：**加粗关键点**，分段与编号，降低阅读负担。"
-        f"{RESPONSE_LEN_HINT_ZH}"
+    (Speaker.COOK, (
+        "你是库克，**收个尾**：像主持人跟观众说一句「今天先聊到这」，顺手把三条路线各**点一句人话**，"
+        "让观众觉得「这三个人是真的在吵同一件事」，不是来判输赢的。"
+        f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
 ]
 
 
 def _judge_system_prompt() -> str:
     return (
-        "你是CaseComparator（双案例对比摘要器）。你的目标不是评判胜负，而是把两位研究者的对谈"
-        "提炼成可用于写论文/政策备忘录的“异同对比+研究议程”。"
-        "不要引入外部事实核查；只基于对谈文本做归纳，明确区分“对谈中已确认事实/推断/待核验点”。"
+        "你是现场主持人，散场前对着观众**口播收束**（这段也会给人读/念出来）。"
+        "只基于下面 transcript，不要引入场外新事实。"
+        "用**三四段短口语**：大家各自最硬的一个点、真正掐起来的一个分歧、两三件观众散场后可以自己去查证的事。"
+        "不要用「1）2）3）」公文编号；不要写成咨询报告摘要。"
     )
 
 
@@ -210,28 +300,22 @@ def _judge_user_prompt(topic: str, turns: List["Turn"]) -> str:
     transcript = "\n".join(transcript_lines).strip()
     return (
         f"主题：{topic}\n\n"
-        f"以下是三轮对谈全文：\n{transcript}\n\n"
-        "请按模板输出“对比小结”，只基于对谈内容做归纳（不要引入外部事实核查）。\n"
-        "输出必须严格按下面模板（不要加多余段落/说明），并用markdown增强可读性：\n"
-        "- 只用 **加粗**（不要用表情、不要用代码块）\n"
-        "- 分行、分段，降低阅读负担\n"
-        "- 用 1/2/3/4 编号形成层次\n\n"
-        "1) **相同点（3-6条）**\n"
-        "- ...\n\n"
-        "2) **不同点（3-6条）**\n"
-        "- ...\n\n"
-        "3) **关键争点与待核验清单（3-6条）**\n"
-        "- ...\n\n"
-        "4) **研究议程（可证伪命题/预测，3-6条）**\n"
-        "- 每条写明“如何用公开材料验证/推翻”\n"
+        f"以下是圆桌口语实录（可能略乱，但别帮嘉宾改口风）：\n{transcript}\n\n"
+        "请你用**主持人散场口播**写出来：语气轻松、句子短；最多用 **一两处加粗** 帮观众抓住关键词。"
+        "不要输出「1）2）3）」那种模板；不要替嘉宾补充他们没说过的硬数字。"
     )
 
 
 class DebateRunner:
     def __init__(self):
-        # Read skills on initialization
-        self.jervis_skill = self._read_skill(JERVIS_SKILL_PATH)
-        self.mearsheimer_skill = self._read_skill(MEARSHEIMER_SKILL_PATH)
+        self.deep_research = self._read_skill(DEEP_RESEARCH_PATH)
+        self._skills: Dict[Speaker, str] = {
+            Speaker.WUWEI: self._read_skill(WUWEI_SKILL_PATH),
+            Speaker.LIPTAN: self._read_skill(LIPTAN_SKILL_PATH),
+            Speaker.COOK: self._read_skill(COOK_SKILL_PATH),
+            Speaker.JENSEN: self._read_skill(JENSEN_SKILL_PATH),
+            Speaker.LEX: self._read_skill(LEX_SKILL_PATH),
+        }
 
         # Initialize LLM client (OpenAI-compatible for Ark coding endpoint)
         self.protocol = _env("API_PROTOCOL", "openai")  # openai (default) or anthropic
@@ -305,22 +389,25 @@ class DebateRunner:
             return ""
 
     def _build_system_prompt(self, speaker: Speaker) -> str:
-        """Build system prompt combining the skill rules and role"""
-        if speaker == Speaker.JERVIS:
-            skill_text = self.jervis_skill
-            prefix = "你现在需要扮演滴滴 Researcher，严格遵循以下思维框架和表达方式：\n\n"
-        else:
-            skill_text = self.mearsheimer_skill
-            prefix = "你现在需要扮演Manus Researcher，严格遵循以下思维框架和表达方式：\n\n"
-
-        # If skill is empty, just use the basic role
+        """SKILL + 共享事实底盘 deep-research.md（与架构宪章一致）。"""
+        skill_text = (self._skills.get(speaker) or "").strip()
+        role = _speaker_zh(speaker)
         if not skill_text:
-            if speaker == Speaker.JERVIS:
-                return "你是滴滴 Researcher，专注滴滴数据安全案的案例研究者。"
-            else:
-                return "你是Manus Researcher，专注Manus案的案例研究者。"
+            skill_text = f"（角色文件未读入；请以 {role} 身份、基于事实底盘谨慎发言。）"
 
-        return f"{prefix}{skill_text}\n\n接下来请根据用户的问题扮演这个角色进行案例研究对谈。"
+        parts: List[str] = [
+            f"你现在需要扮演 **{role}**，严格遵循下列角色技能文档中的思维框架与表达要求：\n\n{skill_text}",
+        ]
+        dr = (self.deep_research or "").strip()
+        if dr:
+            parts.append(
+                "\n\n---\n\n【共享事实底盘 — 全文】\n"
+                "以下为 `docs/background/deep-research.md` 合并正文；心里有数即可，**口语里不必句句挂「§几」**。\n\n"
+                f"{dr}"
+            )
+        parts.append("\n\n" + ORAL_FORUM_CONTRACT_ZH.strip())
+        parts.append("\n\n接下来只根据本回合 user 指令发言；不要编造文档未支持的具体数字。")
+        return "".join(parts)
 
     def create_new_run(self) -> str:
         """Create a new debate run and start background execution"""
@@ -342,16 +429,21 @@ class DebateRunner:
 
         try:
             last_text_by_speaker: Dict[Speaker, str] = {}
+            last_speaker: Optional[Speaker] = None
             for i, (speaker, base_prompt) in enumerate(DIALOGUE_TURNS, 1):
                 if run.status != RunStatus.RUNNING:
                     break
 
                 system_prompt = self._build_system_prompt(speaker)
-                opponent = Speaker.MEARSHEIMER if speaker == Speaker.JERVIS else Speaker.JERVIS
-                opponent_last = last_text_by_speaker.get(opponent)
-                user_prompt = f"{base_prompt}{_interaction_wrapper(_speaker_zh(opponent), opponent_last)}"
+                opponent_name = _speaker_zh(last_speaker) if last_speaker else ""
+                opponent_last = last_text_by_speaker.get(last_speaker) if last_speaker else None
+                user_prompt = f"{base_prompt}{_interaction_wrapper(opponent_name, opponent_last)}"
 
-                response_text = await self._call_llm(system_prompt, user_prompt)
+                response_text = await self._call_llm(
+                    system_prompt,
+                    user_prompt,
+                    temperature=FORUM_LLM_TEMPERATURE,
+                )
                 if response_text is None:
                     run.status = RunStatus.ERROR
                     run.error = f"第 {i} 轮（{speaker}）未能获取模型回复：请检查 API 配置、网络或模型可用性。"
@@ -359,14 +451,8 @@ class DebateRunner:
                     return
 
                 response_text = _clean_model_output(response_text)
-                response_text = (response_text or "").strip()
-
-                # Ensure first round explicitly self-identifies (deterministic UX).
-                # Round 1 has two turns: i=1 (Mearsheimer) and i=2 (Jervis).
-                if i == 1:
-                    response_text = f"【我是 Manus Researcher】\n\n{response_text}"
-                elif i == 2:
-                    response_text = f"【我是 滴滴 Researcher】\n\n{response_text}"
+                response_text = _clean_forum_live(response_text or "", speaker=speaker)
+                response_text = response_text.strip()
 
                 # Add turn
                 turn = Turn(
@@ -377,6 +463,7 @@ class DebateRunner:
                 )
                 run.turns.append(turn)
                 last_text_by_speaker[speaker] = turn.text
+                last_speaker = speaker
 
                 # Slow down text output so UI doesn't race ahead of audio playback.
                 await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
@@ -391,16 +478,30 @@ class DebateRunner:
             run.error = f"Unexpected error: {str(e)}"
             self._save_result(run)
 
-    async def _call_llm(self, system_prompt: str, user_prompt: str, *, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
+    async def _call_llm(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        *,
+        max_tokens: int = MAX_RESPONSE_TOKENS,
+        temperature: Optional[float] = None,
+    ) -> Optional[str]:
         """Call LLM with error handling (supports 2 protocols)."""
         if self.protocol == "anthropic":
             return await asyncio.to_thread(self._call_anthropic, system_prompt, user_prompt, max_tokens)
-        return await asyncio.to_thread(self._call_openai, system_prompt, user_prompt, max_tokens)
+        return await asyncio.to_thread(
+            self._call_openai,
+            system_prompt,
+            user_prompt,
+            max_tokens,
+            temperature if temperature is not None else DEFAULT_LLM_TEMPERATURE,
+        )
 
     def _openai_chat_with_quota_fallback(
         self,
         messages: List[Dict[str, str]],
         max_tokens: int,
+        temperature: float = DEFAULT_LLM_TEMPERATURE,
     ) -> Optional[str]:
         """Primary = Volcengine Ark; on 429 / AccountQuotaExceeded switch to local OpenAI-compatible (e.g. Qwen)."""
         if self.protocol != "openai":
@@ -410,7 +511,7 @@ class DebateRunner:
             return client.chat.completions.create(
                 model=model,
                 messages=messages,
-                temperature=0.7,
+                temperature=temperature,
                 max_tokens=max_tokens,
             )
 
@@ -455,15 +556,26 @@ class DebateRunner:
             print(f"Unexpected LLM error: {e}")
             return None
 
-    def _call_openai(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
+    def _call_openai(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int = MAX_RESPONSE_TOKENS,
+        temperature: float = DEFAULT_LLM_TEMPERATURE,
+    ) -> Optional[str]:
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        return self._openai_chat_with_quota_fallback(messages, max_tokens)
+        return self._openai_chat_with_quota_fallback(messages, max_tokens, temperature)
 
-    def _call_openai_messages(self, messages: List[Dict[str, str]], max_tokens: int) -> Optional[str]:
-        return self._openai_chat_with_quota_fallback(messages, max_tokens)
+    def _call_openai_messages(
+        self,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+        temperature: float = DEFAULT_LLM_TEMPERATURE,
+    ) -> Optional[str]:
+        return self._openai_chat_with_quota_fallback(messages, max_tokens, temperature)
 
     def _call_anthropic(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
         try:
@@ -509,7 +621,7 @@ class DebateRunner:
                     )
                 )
                 if judge_text:
-                    judge_md = judge_text.strip()
+                    judge_md = _clean_forum_live(_clean_model_output(judge_text).strip())
                     run.judge_result = judge_md  # store for frontend display
             except Exception as e:
                 judge_md = f"对比小结生成失败：{e}"
@@ -517,7 +629,7 @@ class DebateRunner:
 
         # Build markdown
         lines = []
-        lines.append("# 案例研究对谈纪要：滴滴数据安全案 vs Manus案")
+        lines.append("# 论坛交锋纪要：RISC-V vs x86 vs ARM")
         lines.append("")
         lines.append(f"**主题**：{run.topic}")
         lines.append("")
@@ -548,7 +660,7 @@ class DebateRunner:
         if judge_md:
             lines.append("---")
             lines.append("")
-            lines.append("## 对比小结")
+            lines.append("## 论坛纪要")
             lines.append("")
             lines.append(judge_md)
             lines.append("")
@@ -615,11 +727,12 @@ class DebateRunner:
         # Keep it short to avoid prompt bloat across turns.
         first_turn_user_context = (
             "【对话场景设定（仅本次会话首次注入）】\n"
-            "你在与一位中国的国家安全学方向博士生进行学术讨论。整体风格要求：严谨、可证伪、术语清晰、尽量用“主张-机制-证据/可检验预测-反例边界”结构。\n"
+            "台下是公众科学日分会场延续交流：观众刚听完圆桌，现在向你追问。像在**现场被人拦住聊两句**——口语、有停顿感，"
+            "可严谨但别念论文；不要用「Q1」「1）共识」体，也不要在正文里写 @人名 传棒。\n"
             "【身份相关性规则】\n"
             "- 若问题与提问者身份/语境无关：完全忽略其身份，不要硬扯。\n"
             "- 只有当问题与中国语境/政策含义/案例选择直接相关时：才可简短点到提问者语境（最多一句），其余仍以理论与机制为主。\n"
-            "【表达约束】不做空泛口号，不堆砌名词；若引入假设或外部事实，请明确标注为“假设/示例”。"
+            "【表达约束】不做空泛口号；若引入假设或外部事实，请明确标注为「假设/示例」。"
         )
         is_first_chat_turn = len(run.chat_history) == 0
 
@@ -637,8 +750,14 @@ class DebateRunner:
                 messages.append({"role": "user", "content": msg.content})
             else:
                 # assistant from previous turn (could be different master)
-                assert msg.speaker in ("jervis", "mearsheimer")
-                sp: Speaker = msg.speaker  # type: ignore
+                assert msg.speaker in (
+                    Speaker.LEX.value,
+                    Speaker.WUWEI.value,
+                    Speaker.LIPTAN.value,
+                    Speaker.COOK.value,
+                    Speaker.JENSEN.value,
+                )
+                sp = Speaker(msg.speaker)
                 speaker_name = _speaker_zh(sp)
                 prefixed = f"【{speaker_name}】{msg.content}"
                 messages.append({"role": "assistant", "content": prefixed})
@@ -651,12 +770,15 @@ class DebateRunner:
             full_question_lines.append(f"**{name}**: {t.text}")
         full_question_lines.append("")
         full_question_lines.append(f"### 当前这轮：你是{_speaker_zh(target_speaker)}，需要你回答用户的问题。")
-        full_question_lines.append("这场对话是一个共享会场，所有之前的对话（包括提问和另外一位大师的回答）你都能看见。此轮只需要你作答即可。")
+        full_question_lines.append(
+            "这场对话是一个共享会场，所有之前的对话（包括提问与其他嘉宾的回答）你都能看见。此轮只需要你作答即可。"
+        )
         full_question_lines.append("")
         full_question_lines.append(f"**用户问题**: {user_message}")
         full_question_lines.append("")
         full_question_lines.append(
-            "请以你的身份回应，用markdown加粗重点，保持层次感，允许展开到300-400字。"
+            f"请以你的身份回应：口语自然，**{RESPONSE_LEN_HINT_ZH}** "
+            "可加粗一两处真正要敲黑板的地方；不要写 @人名 / →@ 传棒。"
         )
         messages.append({"role": "user", "content": "\n".join(full_question_lines)})
 
@@ -671,8 +793,8 @@ class DebateRunner:
         if reply is None:
             return None
 
-        # Clean boilerplate disclaimer
-        cleaned = _clean_model_output(reply)
+        # Clean boilerplate disclaimer + oral/TTS hygiene (same as论坛交锋)
+        cleaned = _clean_forum_live(_clean_model_output(reply) or "", speaker=target_speaker)
 
         # Append to shared room: user message first, then assistant reply.
         from datetime import datetime

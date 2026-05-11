@@ -4,6 +4,7 @@ import { RoleCard } from './components/RoleCard'
 import { TurnMessage } from './components/TurnMessage'
 import { MasterChat } from './components/MasterChat.tsx'
 import { DebateAudio } from './components/DebateAudio'
+import { LexOpeningStage } from './components/LexOpeningStage'
 import { speakerMeta } from './utils/avatars'
 import { markdownToSafeHtml } from './utils/markdownRender'
 import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown } from './api'
@@ -18,14 +19,14 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
+  /** 架构 §1：阶段 0 / 0.5 由 Lex 垫场 + 预录开场，完成后再请求后端论坛交锋（阶段 1） */
+  const [lexPreamble, setLexPreamble] = useState(false)
 
   const renderCompareMarkdown = (text: string) => (
     <div className="md-render compare-md" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(text) }} />
   )
 
-  const handleStart = useCallback(async () => {
-    // Must be triggered by user gesture to allow autoplay audio
-    setAudioEnabled(true)
+  const startForumBackend = useCallback(async () => {
     setLoading(true)
     setError(null)
     setTurns([])
@@ -33,7 +34,6 @@ function App() {
     setRunId(null)
     setJudgeResult(null)
     setChatOpen(false)
-
     try {
       const id = await startDebate()
       setRunId(id)
@@ -43,10 +43,17 @@ function App() {
     }
   }, [])
 
+  const handleStart = useCallback(() => {
+    // 用户手势：解锁后续 TTS / 预录 mp3 autoplay
+    setAudioEnabled(true)
+    setError(null)
+    setLexPreamble(true)
+  }, [])
+
   const handleDownload = useCallback(async () => {
     if (!runId) return
     const content = await getDebateResult(runId)
-    downloadMarkdown(content, 'case_dialogue_result.md')
+    downloadMarkdown(content, 'riscv_forum_result.md')
   }, [runId])
 
   // Polling
@@ -79,33 +86,83 @@ function App() {
   }, [runId, status])
 
   const isDone = status === 'done'
-  const isRunning = status === 'running' || loading
+  const isRunning = status === 'running' || loading || lexPreamble
 
   return (
     <div className="app-root">
       <div className="app-container">
         <header className="app-header">
-          <h1>国家安全案例研究对谈</h1>
+          <h1>RISC-V 三国杀 · 论坛交锋</h1>
           <p className="topic">
-            <strong>主题</strong>：滴滴数据安全案 vs Manus案（对比研究）
+            <strong>主题</strong>：RISC-V vs x86 vs ARM（Agent 时代算力格局 · demo）
           </p>
         </header>
 
-        <div className="roles-container">
-          <RoleCard
-            name={speakerMeta.jervis.nameZh}
-            school={speakerMeta.jervis.subtitleZh}
-            avatarSrc={speakerMeta.jervis.avatarSrc}
-            accent={speakerMeta.jervis.accent}
-            isLeft={true}
+        {lexPreamble && (
+          <LexOpeningStage
+            keynoteImageSrc="/images/summit-cas-iss-keynote.png"
+            onFinished={() => {
+              setLexPreamble(false)
+              void startForumBackend()
+            }}
           />
-          <RoleCard
-            name={speakerMeta.mearsheimer.nameZh}
-            school={speakerMeta.mearsheimer.subtitleZh}
-            avatarSrc={speakerMeta.mearsheimer.avatarSrc}
-            accent={speakerMeta.mearsheimer.accent}
-            isLeft={false}
-          />
+        )}
+
+        <div className="roundtable-wrap">
+          <p className="roundtable-caption">圆桌席次 · Lex 左侧主持 · 四嘉宾围席</p>
+          <div className="roundtable-stage" aria-label="论坛圆桌席次">
+            <div className="roundtable-oval" aria-hidden />
+            <div className="roundtable-seat roundtable-seat--lex">
+              <RoleCard
+                name={speakerMeta.lex.nameZh}
+                school={speakerMeta.lex.subtitleZh}
+                avatarSrc={speakerMeta.lex.avatarSrc}
+                accent={speakerMeta.lex.accent}
+                isLeft
+                variant="seat"
+              />
+            </div>
+            <div className="roundtable-seat roundtable-seat--wuwei">
+              <RoleCard
+                name={speakerMeta.wuwei.nameZh}
+                school={speakerMeta.wuwei.subtitleZh}
+                avatarSrc={speakerMeta.wuwei.avatarSrc}
+                accent={speakerMeta.wuwei.accent}
+                isLeft
+                variant="seat"
+              />
+            </div>
+            <div className="roundtable-seat roundtable-seat--liptan">
+              <RoleCard
+                name={speakerMeta.liptan.nameZh}
+                school={speakerMeta.liptan.subtitleZh}
+                avatarSrc={speakerMeta.liptan.avatarSrc}
+                accent={speakerMeta.liptan.accent}
+                isLeft
+                variant="seat"
+              />
+            </div>
+            <div className="roundtable-seat roundtable-seat--cook">
+              <RoleCard
+                name={speakerMeta.cook.nameZh}
+                school={speakerMeta.cook.subtitleZh}
+                avatarSrc={speakerMeta.cook.avatarSrc}
+                accent={speakerMeta.cook.accent}
+                isLeft
+                variant="seat"
+              />
+            </div>
+            <div className="roundtable-seat roundtable-seat--jensen">
+              <RoleCard
+                name={speakerMeta.jensen.nameZh}
+                school={speakerMeta.jensen.subtitleZh}
+                avatarSrc={speakerMeta.jensen.avatarSrc}
+                accent={speakerMeta.jensen.accent}
+                isLeft
+                variant="seat"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="controls-container">
@@ -114,7 +171,7 @@ function App() {
             onClick={handleStart}
             disabled={isRunning}
           >
-            {isRunning ? '对谈进行中...' : '开始对谈'}
+            {lexPreamble ? 'Lex 开场中…' : isRunning ? '对谈进行中...' : '开始对谈'}
           </button>
 
           {isDone && (
@@ -132,9 +189,13 @@ function App() {
           </div>
         )}
 
-        {isRunning && turns.length === 0 && (
+        {!lexPreamble && loading && !runId && (
+          <div className="loading-box">正在连接论坛服务器…</div>
+        )}
+
+        {!lexPreamble && isRunning && runId && turns.length === 0 && (
           <div className="loading-box">
-            正在准备，请稍等第一位研究者开场...
+            论坛交锋生成中：首位发言嘉宾为吴伟（RISC-V）——主持开场已由 Lex 完成。
           </div>
         )}
 
@@ -160,14 +221,14 @@ function App() {
             })()}
 
             {isRunning && (
-              <div className="waiting-text">正在等待下一位研究者回应...</div>
+              <div className="waiting-text">正在等待下一位嘉宾回应...</div>
             )}
           </div>
         )}
 
         {judgeResult && (
           <div className="judge-box">
-            <h2 className="judge-title">对比小结</h2>
+            <h2 className="judge-title">论坛纪要</h2>
             <div className="judge-content">
               {renderCompareMarkdown(judgeResult)}
             </div>
@@ -175,7 +236,7 @@ function App() {
         )}
 
         <footer className="app-footer">
-          case-dialogue · Didi vs Manus
+          RISC-V 三国杀 · 公众科学日分会场 demo
         </footer>
       </div>
       {runId && (

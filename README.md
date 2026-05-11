@@ -57,7 +57,7 @@ API_KEY=你的ArkKey
 MODEL=ark-code-latest
 ```
 
-可选 TTS（DashScope）；RISC-V 过渡期可 **`VOICE_ID_JERVIS` / `VOICE_ID_MEARSHEIMER` 均填同一克隆**，详见 [`docs/design/architecture.md`](docs/design/architecture.md) 与 [`.env.example`](.env.example)。
+可选 TTS（DashScope）：填 **`VOICE_ID_DEFAULT`** 或 **`VOICE_ID_MEARSHEIMER`**（或分填 `VOICE_ID_LEX` 等五键）即可；详见 [`docs/design/architecture.md`](docs/design/architecture.md) 与 [`.env.example`](.env.example)。
 
 ## Cloudflare 与北京网络
 

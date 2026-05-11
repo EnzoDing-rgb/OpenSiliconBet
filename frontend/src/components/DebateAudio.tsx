@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PcmPlayer } from '../audio/pcmPlayer'
 import { friendlyTtsPhaseDetail } from '../utils/ttsPhaseUi'
+import type { Speaker } from '../types'
+import { speakerLabelZh } from '../utils/avatars'
 
 type AudioMeta = {
   type: 'meta'
   format: 'PCM_24000HZ_MONO_16BIT'
-  speaker: 'jervis' | 'mearsheimer'
+  speaker: Speaker
   round: number
   turn_index: number
 }
@@ -15,21 +17,20 @@ type PhaseMsg = {
   phase: string
   turn_index?: number
   round?: number
-  speaker?: 'jervis' | 'mearsheimer'
+  speaker?: Speaker
   message?: string
 }
 
 type ControlMsg =
   | AudioMeta
   | PhaseMsg
-  | { type: 'turn_done'; speaker: 'jervis' | 'mearsheimer'; round: number; turn_index: number }
+  | { type: 'turn_done'; speaker: Speaker; round: number; turn_index: number }
   | { type: 'all_done' }
   | { type: 'error'; message: string }
 
-function speakerZh(s: 'jervis' | 'mearsheimer' | undefined): string | null {
-  if (s === 'jervis') return '滴滴 Researcher'
-  if (s === 'mearsheimer') return 'Manus Researcher'
-  return null
+function speakerZh(s: Speaker | undefined): string | null {
+  if (!s) return null
+  return speakerLabelZh(s)
 }
 
 export function DebateAudio({

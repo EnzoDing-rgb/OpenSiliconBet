@@ -81,3 +81,51 @@ def test_implicit_same_as_current_uses_lrs():
         last_spoken_at=last,
     )
     assert nxt == "wuwei"
+
+
+def test_eligible_pool_excludes_full_guest_at_ignored():
+    """@ 指向不在 eligible 池内的嘉宾（视为已满员）→ 降级为 LRS，仅在 pool 内。"""
+    last = {"wuwei": 100.0, "liptan": 1.0, "cook": 2.0}
+    nxt = resolve_next_phase1_guest(
+        "请 @liptan 回应。",
+        "wuwei",
+        implicit_next=None,
+        last_spoken_at=last,
+        eligible=frozenset({"wuwei", "cook"}),
+    )
+    assert nxt == "cook"
+
+
+def test_eligible_pool_single_next_is_deterministic():
+    last = {"wuwei": 1.0, "liptan": 9.0, "cook": 5.0}
+    nxt = resolve_next_phase1_guest(
+        "无话。",
+        "wuwei",
+        implicit_next=None,
+        last_spoken_at=last,
+        eligible=frozenset({"liptan"}),
+    )
+    assert nxt == "liptan"
+
+
+def test_eligible_disjoint_raises():
+    with pytest.raises(ValueError, match="empty"):
+        resolve_next_phase1_guest(
+            "",
+            "wuwei",
+            implicit_next=None,
+            last_spoken_at={"wuwei": 0.0, "liptan": 0.0, "cook": 0.0},
+            eligible=frozenset({"lex"}),
+        )
+
+
+def test_implicit_not_in_eligible_uses_lrs():
+    last = {"wuwei": 10.0, "liptan": 1.0, "cook": 5.0}
+    nxt = resolve_next_phase1_guest(
+        "继续。",
+        "wuwei",
+        implicit_next="liptan",
+        last_spoken_at=last,
+        eligible=frozenset({"wuwei", "cook"}),
+    )
+    assert nxt == "cook"

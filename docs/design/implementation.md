@@ -27,7 +27,7 @@
 | 已完成 | [`../characters/jensen-huang-perspective-SKILL.md`](../characters/jensen-huang-perspective-SKILL.md) |
 | 已完成 | [`../characters/lex-fridman-host-perspective-SKILL.md`](../characters/lex-fridman-host-perspective-SKILL.md) |
 | 已完成 | [./architecture.md](./architecture.md)（宪章） |
-| 待办 | `docs/background/jensen-closing-speech.md`（可选；或并入 jensen SKILL） |
+| 已完成 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md)（阶段 2 **必注弹药**；见 §4 B、§6 **D.6b**） |
 | 待办 | `backend/free_qa.py` + `FreeQAPanel`；Summary + Intent；五人窗 |
 | 待办 | `scripts/pregen_lex_opening.py` + `public/audio` 两 mp3 + `OpeningPlayer.tsx` |
 | 待办 | Speaker 五枚举；`models` / `types` / `DebateAudio` / TTS 全栈对齐 |
@@ -46,7 +46,7 @@
 | Lex 0.5 文案 | [`../background/lex-opening-script.md`](../background/lex-opening-script.md) **已在仓**（含阶段 2.5 转场句） |
 | V2 架构蓝图 | [./architecture.md](./architecture.md) **已在仓** |
 | 架构入口 | 本目录 `design/`；旧双人长文 → [`../_archieved_mds/architecture-legacy-didi-manus.md`](../_archieved_mds/architecture-legacy-didi-manus.md) |
-| 仍缺文档（可选） | `jensen-closing-speech.md`（可放 `docs/` 或 `docs/background/`） |
+| Jensen 弹药 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) — 阶段 2 **强制**并入 prompt（已在仓） |
 | 仍缺实现 | `scripts/pregen_lex_opening.py`、两轨 mp3、`OpeningPlayer.tsx`、`free_qa.py`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`、五 speaker + v2 Director + 三级 baton + 回合级 TTS |
 | 运行栈 | `app.py` + `tts_manager.py` 仍双 voice；过渡期 **全员 `VOICE_ID_MEARSHEIMER`** |
 
@@ -59,7 +59,7 @@
 | 主题 | 指令集 · RISC-V vs x86 vs ARM，开放探讨 |
 | UI | 顶栏 + `<title>` + banner：**RISC-V 三国杀**；副标题：公众科学日分会场 |
 | 受众 | 老师 + 中学生（不降智） |
-| 形式 | Lex 极简 → **0.5 预录**（可跳过）→ **论坛交锋**（每人 2 段共 6 段）→ Lex 手机钩 → 黄 **CSS** 独白 → **Lex 2.5 转场** → 主屏 chat → Lex 收束 |
+| 形式 | Lex 极简 → **0.5 预录**（可跳过）→ **论坛交锋**（每人 2 段共 6 段）→ Lex **主持引介** → **视频连线**（CSS 视窗）→ 黄独白 → **Lex 2.5 转场** → 主屏 chat → Lex 收束 |
 | 知识轴 | RISC-V 能否替代 x86/ARM；Agent 窗口；1–3 年走向 |
 
 ---
@@ -75,6 +75,9 @@
 
 黄仁勋：阶段 2 **纯 CSS**；小窗保留至结束；阶段 3 在席。
 
+**「弹药」是什么（已落盘，强制使用）**  
+[`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md)：**阶段 2** 调用 Jensen 前 **必须整段注入**（锚点 + 金句池 + 独白骨架），与 [`../characters/jensen-huang-perspective-SKILL.md`](../characters/jensen-huang-perspective-SKILL.md) + [`../background/deep-research.md`](../background/deep-research.md) **叠放**，不得省略。细节与实现约定见该文件底部「实现侧拼接约定」。
+
 ---
 
 ## 5. C. 叙事阶段
@@ -82,7 +85,7 @@
 1. **0** Lex 极简 + 顶栏副标题。  
 2. **0.5** 播 `lex-opening-long.mp3`；**跳过** → 停长播 `lex-opening-short.mp3`（「好的，那让我们直接开始。」）→ 进 **1**。`voice_id` = `VOICE_ID_MEARSHEIMER`。  
 3. **1 论坛交锋** 三级 baton（见 **§7** 与宪章 §3）。Lex **不接棒**。**收口**：每人 2 段、**共 6** 条 guest turn；第 6 段播完 → **2**。  
-4. **2** Lex 手机钩 → CSS「视频电话」→ 黄仁勋独白 ≤200 字 → 小窗。  
+4. **2** Lex **主持引介** → **视频连线** UI（纯 CSS）→ 黄仁勋独白 ≤200 字（**必带** [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) 弹药上下文）→ 小窗。  
 5. **2.5（必选）** 黄播完后 Lex：**「好，观众朋友们，我们现在进入观众提问环节。」** 播完 → **3**。  
 6. **3** 主屏 chat：Summary（≤300 增量 + 近 3 轮原文）→ Intent（ASK/PROVOKE/CHITCHAT + target）→ 分发；建议 ≤120s Lex 收口。  
 7. **收束** Lex 致谢一句。
@@ -97,10 +100,13 @@
 
 **D.2 Baton**  
 1. 显式 `@`，别名归一 `lex|wuwei|liptan|cook|jensen`，多 `@` 取**最后**。  
-2. **NextSpeakerSelector**（余下两席）。  
-3. **LRS**。  
+2. **NextSpeakerSelector**（在 **eligible pool** 内针对「余下可发言席」；pool 定义见 **§6.1**）。  
+3. **LRS**（仅在 **eligible pool** 上取最久未发言）。  
 4. **相邻**禁同 Guest 连两轮 → 改走 2/3。  
-5. **收口**：各 2 段、总和 6；`FORUM_GUEST_TURNS_TOTAL=6`（默认勿改）。
+5. **收口**：各 2 段、总和 6；`FORUM_GUEST_TURNS_TOTAL=6`（默认勿改）；计数与 pool 的 **状态机细节见 §6.1**。
+
+**D.2b 阶段 2.5（实现默认）**  
+Lex 转场句：**当场 TTS + 固定字符串**（与 [./architecture.md](./architecture.md) 文案一致），**不**要求预合成 mp3；改字只改代码/配置常量即可。
 
 **D.3 文件**：`models.py`、`debate_runner.py`、`free_qa.py`、`tts_manager.py`、`app.py`、`.env.example`；前端 `types.ts`、`DebateAudio.tsx`、`avatars.ts`、`App.tsx`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`。
 
@@ -110,13 +116,42 @@
 
 **D.6** 0.5：[`../background/lex-opening-script.md`](../background/lex-opening-script.md) + `scripts/pregen_lex_opening.py` + `lex-opening-{long,short}.mp3` + `OpeningPlayer.tsx`。
 
+**D.6b 阶段 2 · Jensen 弹药**  
+[`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) 为 **必选附件**：每次生成 Jensen 阶段 2 独白前 **必须**读入并注入其「可核验锚点」「金句池」「独白骨架」全文；文件缺失或读失败 → **报错 / 构建失败**，禁止静默降级。
+
+### 6.1 每人两轮、共六段：机制说明（非整场硬编码）
+
+**结论**
+
+- **不是**旧滴滴栈那种「六行固定 `(speaker, prompt)` 表」硬编码**谁第几句说什么**。
+- **是**把 **`MAX_SPEECHES_PER_GUEST = 2`** 与 **`FORUM_GUEST_TURNS_TOTAL = 6`**（默认常量；可选 env **仅在不改「每人 2 段」产品语义的前提下**覆盖总配额，若只改总数不等价于每人两轮则需另开产品讨论）写进 **Director 状态**；每完成一条 **三嘉宾之一**（`wuwei|liptan|cook`）的发言，只给该嘉宾 **`count += 1`**；当且仅当 **`wuwei==2 && liptan==2 && cook==2`** 时结束阶段 1（等价校验：`sum==6 && min==2`）。
+
+**与 Baton 的配合（关键）**
+
+下一发言人的解析仍走 [`../../backend/baton.py`](../../backend/baton.py) 的三级逻辑（`@` → NextSpeakerSelector → LRS），但传入的 **候选人池 `pool`（eligible）** 不是固定的三人全集，而是：
+
+```text
+pool = { g in (wuwei, liptan, cook) : count[g] < 2 }
+```
+
+- 若显式 `@` 指向 **`count` 已为 2** 的嘉宾 → 视为无效，走隐式 / LRS，且 **仅在 `pool` 内** 选。
+- **LRS / NextSpeakerSelector** 同样只在 `pool` 上操作；从状态上 **不可能** 合法选中「某人第三段」（实现须单测防回归：满员仍被 `@` 时降级、`pool` 大小为 1 时下一发言者唯一等）。
+
+早期轮次 `pool` 仍为三人；中后期 `pool` 缩小；当只剩一人未满 2 段时 `pool` 大小为 1，下一发言者唯一确定。
+
+**建议落点（实现时）**
+
+- 在 v2 Director（[`../../backend/debate_runner.py`](../../backend/debate_runner.py) 或未来拆出的 `forum_director.py`）中维护 **`guest_speech_counts: dict[str, int]`** 与 **`phase`**。
+- 为 `resolve_next_phase1_guest` 增加可选参数 **`eligible: frozenset[str]`**（即上面的 `pool`），或由包装函数在调用前将 baton 结果 **clamp** 到 `pool`。
+- 单测建议：`@` 已满员嘉宾时落到 LRS/隐式且仍在 `pool` 内；第 6 段完成后 `stage` 切入 **2**；禁止第 7 段三人发言。
+
 ---
 
 ## 7. E. 交货顺序
 
 1. [`../background/deep-research.md`](../background/deep-research.md) 留白 → Research。  
 2. 五 SKILL 增量淬炼：[`../../.agents/skills/huashu-nuwa/SKILL.md`](../../.agents/skills/huashu-nuwa/SKILL.md)。  
-3. 宪章已就绪；可选 `docs/background/jensen-closing-speech.md`。  
+3. 宪章已就绪；[`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md)（Jensen 弹药）已在仓，阶段 2 **强制注入**（见 **D.6b**）。  
 4. Lex 0.5：pregen + mp3 + `OpeningPlayer`。  
 5. 代码：Director + baton + free_qa + 枚举 + 回合级 TTS + UI + D.0。
 
@@ -196,6 +231,7 @@
 
 ### 阶段 2 — 黄仁勋
 
+- [ ] LLM 调用前 **已读入并注入** `docs/background/jensen-closing-speech.md` 全文（锚点 + 金句池 + 独白骨架）；路径缺失或内容为空 → **失败**（单测覆盖）。  
 - [ ] CSS 动画类名；独白 ≤200 字。  
 - [ ] 小窗延续到阶段 3。
 

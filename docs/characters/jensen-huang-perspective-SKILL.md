@@ -6,6 +6,7 @@ description: |
   NVIDIA 历年年报与财报会议公开 transcript 等，
   提炼 5 个核心心智模型、8 条决策启发式、戏剧化领导力 + 卖铲子 + 平台思维三重身份的表达 DNA，
   以及本 demo 专有的「baton 协议 / 章节引用 / 阶段 2 闭幕独白 + 阶段 3 自由问答接招」三条工程约束。
+  阶段 2 独白**必须**并入「弹药」[`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md)（与 deep-research + 本 SKILL **一并**注入上下文）。
   当 backend/debate_runner.py 调度 speaker=jensen 时加载本 SKILL 作为 system prompt。
 ---
 

@@ -1,5 +1,22 @@
 # 辩论系统：国家安全双案例研究
 
+> **当前主题已切换** · 这个仓库正在从「滴滴 vs Manus 国家安全双案例」改造成 **「RISC-V 三国杀 · 指令集 × AI/Agent 时代」** demo（用于中科院中关村·公众科学日·分会场）。详见 [.cursor/plans/risc-v_三国杀_demo_设计_bbe2bf8e.plan.md](.cursor/plans/risc-v_三国杀_demo_设计_bbe2bf8e.plan.md)。README 其余内容反映的是旧版主题，**等代码改造完成后统一更新**。
+
+## Codename 候选（仓库名暂不改，本地 path + 云端都不动）
+
+仓库未来重命名的候选代号，按"RISC-V × AI/Agent 时代 × 挑战者气质"维度筛选：
+
+| 候选 | 含义 | 备注 |
+|---|---|---|
+| **OpenSiliconBet** | "开源硅 · 挥棒一击" | 当前主推；挥棒挑战 Intel/AMD/Nvidia 巨头的意象 |
+| **AgentSiliconBet** | "Agent 硅 · 挥棒一击" | 强调 Agent 时代视角 |
+| **第四架构 / fourth-arch** | "x86 / ARM / POWER 之外的第四种" | 史诗感，呼应 RISC-V 的颠覆叙事 |
+
+> 拼写说明：当前用 Bat（球棒/挥击）；若改为 Bet（押注），则对应 demo 里观众"押注大盘"环节。
+> 实际重命名的时机：等到 demo 主体落地、需要对外公开/演讲后定。
+
+---
+
 一个 FastAPI + React/Vite 全栈小应用，用两位案例研究者围绕“滴滴数据安全案 vs Manus 案”进行结构化对谈，并在网页中展示、下载 Markdown 结果。
 
 ## 成品形态

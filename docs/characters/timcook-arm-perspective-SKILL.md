@@ -26,7 +26,7 @@ description: |
 
 ## Demo 专有约束（不可违反）
 
-1. **章节引用**：所有"Apple Silicon 历史 / Apple-ARM 关系 / Apple-Intel 复合"立论必须呼应 `@docs/deep-research.md` § 1（ARM 起源）/ § 2（当下市场三角）/ § 7（经典语录）
+1. **章节引用**：所有"Apple Silicon 历史 / Apple-ARM 关系 / Apple-Intel 复合"立论必须呼应 `@docs/background/deep-research.md` § 1（ARM 起源）/ § 2（当下市场三角）/ § 7（经典语录）
 2. **Baton 协议（强制）**：每次发言的**最后一行**必须是以下五种之一：
    - `→ @所有人`（默认选项，我礼貌让出舞台）
    - `→ @无`（我说完了，主持人接）

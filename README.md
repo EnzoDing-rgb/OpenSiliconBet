@@ -16,7 +16,14 @@
 
 ## 共享事实档案（RISC-V 三国杀）
 
-- [**@docs/deep-research.md**](docs/deep-research.md) — 占位 + 每章写作提示词 + 留白区；你 Deep Research 后填入；五位嘉宾 LLM 每次调用都会读入整份文档（无 RAG、无 Tier 分层）。
+`docs/` 目录：**`background/`**（事实与台本）· **`characters/`**（五嘉宾 SKILL）· **`design/`**（架构 / 实施与测试 / 实时 TTS）· **`_archieved_mds/`**（旧栈与草稿）。
+
+- [**@docs/background/deep-research.md**](docs/background/deep-research.md) — 占位 + 每章写作提示词 + 留白区；五位嘉宾 LLM 每次调用读入整份（无 RAG、无 Tier 分层）。
+- [**docs/design/architecture.md**](docs/design/architecture.md) — 架构宪章（阶段机、论坛交锋、baton、回合级 TTS、Free QA）。
+- [**docs/design/implementation.md**](docs/design/implementation.md) — **实施计划 + 测试规格**（与 Cursor plan 对齐）。
+- [**docs/design/realtime-tts-architecture.md**](docs/design/realtime-tts-architecture.md) — 千问实时 TTS WebSocket 管线说明。
+- [**docs/_archieved_mds/architecture-legacy-didi-manus.md**](docs/_archieved_mds/architecture-legacy-didi-manus.md) — 旧滴滴/Manus 双人栈全文（归档）。
+- **`docs/_archieved_mds/`** — 其余草稿、蒸馏笔记、旧对谈纪要等（不删除）。
 
 > 实际重命名仓库的时机：等到 demo 主体落地、需要对外公开/演讲后定。
 
@@ -246,7 +253,29 @@ npm install
 
 ### 2. 配置 API
 
-本项目**不再硬编码任何 API Key**，请使用环境变量（推荐用项目根目录 `.env` 文件）。\n+\n+1) 复制示例文件：\n+\n+```bash\n+cp .env.example .env\n+```\n+\n+2) 编辑 `.env`，填入你的配置（`.env` 已被 `.gitignore` 忽略，不会提交到仓库）：\n+\n+```bash\n+API_PROTOCOL=openai\n+API_BASE_URL=https://ark.cn-beijing.volces.com/api/coding/v3\n+API_KEY=你的ArkKey\n+MODEL=ark-code-latest\n+\n+# 可选：阿里云 DashScope 语音（只在你启用音频功能时需要）\n+# DASHSCOPE_API_KEY=你的DashScopeKey\n+# VOICE_ID_JERVIS=\n+# VOICE_ID_MEARSHEIMER=\n+```\n+\n+后端会优先读取 `API_*`，也兼容旧变量名 `ARK_API_KEY/ARK_BASE_URL/ARK_MODEL`。\n*** End Patch"}]} 
+本项目**不再硬编码任何 API Key**，请使用环境变量（推荐用项目根目录 `.env` 文件）。
+
+1) 复制示例文件：
+
+```bash
+cp .env.example .env
+```
+
+2) 编辑 `.env`，填入你的配置（`.env` 已被 `.gitignore` 忽略，不会提交到仓库）：
+
+```bash
+API_PROTOCOL=openai
+API_BASE_URL=https://ark.cn-beijing.volces.com/api/coding/v3
+API_KEY=你的ArkKey
+MODEL=ark-code-latest
+
+# 可选：阿里云 DashScope 语音（只在你启用音频功能时需要）
+# DASHSCOPE_API_KEY=你的DashScopeKey
+# VOICE_ID_JERVIS=
+# VOICE_ID_MEARSHEIMER=
+```
+
+后端会优先读取 `API_*`，也兼容旧变量名 `ARK_API_KEY` / `ARK_BASE_URL` / `ARK_MODEL`。
 
 ### 3. 启动服务
 
@@ -330,7 +359,57 @@ http://localhost:5173
 
 ## 固定域名公网部署（`enzoding.net`，不备案）
 
-你可以用 **Cloudflare Registrar** 购买/托管域名（不需要国内备案），并用 **Cloudflare Tunnel（命名 Tunnel）** 把本机服务安全暴露到公网。\n+\n+推荐 Tunnel 名称：`enzo-amusement-park`。\n+\n+### 1) Cloudflare 买域名\n+\n+- 入口：[Cloudflare Registrar](https://dash.cloudflare.com/?to=/:account/domains/register)\n+\n+### 2) 登录并创建命名 Tunnel（在 Linux 上）\n+\n+```bash\n+cloudflared tunnel login\n+cloudflared tunnel create enzo-amusement-park\n+```\n+\n+创建后会得到一个 Tunnel UUID。你可以用：\n+\n+```bash\n+cloudflared tunnel list\n+```\n+\n+### 3) 绑定子域名到 Tunnel（例如 `app.enzoding.net`）\n+\n+```bash\n+cloudflared tunnel route dns enzo-amusement-park app.enzoding.net\n+```\n+\n+### 4) 创建 `cloudflared` 配置文件\n+\n+在 `~/.cloudflared/config.yml` 写入（注意把 `<TUNNEL-UUID>` 改成你的）：\n+\n+```yaml\n+tunnel: <TUNNEL-UUID>\n+credentials-file: /home/fengde/.cloudflared/<TUNNEL-UUID>.json\n+\n+ingress:\n+  - hostname: app.enzoding.net\n+    service: http://127.0.0.1:9000\n+  - service: http_status:404\n+```\n+\n+### 5) 生产启动（单端口 + 命名 Tunnel）\n+\n+```bash\n+./dev.sh --prod --tunnel-name enzo-amusement-park\n+```\n+\n+说明：\n+\n+- `--prod` 会构建前端并让 FastAPI 服务 `frontend/dist`，整个站点只需后端 `9000` 一个端口。\n+- 命名 Tunnel 不会像 Quick Tunnel 那样每次重启换 URL。\n*** End Patch"}]} 
+你可以用 **Cloudflare Registrar** 购买/托管域名（不需要国内备案），并用 **Cloudflare Tunnel（命名 Tunnel）** 把本机服务安全暴露到公网。
+
+推荐 Tunnel 名称：`enzo-amusement-park`。
+
+### 1) Cloudflare 买域名
+
+- 入口：[Cloudflare Registrar](https://dash.cloudflare.com/?to=/:account/domains/register)
+
+### 2) 登录并创建命名 Tunnel（在 Linux 上）
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create enzo-amusement-park
+```
+
+创建后会得到一个 Tunnel UUID。你可以用：
+
+```bash
+cloudflared tunnel list
+```
+
+### 3) 绑定子域名到 Tunnel（例如 `app.enzoding.net`）
+
+```bash
+cloudflared tunnel route dns enzo-amusement-park app.enzoding.net
+```
+
+### 4) 创建 `cloudflared` 配置文件
+
+在 `~/.cloudflared/config.yml` 写入（注意把 `<TUNNEL-UUID>` 改成你的）：
+
+```yaml
+tunnel: <TUNNEL-UUID>
+credentials-file: /home/fengde/.cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: app.enzoding.net
+    service: http://127.0.0.1:9000
+  - service: http_status:404
+```
+
+### 5) 生产启动（单端口 + 命名 Tunnel）
+
+```bash
+./dev.sh --prod --tunnel-name enzo-amusement-park
+```
+
+说明：
+
+- `--prod` 会构建前端并让 FastAPI 服务 `frontend/dist`，整个站点只需后端 `9000` 一个端口。
+- 命名 Tunnel 不会像 Quick Tunnel 那样每次重启换 URL。
 
 #### 方式三：直接内网 IP 访问（如果 Mac 和 Linux 在同一个局域网/VPN）
 

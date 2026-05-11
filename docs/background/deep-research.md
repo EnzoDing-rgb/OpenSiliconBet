@@ -1,7 +1,7 @@
 # RISC-V × AI/Agent 时代 · 共享事实档案
 
 > 本文档是「RISC-V 三国杀」demo 的**唯一共享事实底盘**，每次对谈的所有 5 个嘉宾（Lex Fridman / 吴伟 / 陈立武 / 库克 / 黄仁勋）的 LLM 调用都会把整份文档塞进 system prompt。  
-> **仓库路径**：`docs/deep-research.md` · **Cursor 引用**：`@docs/deep-research.md`（与各 SKILL 里写法一致）。
+> **仓库路径**：`docs/background/deep-research.md` · **Cursor 引用**：`@docs/background/deep-research.md`（与各 SKILL 内 `@docs/...` 保持一致；旧路径 `@docs/deep-research.md` 已作废）。
 
 ## 文档定位
 

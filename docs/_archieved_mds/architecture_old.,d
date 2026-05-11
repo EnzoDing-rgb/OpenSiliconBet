@@ -1,0 +1,11 @@
+# 架构说明（RISC-V 三国杀 · 入口）— 已弃用副本
+
+> **本文件已弃用**，仅作历史书签。当前请以 **`docs/design/`** 下文档为准。
+
+- **总设计与阶段**：Cursor plan `risc-v_三国杀_demo_设计_bbe2bf8e.plan.md`（论坛交锋 6 回合、阶段 2.5 Lex 转场、v2 Director、三级 baton、回合级 TTS、Lex 0.5 预录等）；合并稿见 [`../design/implementation.md`](../design/implementation.md)。
+- **事实底盘**：[`../background/deep-research.md`](../background/deep-research.md)
+- **实时 TTS（千问 WebSocket）**：[`../design/realtime-tts-architecture.md`](../design/realtime-tts-architecture.md)
+- **架构宪章**：[`../design/architecture.md`](../design/architecture.md)
+- **计划 + 测试规格**：[`../design/implementation.md`](../design/implementation.md)
+
+**归档目录** [`./`](./)：草稿、蒸馏笔记、旧对谈纪要等，与默认运行栈解耦。

@@ -487,8 +487,8 @@ class DebateRunner:
             return None
 
     def _save_result(self, run: DebateRun) -> None:
-        """Save the final debate result to docs/debate_result.md"""
-        output_dir = PROJECT_ROOT / "docs"
+        """Save the final debate result to docs/_archieved_mds/debate_result.md"""
+        output_dir = PROJECT_ROOT / "docs" / "_archieved_mds"
         output_path = output_dir / "debate_result.md"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -578,7 +578,7 @@ class DebateRunner:
 
     def get_result_markdown(self, run_id: str) -> Optional[str]:
         """Read the saved result markdown"""
-        result_path = PROJECT_ROOT / "docs" / "debate_result.md"
+        result_path = PROJECT_ROOT / "docs" / "_archieved_mds" / "debate_result.md"
         if not result_path.exists():
             return None
         try:

@@ -1,1 +1,0 @@
-../.agents/skills/john-mearsheimer-perspective/SKILL.md

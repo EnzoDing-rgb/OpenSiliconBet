@@ -1,1 +1,0 @@
-../.agents/skills/robert-jervis-perspective/SKILL.md

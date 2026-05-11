@@ -1,5 +1,7 @@
 # 项目架构与可改造点（current state）
 
+> **归档（2026-05）**：本文件从旧 `docs/architecture.md` 迁入 `_archieved_mds/`，保留滴滴/Manus 双人栈细节。当前 RISC-V 三国杀：**宪章**见 [`../design/architecture.md`](../design/architecture.md)；**计划 + 测试**见 [`../design/implementation.md`](../design/implementation.md)；仓库根 `README` 与 Cursor plan `risc-v_三国杀_demo_设计_bbe2bf8e.plan.md`。国关学者 Skill 等历史入口亦在本归档目录。
+
 > 写这份文档的目的：在你把 demo 从「滴滴 vs Manus 国家安全案」改造成「RISC-V vs x86 vs ARM 科普」之前，先把当前系统在做什么、由哪些文件支撑、哪些是**硬编码的角色绑定点**讲清楚。改造时只动这些点即可，不需要重写架构。
 
 ---
@@ -56,7 +58,7 @@
 | 文件 | 行数级 | 干什么 |
 |---|---|---|
 | `app.py` | ~146 | FastAPI 入口；注册 5 个 REST + 1 个 WebSocket；生产模式下 mount 前端 `dist/` 当静态站。 |
-| `debate_runner.py` | ~704 | 单例 `DebateRunner`：读 SKILL → 拼 system prompt → 顺序跑 6 turn → 落盘 `docs/debate_result.md` → `chat_with_debater` 实现共享会场追问。 |
+| `debate_runner.py` | ~704 | 单例 `DebateRunner`：读 SKILL → 拼 system prompt → 顺序跑 6 turn → 落盘 `docs/_archieved_mds/debate_result.md` → `chat_with_debater` 实现共享会场追问。 |
 | `tts_manager.py` | ~382 | DashScope Realtime TTS 代理：`TextChunker` 流式切片 → `QwenTtsRealtime` WebSocket → 把 `response.audio.delta` (base64 PCM) 解码后转发到浏览器；带 ack 流控避免抢拍。 |
 | `models.py` | ~53 | 数据契约：`Speaker`(枚举 `JERVIS / MEARSHEIMER`)、`Turn`、`ChatMessage`、`DebateRun`、API 返回结构。 |
 | `requirements.txt` | 10 | `fastapi / uvicorn / openai / anthropic / dotenv / pydantic / dashscope / ...` |
@@ -103,7 +105,7 @@
 4. 同时 `DebateAudio` 已经开了 WebSocket：
    - 后端 `tts_manager.handle_connection` while 循环看 `len(run.turns)` 是否多了一段，多了就开 `TtsSession` 走 DashScope 流式 → 浏览器；
    - 浏览器收到 `turn_done` 后等 `PcmPlayer.getBufferedMs() < 120` 才发 `ack_turn_done`，后端才推下一段（防止字音错位）。
-5. 6 个 turn 跑完，`run.status = DONE` → `_save_result` 再调一次 LLM 生成「对比小结」（system prompt 在 `_judge_system_prompt`）→ 写 `docs/debate_result.md` 并把 `judge_result` 挂到 `run` 对象上 → 前端轮询拿到后渲染「对比小结」面板。
+5. 6 个 turn 跑完，`run.status = DONE` → `_save_result` 再调一次 LLM 生成「对比小结」（system prompt 在 `_judge_system_prompt`）→ 写 `docs/_archieved_mds/debate_result.md` 并把 `judge_result` 挂到 `run` 对象上 → 前端轮询拿到后渲染「对比小结」面板。
 6. 用户随时可以点「与研究者对话」抽屉，`POST /api/debate/chat/{run_id}` → `chat_with_debater` 把整场 6 turn + 历史所有 chat 当 context 一起送回模型，实现「共享会场可追问」。
 
 ---
@@ -193,7 +195,7 @@ MANUS_SKILL_PATH=...
 **当前约束（demo 级）**：
 - `runs: Dict[str, DebateRun]` 是**进程内字典**，重启即丢；多进程部署会丢 run 状态。
 - WebSocket 一个 `run_id` 同一时间只允许一路播放（`_active_run_audio` 计数），多 tab 会被拒。
-- 没有持久化数据库，只有 `docs/debate_result.md` 这一份 last-write-wins。
+- 没有持久化数据库，只有 `docs/_archieved_mds/debate_result.md` 这一份 last-write-wins。
 - `runner` 是**模块级单例**，自然限定单实例部署。
 
 **为「RISC-V 科普 + 互动 + 实时」要做的演化**（这一节是给后面讨论用的钩子，不是承诺）：

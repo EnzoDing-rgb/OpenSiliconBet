@@ -8,12 +8,17 @@
 
 | 候选 | 含义 | 备注 |
 |---|---|---|
-| **OpenSiliconBet** | "开源硅 · 挥棒一击" | 当前主推；挥棒挑战 Intel/AMD/Nvidia 巨头的意象 |
-| **AgentSiliconBet** | "Agent 硅 · 挥棒一击" | 强调 Agent 时代视角 |
+| **OpenSiliconBet** | "押注开源硅" | 当前主推；偏「开源硅 vs 巨头」气质 |
+| **AgentSiliconBet** | "押注 Agent 硅" | 强调 Agent 时代视角 |
 | **第四架构 / fourth-arch** | "x86 / ARM / POWER 之外的第四种" | 史诗感，呼应 RISC-V 的颠覆叙事 |
 
-> 拼写说明：当前用 Bat（球棒/挥击）；若改为 Bet（押注），则对应 demo 里观众"押注大盘"环节。
-> 实际重命名的时机：等到 demo 主体落地、需要对外公开/演讲后定。
+> 拼写已定：用 **Bet**（押注），与「把信仰写成可讲的故事」同义；具体互动形态随 demo 迭代。
+
+## 共享事实档案（RISC-V 三国杀）
+
+- [**@docs/deep-research.md**](docs/deep-research.md) — 占位 + 每章写作提示词 + 留白区；你 Deep Research 后填入；五位嘉宾 LLM 每次调用都会读入整份文档（无 RAG、无 Tier 分层）。
+
+> 实际重命名仓库的时机：等到 demo 主体落地、需要对外公开/演讲后定。
 
 ---
 

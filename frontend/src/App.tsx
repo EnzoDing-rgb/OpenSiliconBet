@@ -10,6 +10,8 @@ import { markdownToSafeHtml } from './utils/markdownRender'
 import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown } from './api'
 import type { Turn, RunStatus } from './types'
 
+const KEYNOTE_IMAGE_SRC = '/images/summit-cas-iss-keynote.png'
+
 function App() {
   const [runId, setRunId] = useState<string | null>(null)
   const [status, setStatus] = useState<RunStatus | null>(null)
@@ -98,9 +100,17 @@ function App() {
           </p>
         </header>
 
+        <div
+          className="hero-keynote"
+          role="img"
+          aria-label="中科院软件所讲堂 · AI Summit 会场示意"
+          style={{
+            backgroundImage: `url("${KEYNOTE_IMAGE_SRC.replace(/\\/g, '/').replace(/"/g, '%22')}")`,
+          }}
+        />
+
         {lexPreamble && (
           <LexOpeningStage
-            keynoteImageSrc="/images/summit-cas-iss-keynote.png"
             onFinished={() => {
               setLexPreamble(false)
               void startForumBackend()
@@ -108,7 +118,10 @@ function App() {
           />
         )}
 
-        <div className="roundtable-wrap">
+        <div
+          className={`roundtable-wrap${lexPreamble ? ' roundtable-wrap--lex-active' : ''}`}
+          aria-hidden={lexPreamble}
+        >
           <p className="roundtable-caption">圆桌席次 · Lex 左侧主持 · 四嘉宾围席</p>
           <div className="roundtable-stage" aria-label="论坛圆桌席次">
             <div className="roundtable-oval" aria-hidden />

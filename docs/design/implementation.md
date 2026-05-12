@@ -48,7 +48,7 @@
 | 架构入口 | 本目录 `design/`；旧双人长文 → [`../_archieved_mds/architecture-legacy-didi-manus.md`](../_archieved_mds/architecture-legacy-didi-manus.md) |
 | Jensen 弹药 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) — 阶段 2 **强制**并入 prompt（已在仓） |
 | 仍缺实现 | `scripts/pregen_lex_opening.py`、两轨 mp3、`OpeningPlayer.tsx`、`free_qa.py`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`、五 speaker + v2 Director + 三级 baton + 回合级 TTS |
-| 运行栈 | `app.py` + `tts_manager.py`：`VOICE_ID_{LEX,WUWEI,...}` 或 **`VOICE_ID_DEFAULT` / `VOICE_ID_MEARSHEIMER`** 全员回退 |
+| 运行栈 | `app.py` + `tts_manager.py` 仍双 voice；过渡期 **全员 `VOICE_ID_MEARSHEIMER`** |
 
 ---
 

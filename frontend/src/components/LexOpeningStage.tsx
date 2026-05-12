@@ -8,13 +8,7 @@ const AUDIO_SHORT = '/audio/lex-opening-short.mp3'
 
 type InnerStep = 'init' | 'opening'
 
-export function LexOpeningStage({
-  keynoteImageSrc,
-  onFinished,
-}: {
-  keynoteImageSrc: string
-  onFinished: () => void
-}) {
+export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
   const [step, setStep] = useState<InnerStep>('init')
   const [longBroken, setLongBroken] = useState(false)
   const gid = useId().replace(/:/g, '')
@@ -84,14 +78,7 @@ export function LexOpeningStage({
 
   return (
     <section className="lex-opening-stage" aria-labelledby="lex-opening-title">
-      <div
-        className="lex-opening-stage__bg"
-        style={{ backgroundImage: `url("${keynoteImageSrc.replace(/\\/g, '/').replace(/"/g, '%22')}")` }}
-        role="img"
-        aria-label="中科院软件所讲堂 · AI Summit 会场示意"
-      />
-      <div className="lex-opening-stage__scrim" />
-      <div className="lex-opening-stage__content">
+      <div className="lex-opening-stage__panel">
         <p className="lex-opening-stage__venue" id="lex-opening-title">
           公众科学日分会场 · 中科院软件所讲堂
         </p>

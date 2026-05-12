@@ -40,6 +40,8 @@
   padding: 14px 12px 16px;
   gap: 10px;
   max-width: 148px;
+  background: #fff;
+  backdrop-filter: none;
 }
 
 .role-card--seat.left,

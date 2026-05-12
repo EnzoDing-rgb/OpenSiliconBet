@@ -136,8 +136,52 @@ body {
   line-height: 1.6;
 }
 
+/* 会场照片：仅视觉条，无叠字；首屏即显，不依赖「开始对谈」 */
+.hero-keynote {
+  width: 100%;
+  min-height: 200px;
+  max-height: 280px;
+  margin: 0 0 28px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background-size: cover;
+  background-position: center 22%;
+  background-repeat: no-repeat;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.1);
+  filter: saturate(1.05) contrast(1.02);
+}
+
 .roundtable-wrap {
   margin-bottom: 28px;
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  max-height: 2000px;
+  transition:
+    max-height 0.5s ease,
+    opacity 0.4s ease,
+    margin-bottom 0.4s ease,
+    visibility 0s linear 0s;
+}
+
+.roundtable-wrap--lex-active {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    max-height 0.5s ease,
+    opacity 0.35s ease,
+    margin-bottom 0.35s ease,
+    visibility 0s linear 0.35s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roundtable-wrap,
+  .roundtable-wrap--lex-active {
+    transition-duration: 0.01ms;
+  }
 }
 
 .roundtable-caption {
@@ -159,6 +203,7 @@ body {
 
 .roundtable-oval {
   position: absolute;
+  z-index: 0;
   left: 22%;
   top: 50%;
   transform: translateY(-50%);

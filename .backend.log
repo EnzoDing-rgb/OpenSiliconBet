@@ -168,3 +168,4 @@ INFO:     127.0.0.1:52618 - "GET /api/debate/status/379bddf8-12b6-4cd6-829e-4854
 INFO:     connection closed
 INFO:     127.0.0.1:36180 - "WebSocket /ws/debate-audio?run_id=379bddf8-12b6-4cd6-829e-4854bc669c25" [accepted]
 INFO:     connection open
+INFO:     connection closed

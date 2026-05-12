@@ -78,17 +78,22 @@ export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
 
   return (
     <section className="lex-opening-stage" aria-labelledby="lex-opening-title">
-      <div className="lex-opening-stage__panel">
-        <p className="lex-opening-stage__venue" id="lex-opening-title">
-          公众科学日分会场 · 中科院软件所讲堂
-        </p>
-        <h2 className="lex-opening-stage__h2">阶段 {step === 'init' ? '0' : '0.5'} · Lex 主持开场</h2>
+      <div
+        className="lex-opening-stage__panel"
+        style={{ ['--lex-accent' as string]: lex.accent }}
+      >
+        <div className="lex-opening-stage__masthead">
+          <p className="lex-opening-stage__venue">公众科学日分会场 · 中科院软件所讲堂</p>
+          <h2 className="lex-opening-stage__h2" id="lex-opening-title">
+            {step === 'init' ? 'Lex 主持开场' : 'Lex 预录开场'}
+          </h2>
+        </div>
 
         <div className="lex-opening-stage__host">
           <div className="lex-opening-stage__avatar-wrap" style={{ ['--accent' as string]: lex.accent }}>
-            <img className="lex-opening-stage__avatar" src={lex.avatarSrc} alt="" width={120} height={120} />
+            <img className="lex-opening-stage__avatar" src={lex.avatarSrc} alt="" width={104} height={104} />
             <span className="lex-opening-stage__mic" aria-hidden title="话筒">
-              <svg viewBox="0 0 32 48" width="40" height="56" focusable="false">
+              <svg viewBox="0 0 32 48" width="36" height="50" focusable="false">
                 <rect x="12" y="6" width="8" height="22" rx="4" fill={`url(#mic-grad-${gid})`} stroke="#1e293b" strokeWidth="1" />
                 <path d="M10 28c0 4 2 7 6 7s6-3 6-7" fill="none" stroke="#1e293b" strokeWidth="1.5" />
                 <rect x="14" y="34" width="4" height="10" rx="1" fill="#334155" />
@@ -103,39 +108,49 @@ export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
             </span>
           </div>
           <div className="lex-opening-stage__host-text">
-            <p className="lex-opening-stage__name">{lex.nameZh}</p>
-            <p className="lex-opening-stage__role">{lex.subtitleZh}</p>
+            <p className="lex-opening-stage__host-line">Lex Fridman from MIT，主持开场</p>
           </div>
         </div>
 
         {step === 'init' ? (
-          <div className="lex-opening-stage__copy">
-            <p>
-              大家好，我是 Lex。今天这场「RISC-V vs x86 vs ARM」不是判输赢的擂台，而是把三条算力路线放在同一张圆桌上——看
-              Agent 时代它们各自怎么接招。
-            </p>
-            <p className="lex-opening-stage__hint">下面是我的预录开场（阶段 0.5）。你也可以稍后一键跳过短接进圆桌。</p>
-            <button type="button" className="lex-opening-stage__primary" onClick={() => setStep('opening')}>
-              播放 Lex 预录开场
-            </button>
-          </div>
+          <>
+            <div className="lex-opening-stage__script">
+              <p className="lex-opening-stage__lede">
+                大家好，我是 Lex。今天这场「RISC-V vs x86 vs ARM」不是判输赢的擂台，而是把三条算力路线放在同一张圆桌上——看
+                Agent 时代它们各自怎么接招。
+              </p>
+            </div>
+            <div className="lex-opening-stage__actions">
+              <p className="lex-opening-stage__hint">
+                下面是我的预录开场。你也可以稍后一键跳过，直接进入圆桌。
+              </p>
+              <button type="button" className="lex-opening-stage__primary" onClick={() => setStep('opening')}>
+                播放 Lex 预录开场
+              </button>
+            </div>
+          </>
         ) : (
-          <div className="lex-opening-stage__copy">
-            <audio ref={longRef} src={AUDIO_LONG} preload="none" onError={() => setLongBroken(true)} />
-            <audio ref={shortRef} src={AUDIO_SHORT} preload="none" />
-            {longBroken ? (
-              <>
+          <>
+            <audio ref={longRef} className="lex-opening-stage__audio" src={AUDIO_LONG} preload="none" onError={() => setLongBroken(true)} />
+            <audio ref={shortRef} className="lex-opening-stage__audio" src={AUDIO_SHORT} preload="none" />
+            <div className="lex-opening-stage__script">
+              {longBroken ? (
                 <p className="lex-opening-stage__warn">
                   未检测到预录音频（请将 <code>lex-opening-long.mp3</code> / <code>lex-opening-short.mp3</code> 放入{' '}
                   <code>frontend/public/audio/</code>，见 <code>lex-opening-script.md</code>）。
                 </p>
+              ) : (
+                <p className="lex-opening-stage__status">
+                  正在播放预录贯口… 跳过时会先停长轨，再播短句「好的，那让我们直接开始。」（无叠声）
+                </p>
+              )}
+            </div>
+            <div className="lex-opening-stage__actions">
+              {longBroken ? (
                 <button type="button" className="lex-opening-stage__primary" onClick={() => complete()}>
                   直接进入论坛交锋
                 </button>
-              </>
-            ) : (
-              <>
-                <p>正在播放预录贯口… 跳过时会先停长轨，再播短句「好的，那让我们直接开始。」（无叠声）</p>
+              ) : (
                 <div className="lex-opening-stage__row">
                   <button type="button" className="lex-opening-stage__ghost" onClick={skip}>
                     跳过开场
@@ -144,9 +159,9 @@ export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
                     直接进入论坛交锋
                   </button>
                 </div>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </section>

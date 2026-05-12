@@ -16,7 +16,7 @@ export type SpeakerMeta = {
 export const speakerMeta: Record<Speaker, SpeakerMeta> = {
   lex: {
     nameZh: 'Lex Fridman',
-    subtitleZh: '主持人',
+    subtitleZh: 'Lex Fridman from MIT',
     avatarSrc: lexFace,
     accent: '#64748b',
   },

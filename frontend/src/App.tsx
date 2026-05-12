@@ -100,14 +100,15 @@ function App() {
           </p>
         </header>
 
-        <div
-          className="hero-keynote"
-          role="img"
-          aria-label="中科院软件所讲堂 · AI Summit 会场示意"
-          style={{
-            backgroundImage: `url("${KEYNOTE_IMAGE_SRC.replace(/\\/g, '/').replace(/"/g, '%22')}")`,
-          }}
-        />
+        <div className="hero-keynote-wrap">
+          <img
+            className="hero-keynote-img"
+            src={KEYNOTE_IMAGE_SRC}
+            alt="中科院软件所讲堂 · AI Summit 会场示意（RISC-V vs x86 vs ARM）"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
 
         {lexPreamble && (
           <LexOpeningStage

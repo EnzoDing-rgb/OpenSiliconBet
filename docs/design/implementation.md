@@ -294,3 +294,33 @@ cd frontend && npm test
 ```
 
 （venv 路径按本机调整。）
+
+---
+
+# 第三部分：扩展能力（股价联动 · Chat 策展落盘）
+
+> 与宪章 [§9–§10](./architecture.md#9-三家股价联动市场快照--设计意图) 对齐。本部分为 **计划 + 验收**；未实现前 CI 行为不变。
+
+## III.1 三家股价联动
+
+| 里程碑 | 内容 | 验收 |
+|--------|------|------|
+| M1 配置 | 环境变量或 YAML：`TICKER_X86`、`TICKER_ARM`、`TICKER_AI`（名称可调整）+ 数据源 API key 仅后端 | 前端网络面板无第三方 key |
+| M2 快照 API | `GET /api/market/snapshot` 返回三档最新价、涨跌幅、`as_of` ISO 时间；失败返回 503 + 上次缓存 | pytest mock HTTP；无 key 时单测降级路径 |
+| M3 UI | 顶栏或 hero 下 **一行 strip**：三家名称 + 涨跌色 + `as_of`；悬停显示免责声明 | Vitest 快照或 DOM 文本；断网文案 |
+| M4 Prompt 拼接 | 辩论开局（`startDebate` 或 Director enter phase 1）可选注入 `market_context` 一段 | mock 断言 system 含「截至」时间戳；长度上限 |
+
+**禁止**：CI 依赖实时行情；用 fixture JSON。
+
+## III.2 观众 Chat → Curator LLM → Markdown 落盘
+
+| 里程碑 | 内容 | 验收 |
+|--------|------|------|
+| M1 操作入口 | 阶段 3（或 debug 全局）**单按钮**「金句落盘」/「写入笔记」；loading + 错误 toast | 无 run_id 不可点或提示 |
+| M2 后端 Curator | 新模块如 `curator_persist.py`：`build_payload(turns, chat_tail)` → LLM → **校验 JSON schema** → `render_markdown_block` | schema 非法 → 4xx，**不写文件** |
+| M3 写文件 | `NOTES_OUTPUT_PATH` allowlist（仅 `docs/` 下子路径）；append 模式；文件头带 `run_id`、UTC | pytest tmp_path + allowlist 拒绝 `../etc/passwd` 类路径 |
+| M4 幂等（可选 v2） | `client_request_id` 或内容 hash 防连点重复章节 | 双次点击单测 |
+
+**与人眼验收关系**：可作为宪章 §8 之后的 **§9–§10 扩展人眼条**（行情条是否可读、落盘后 md 是否多一节）。
+
+**与第二部分关系**：II.* 清单全部仍适用；III.* 为增量，不删减原阶段测试。

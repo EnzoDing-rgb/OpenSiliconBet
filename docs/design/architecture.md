@@ -73,9 +73,11 @@
 
 ## 5. 音色分配 (Voice IDs)
 
-在 DashScope 专属音色就绪前，全局统一使用 `VOICE_ID_MEARSHEIMER` 占位，保证链路畅通。
-*   `.env` 中配置 `VOICE_ID_MEARSHEIMER=xxx`。
-*   `tts_manager.py` 中为 5 人预留不同的 Voice ID 映射表，当前全部 fallback 到 Mearsheimer。
+五辩手（`lex` / `wuwei` / `liptan` / `cook` / `jensen`）各自一条 **`VOICE_ID_*`**，写在项目根 `.env`。未单独配置的角色会退回 `VOICE_ID_DEFAULT` → `VOICE_ID_MEARSHEIMER` → `VOICE_ID_JERVIS`（见 `backend/app.py`）。
+
+批量复刻（北京、`qwen-voice-enrollment` + `target_model` = `TTS_MODEL` 同款 realtime）：把 `Lex.m4a`、`Wuwei.m4a`、`Lip-Bu.m4a`、`Tim_Cook.m4a`、`Jensen_Huang.m4a` 放在 `assets/`，运行 `python3 scripts/enroll_voices.py`（读 `DASHSCOPE_API_KEY`，自动回写上述五键）。控制台手工上传亦同，须保证 **`target_model` 与 `TTS_MODEL` 完全一致**。
+
+历史双人素材：`VOICE_ID_JERVIS` / `VOICE_ID_MEARSHEIMER` 仍可保留作回退或预录合成。
 
 ## 6. 全局约束 (Global Constraints)
 

@@ -15,7 +15,8 @@
 - 在控制台生成一个 **API Key**，记下来 → 放后端环境变量里，**绝对不能放到前端代码里**（会泄露，别人刷你钱）
 
 ### 2. 复刻辩手音色（你有音频）
-- 在「语音模型 → 声音复刻/声音设计」页面，为每位需要克隆的发言人各上传一段音频（下文以**双人示例**「杰维斯 / 米尔斯海默」命名；五辩手时同理准备五份 enrollment，拿到五个 `voice_id`）。
+- **控制台**：在「语音模型 → 声音复刻/声音设计」页面，为每位需要克隆的发言人各上传一段音频（下文以**双人示例**「杰维斯 / 米尔斯海默」命名；五辩手时同理准备五份 enrollment，拿到五个 `voice_id`）。
+- **API（推荐与本仓库对齐）**：北京 `https://dashscope.aliyuncs.com/api/v1/services/audio/tts/customization`，`model`=`qwen-voice-enrollment`，`input.action`=`create`，`target_model` 必须与 **`TTS_MODEL`（默认 `qwen3-tts-vc-realtime-2026-01-15`）** 一致；响应 `output.voice` 即写入 `.env` 的 `VOICE_ID_*`。仓库脚本：将 `Lex.m4a`、`Wuwei.m4a`、`Lip-Bu.m4a`、`Tim_Cook.m4a`、`Jensen_Huang.m4a` 置于 `assets/` 后执行 `python3 scripts/enroll_voices.py`（读 `DASHSCOPE_API_KEY`，自动追加/更新 `VOICE_ID_LEX` 等五键；`--dry-run` 仅检查文件）。
 - 注意：
   1. 音频满足要求（千问声音复刻 `qwen-voice-enrollment` 的官方口径）：
      - 支持格式：WAV(16bit)/MP3/M4A

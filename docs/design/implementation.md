@@ -13,7 +13,7 @@
 - **阶段 2.5（必选）**：黄仁勋独白播完后 Lex 固定句：「好，观众朋友们，我们现在进入观众提问环节。」再开阶段 3；不可叠播、不可省略。
 - **Baton**：`@` → **NextSpeakerSelector**（隐式挑衅）→ **LRS**；不用 Lex 点名接棒。
 - **TTS**：SSE 文本可流式；**禁止**半句切块喂 TTS；整轮完稿后整段合成 + **播放锁**（`onended` / `audio_finished`）。
-- **音色**：独立克隆就绪前 **五键可同一 `VOICE_ID_DEFAULT` / `VOICE_ID_MEARSHEIMER`**，`tts_manager` 按 `lex|wuwei|liptan|cook|jensen` 查表。
+- **音色**：`assets/` 下五份 enrollment + `python3 scripts/enroll_voices.py` → `.env` 五键 `VOICE_ID_LEX|WUWEI|LIPTAN|COOK|JENSEN`；`tts_manager` 按 `lex|wuwei|liptan|cook|jensen` 查表。未配置时回退 `VOICE_ID_DEFAULT` / `MEARSHEIMER` / `JERVIS`。
 - **现状**：`Speaker` 五枚举 + 论坛 6 段 `DIALOGUE_TURNS` + `baton` eligible pool 已接线；**v2 Director / 0.5 / 2.5** 仍待实现。
 
 ### 1.1 与 Cursor Plan 同步的 TODO 清单
@@ -48,7 +48,7 @@
 | 架构入口 | 本目录 `design/`；旧双人长文 → [`../_archieved_mds/architecture-legacy-didi-manus.md`](../_archieved_mds/architecture-legacy-didi-manus.md) |
 | Jensen 弹药 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) — 阶段 2 **强制**并入 prompt（已在仓） |
 | 仍缺实现 | `scripts/pregen_lex_opening.py`、两轨 mp3、`OpeningPlayer.tsx`、`free_qa.py`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`、五 speaker + v2 Director + 三级 baton + 回合级 TTS |
-| 运行栈 | `app.py` + `tts_manager.py` 仍双 voice；过渡期 **全员 `VOICE_ID_MEARSHEIMER`** |
+| 运行栈 | `app.py` + `tts_manager.py`；`.env` 五 `VOICE_ID_*` + 可选 `JERVIS`/`MEARSHEIMER` 回退 |
 
 ---
 
@@ -66,7 +66,7 @@
 
 ## 4. B. 五人
 
-全员中文；人设见 [`../characters/`](../characters/)。0.5 预录：`VOICE_ID_MEARSHEIMER`；其余规划独立 `VOICE_ID_*`，未就绪前 **一律 Mearsheimer fallback**。
+全员中文；人设见 [`../characters/`](../characters/)。0.5 预录：`VOICE_ID_MEARSHEIMER`；论坛实时 TTS：五辩手 `VOICE_ID_LEX` 等（`scripts/enroll_voices.py` 批量生成）。未填某键时回退链见 `app.py`。
 
 | 人 | 文件 |
 |----|------|

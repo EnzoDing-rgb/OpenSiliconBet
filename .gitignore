@@ -30,6 +30,9 @@ dist/
 .frontend.log
 .tunnel.log
 
+# Generated run output (was committed by mistake; regenerate locally)
+docs/_archieved_mds/debate_result.md
+
 # IDE
 .vscode/
 .idea/

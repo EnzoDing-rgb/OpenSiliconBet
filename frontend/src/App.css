@@ -457,13 +457,41 @@ body {
   color: #92400e;
 }
 
+.jensen-vc-confirmed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.jensen-vc-confirmed-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(120, 53, 15, 0.1);
+  color: #78350f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.jensen-vc-confirmed-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #78350f;
+  line-height: 1.2;
+}
+
 .jensen-vc-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   padding: 8px 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #78350f;
 }
@@ -550,18 +578,18 @@ body {
 }
 
 .audience-qa-box {
-  padding: 24px 28px;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.1);
+  padding: 26px 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.88));
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 54px rgba(15, 23, 42, 0.1);
   backdrop-filter: blur(10px);
 }
 
 .audience-qa-title {
   margin: 0 0 18px;
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 800;
   color: #0f172a;
   text-align: center;
 }

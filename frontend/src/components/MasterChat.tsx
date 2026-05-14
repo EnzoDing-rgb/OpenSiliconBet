@@ -80,6 +80,14 @@ export function MasterChat({ runId }: MasterChatProps) {
 
   return (
     <div className="master-chat-container">
+      <div className="master-chat-header">
+        <div>
+          <div className="master-chat-eyebrow">Audience Q&A</div>
+          <div className="master-chat-title">选择一位嘉宾，继续追问</div>
+        </div>
+        <div className="master-chat-status">{sending ? '嘉宾思考中…' : `当前对象：${speakerLabelZh(speaker)}`}</div>
+      </div>
+
       <div className="speaker-tabs">
         {CHAT_SPEAKERS.map((s) => (
           <button

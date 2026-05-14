@@ -67,6 +67,7 @@ export const DebateAudio = forwardRef<
   const wsRef = useRef<WebSocket | null>(null)
   const player = useMemo(() => new PcmPlayer(), [])
   const pendingAckRef = useRef<number | null>(null)
+  const lowBufferSinceRef = useRef<number | null>(null)
 
   useImperativeHandle(
     ref,
@@ -83,6 +84,7 @@ export const DebateAudio = forwardRef<
         if (pending != null && ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'ack_turn_done', turn_index: pending }))
           pendingAckRef.current = null
+          lowBufferSinceRef.current = null
         }
       },
       speakSelection: (speaker: Speaker, text: string) => {
@@ -147,6 +149,7 @@ export const DebateAudio = forwardRef<
     setMeta(null)
     setServerPhase('idle')
     pendingAckRef.current = null
+    lowBufferSinceRef.current = null
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsHost = window.location.host || 'localhost'
@@ -176,14 +179,17 @@ export const DebateAudio = forwardRef<
               wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: -1 }))
             }
             pendingAckRef.current = null
+            lowBufferSinceRef.current = null
             return
           }
           pendingAckRef.current = msg.turn_index
+          lowBufferSinceRef.current = null
           if (msg.skip_playback) {
             const wsNow = wsRef.current
             if (wsNow && wsNow.readyState === WebSocket.OPEN) {
               wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: msg.turn_index }))
               pendingAckRef.current = null
+              lowBufferSinceRef.current = null
             }
           }
         }
@@ -206,10 +212,19 @@ export const DebateAudio = forwardRef<
       const pending = pendingAckRef.current
       const wsNow = wsRef.current
       if (pending == null || !wsNow || wsNow.readyState !== WebSocket.OPEN) return
-      if (player.getBufferedMs() < 120) {
+      const bufferedMs = player.getBufferedMs()
+      if (bufferedMs <= 16) {
+        if (lowBufferSinceRef.current == null) {
+          lowBufferSinceRef.current = window.performance.now()
+          return
+        }
+        if (window.performance.now() - lowBufferSinceRef.current < 220) return
         wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: pending }))
         pendingAckRef.current = null
+        lowBufferSinceRef.current = null
+        return
       }
+      lowBufferSinceRef.current = null
     }, 80)
 
     return () => {

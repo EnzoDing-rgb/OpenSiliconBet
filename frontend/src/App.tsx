@@ -280,13 +280,15 @@ function App() {
                         </p>
                       </>
                     ) : (
-                      <>
+                      <div className="jensen-vc-confirmed" aria-live="polite">
+                        <div className="jensen-vc-confirmed-badge">已触发</div>
+                        <div className="jensen-vc-confirmed-title">黄仁勋 Video Call</div>
+                        <p className="jensen-vc-hint">系统将在当前吴伟发言结束后，切入黄仁勋视频串场。</p>
                         <div className="jensen-vc-loading">
                           <div className="jensen-vc-spinner" />
-                          <span>黄仁勋视频接入中...</span>
+                          <span>正在生成黄仁勋串场内容，请稍候</span>
                         </div>
-                        <p className="jensen-vc-hint">正在生成黄仁勋串场独白，请稍候</p>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}

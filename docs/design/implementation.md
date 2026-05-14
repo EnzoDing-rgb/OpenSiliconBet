@@ -170,7 +170,7 @@ pool = { g in (wuwei, liptan, cook) : count[g] < 2 }
 
 ## 9. G. 背景信息
 
-- **事实层**：[`../background/deep-research.md`](../background/deep-research.md) 进全员 system prompt。  
+- **事实层**：[`../background/deep-research.md`](../background/deep-research.md) 进全员 system prompt（当前为**全文每调用**；降本与「仍可引用」的折中设计见 [architecture.md](./architecture.md) **§11** 末节）。  
 - **灵魂层**：各 SKILL；与事实数字解耦，占位亦可跑通。
 
 ---

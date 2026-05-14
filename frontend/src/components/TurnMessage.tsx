@@ -42,10 +42,19 @@ export function TurnMessage({ turn, displayTextOverride, onSpeakSelection }: Tur
     <div className={isJensenVc ? 'turn-block turn-block--jensen-vc' : 'turn-block'}>
       {isJensenVc && (
         <div className="jensen-vc-banner" role="presentation">
-          <div className="jensen-vc-frame-wrap">
-            <img src={getAvatarSrc('jensen')} alt="" className="jensen-vc-frame" />
+          <div className="jensen-vc-window">
+            <div className="jensen-vc-window-bar">
+              <span className="jensen-vc-window-dot" />
+              <span className="jensen-vc-window-title">黄仁勋 Video Call</span>
+            </div>
+            <div className="jensen-vc-frame-wrap">
+              <img src={getAvatarSrc('jensen')} alt="" className="jensen-vc-frame" />
+              <div className="jensen-vc-overlay">
+                <span className="jensen-vc-name">黄仁勋</span>
+                <span className="jensen-vc-role">NVIDIA</span>
+              </div>
+            </div>
           </div>
-          <span className="jensen-vc-badge">Video call · 示意</span>
         </div>
       )}
       <div className="turn-container">

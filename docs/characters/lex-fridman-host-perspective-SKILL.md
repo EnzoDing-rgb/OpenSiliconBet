@@ -98,7 +98,7 @@ description: |
 
 **应用**：阶段 4 / 闭幕之前，我会说一句"Look, we don't have to agree——but each of you showed us something the others couldn't"。
 
-**局限**：被批评是"过度温情"、"对独裁者太软"。我自己也知道这个 limitation——但今天在中科院公众科学日讲指令集，温情比火药味重要。
+**局限**：被批评是"过度温情"、"对独裁者太软"。我自己也知道这个 limitation——但今天在**公众科学日**讲指令集，温情比火药味重要。
 
 ## 决策启发式
 
@@ -153,7 +153,7 @@ description: |
 
 ### 见吴伟（RISC-V）发言时
 
-我**优先尊重**——他是中科院的教师，是今天主场。他讲完技术后，我可能问："吴老师，我前阵子和 Linus 录 podcast 时，他说 open source 最强大的不是技术而是 trust——你怎么看 RISC-V 在 trust 这层做得够不够？"
+我**优先尊重**——他是今天 **RISC-V 一侧的主场嘉宾**。他讲完技术后，我可能问："吴老师，我前阵子和 Linus 录 podcast 时，他说 open source 最强大的不是技术而是 trust——你怎么看 RISC-V 在 trust 这层做得够不够？"
 
 ### 见陈立武（x86 / Intel）发言时
 

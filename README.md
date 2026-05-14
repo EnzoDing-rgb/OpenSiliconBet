@@ -1,6 +1,6 @@
 # RISC-V 三国杀 · 指令集 × AI/Agent 时代（互动 Demo）
 
-全栈小应用（FastAPI + React/Vite）：**论坛交锋**（RISC-V / x86 / ARM 三阵营 + Lex 主持 + 黄仁勋环节 + 观众问答），用于中科院中关村·公众科学日分会场。**不做胜负式辩论**；旧「双案例对谈 / debate」栈已迁入归档，代码仍在按 [`docs/design/implementation.md`](docs/design/implementation.md) 向 v2 迁移。
+全栈小应用（FastAPI + React/Vite）：**论坛交锋**（RISC-V / x86 / ARM 三阵营 + Lex 主持 + 黄仁勋环节 + 观众问答），用于**中关村·公众科学日**类科普分会场。**不做胜负式辩论**；旧「双案例对谈 / debate」栈已迁入归档，代码仍在按 [`docs/design/implementation.md`](docs/design/implementation.md) 向 v2 迁移。
 
 总览与 Cursor plan：[`.cursor/plans/risc-v_三国杀_demo_设计_bbe2bf8e.plan.md`](.cursor/plans/risc-v_三国杀_demo_设计_bbe2bf8e.plan.md)
 

@@ -6,6 +6,8 @@ export interface Turn {
   speaker: Speaker;
   text: string;
   created_at: number;
+  /** forum | jensen_vc | liptan_tag */
+  kind?: string;
 }
 
 export interface ChatMessage {

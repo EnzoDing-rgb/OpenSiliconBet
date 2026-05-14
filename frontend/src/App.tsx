@@ -5,9 +5,10 @@ import { TurnMessage } from './components/TurnMessage'
 import { MasterChat } from './components/MasterChat.tsx'
 import { DebateAudio } from './components/DebateAudio'
 import { LexOpeningStage } from './components/LexOpeningStage'
+import { AudienceBetPanel } from './components/AudienceBetPanel'
 import { speakerMeta } from './utils/avatars'
 import { markdownToSafeHtml } from './utils/markdownRender'
-import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown } from './api'
+import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, skipForumToJensen } from './api'
 import type { Turn, RunStatus } from './types'
 
 const KEYNOTE_IMAGE_SRC = '/images/summit-cas-iss-keynote.png'
@@ -19,10 +20,10 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [judgeResult, setJudgeResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [chatOpen, setChatOpen] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
   /** 架构 §1：阶段 0 / 0.5 由 Lex 垫场 + 预录开场，完成后再请求后端论坛交锋（阶段 1） */
   const [lexPreamble, setLexPreamble] = useState(false)
+  const [skipForumSent, setSkipForumSent] = useState(false)
 
   const renderCompareMarkdown = (text: string) => (
     <div className="md-render compare-md" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(text) }} />
@@ -35,7 +36,7 @@ function App() {
     setStatus(null)
     setRunId(null)
     setJudgeResult(null)
-    setChatOpen(false)
+    setSkipForumSent(false)
     try {
       const id = await startDebate()
       setRunId(id)
@@ -104,7 +105,7 @@ function App() {
           <img
             className="hero-keynote-img"
             src={KEYNOTE_IMAGE_SRC}
-            alt="中科院软件所讲堂 · AI Summit 会场示意（RISC-V vs x86 vs ARM）"
+            alt="圆桌论坛会场示意（RISC-V vs x86 vs ARM）"
             loading="eager"
             decoding="async"
           />
@@ -195,7 +196,7 @@ function App() {
           )}
         </div>
 
-        <DebateAudio runId={runId} enabled={audioEnabled} totalTurns={6} />
+        <DebateAudio runId={runId} enabled={audioEnabled} totalTurns={8} />
 
         {error && (
           <div className="error-box">
@@ -214,38 +215,93 @@ function App() {
         )}
 
         {turns.length > 0 && (
-          <div className="timeline-container">
-            {(() => {
-              const elements: React.ReactElement[] = []
-              let currentRound = 0
-
-              turns.forEach((turn) => {
-                if (turn.round !== currentRound) {
-                  currentRound = turn.round
-                  elements.push(
-                    <div key={`round-${currentRound}`} className="round-divider">
-                      <span>第 {currentRound} 轮</span>
+          <div className="timeline-with-skip">
+            <div className="timeline-container">
+              {runId &&
+                status === 'running' &&
+                turns.length >= 1 &&
+                turns.length < 6 && (() => {
+                  const hasJensen = turns.some((t) => t.kind === 'jensen_vc')
+                  if (hasJensen) return null
+                  if (skipForumSent) {
+                    return (
+                      <div className="jensen-vc-callout" aria-label="黄仁勋视频串场加载中">
+                        <div className="jensen-vc-loading">
+                          <div className="jensen-vc-spinner" />
+                          <span>黄仁勋视频接入中...</span>
+                        </div>
+                        <p className="jensen-vc-hint">正在生成黄仁勋串场独白，请稍候</p>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="jensen-vc-callout" aria-label="黄仁勋视频串场">
+                      <button
+                        type="button"
+                        className="jensen-vc-btn"
+                        onClick={() => {
+                          void (async () => {
+                            const ok = await skipForumToJensen(runId)
+                            if (ok) setSkipForumSent(true)
+                          })()
+                        }}
+                      >
+                        黄仁勋 Video Call
+                      </button>
+                      <p className="jensen-vc-hint">
+                        跳过尚未生成的论坛尾段，直接进入黄仁勋视频串场环节。
+                      </p>
                     </div>
                   )
-                }
-                elements.push(<TurnMessage key={`turn-${turn.created_at}`} turn={turn} />)
-              })
+                })()}
 
-              return elements
-            })()}
+              {(() => {
+                const elements: React.ReactElement[] = []
+                let currentRound = 0
 
-            {isRunning && (
-              <div className="waiting-text">正在等待下一位嘉宾回应...</div>
-            )}
+                turns.forEach((turn) => {
+                  if (turn.round !== currentRound) {
+                    currentRound = turn.round
+                    const k = turn.kind || 'forum'
+                    let label = `第 ${currentRound} 轮`
+                    if (k === 'jensen_vc') label = '黄仁勋 · 视频串场'
+                    else if (k === 'liptan_tag') label = '陈立武 · 散场接话'
+                    elements.push(
+                      <div key={`round-${currentRound}-${k}`} className="round-divider">
+                        <span>{label}</span>
+                      </div>
+                    )
+                  }
+                  elements.push(<TurnMessage key={`turn-${turn.created_at}`} turn={turn} />)
+                })
+
+                return elements
+              })()}
+
+              {isRunning && (
+                <div className="waiting-text">正在等待下一位嘉宾回应...</div>
+              )}
+            </div>
           </div>
         )}
 
         {judgeResult && (
-          <div className="judge-box">
-            <h2 className="judge-title">Lex 锐评</h2>
-            <div className="judge-content">
-              {renderCompareMarkdown(judgeResult)}
+          <div className="lex-section">
+            <div className="judge-box">
+              <h2 className="judge-title">Lex 锐评</h2>
+              <div className="judge-content">
+                {renderCompareMarkdown(judgeResult)}
+              </div>
             </div>
+
+            <AudienceBetPanel />
+
+            {runId && (
+              <div className="audience-qa-box">
+                <h2 className="audience-qa-title">观众提问</h2>
+                <MasterChat runId={runId} />
+              </div>
+            )}
           </div>
         )}
 
@@ -253,34 +309,6 @@ function App() {
           RISC-V 三国杀 · 公众科学日分会场 demo
         </footer>
       </div>
-      {runId && (
-        <div className="master-chat-drawer">
-          {!chatOpen && (
-            <button
-              className="master-chat-drawer-toggle"
-              onClick={() => setChatOpen(true)}
-              aria-label="展开与研究者对话"
-            >
-              与研究者对话
-            </button>
-          )}
-          {chatOpen && (
-            <div className="master-chat-drawer-panel">
-              <div className="master-chat-drawer-header">
-                <div className="master-chat-drawer-title">与研究者对话</div>
-                <button
-                  className="master-chat-drawer-close"
-                  onClick={() => setChatOpen(false)}
-                  aria-label="收起与研究者对话"
-                >
-                  收起
-                </button>
-              </div>
-              <MasterChat runId={runId} />
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

@@ -412,6 +412,87 @@ body {
   background: transparent;
 }
 
+.timeline-with-skip {
+  margin-bottom: 8px;
+}
+
+.timeline-container {
+  flex: 1;
+  background: transparent;
+}
+
+.jensen-vc-callout {
+  margin: 0 0 20px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1px solid rgba(234, 179, 8, 0.6);
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(234, 179, 8, 0.15);
+}
+
+.jensen-vc-btn {
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #78350f;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.jensen-vc-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+  filter: brightness(1.05);
+}
+
+.jensen-vc-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #92400e;
+}
+
+.jensen-vc-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.jensen-vc-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(245, 158, 11, 0.3);
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .jensen-vc-callout {
+    padding: 14px 16px;
+  }
+
+  .jensen-vc-btn {
+    width: 100%;
+  }
+}
+
 .round-divider {
   display: flex;
   justify-content: center;
@@ -437,8 +518,14 @@ body {
   font-style: italic;
 }
 
-.judge-box {
+.lex-section {
   margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.judge-box {
   padding: 24px 28px;
   background: rgba(255, 255, 255, 0.85);
   border-radius: 16px;
@@ -460,6 +547,23 @@ body {
   line-height: 1.55;
   color: #1f2937;
   text-align: left;
+}
+
+.audience-qa-box {
+  padding: 24px 28px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.audience-qa-title {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
 }
 
 .md-render {

@@ -83,7 +83,7 @@ export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
         style={{ ['--lex-accent' as string]: lex.accent }}
       >
         <div className="lex-opening-stage__masthead">
-          <p className="lex-opening-stage__venue">公众科学日分会场 · 中科院软件所讲堂</p>
+          <p className="lex-opening-stage__venue">公众科学日分会场 · 科普圆桌（布景示意）</p>
           <h2 className="lex-opening-stage__h2" id="lex-opening-title">
             {step === 'init' ? 'Lex 主持开场' : 'Lex 预录开场'}
           </h2>

@@ -5,6 +5,50 @@
   align-items: flex-start;
 }
 
+.turn-block {
+  margin-bottom: 8px;
+}
+
+.turn-block--jensen-vc {
+  margin-bottom: 28px;
+}
+
+.jensen-vc-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 12px 52px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(15, 23, 42, 0.04));
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.jensen-vc-frame-wrap {
+  width: 120px;
+  height: 68px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(234, 179, 8, 0.65);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+  background: #0f172a;
+}
+
+.jensen-vc-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.jensen-vc-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  letter-spacing: 0.02em;
+}
+
 .turn-container.align-right {
   flex-direction: row-reverse;
 }

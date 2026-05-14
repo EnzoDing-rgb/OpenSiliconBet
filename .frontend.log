@@ -8,3 +8,105 @@
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.31.206:5173/
   ➜  Network: http://100.90.186.53:5173/
+12:31:58 PM [vite] (client) hmr update /src/components/LexOpeningStage.tsx
+12:31:59 PM [vite] (client) hmr update /src/App.tsx
+12:32:11 PM [vite] (client) hmr update /src/components/LexOpeningStage.tsx
+12:33:11 PM [vite] (client) hmr update /src/App.tsx, /src/components/MasterChat.tsx
+12:33:24 PM [vite] (client) hmr update /src/App.tsx
+12:33:26 PM [vite] (client) hmr update /src/App.tsx
+12:33:28 PM [vite] (client) hmr update /src/App.tsx
+12:33:30 PM [vite] (client) hmr update /src/App.tsx
+12:33:32 PM [vite] (client) hmr update /src/App.tsx
+12:33:38 PM [vite] (client) hmr update /src/App.tsx
+12:33:38 PM [vite] (client) hmr update /src/App.tsx
+12:33:40 PM [vite] (client) hmr update /src/components/TurnMessage.tsx
+12:33:41 PM [vite] Internal server error: /home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/src/components/TurnMessage.tsx: Unterminated JSX contents. (36:10)
+
+  34 |         />
+  35 |       </div>
+> 36 |     </div>
+     |           ^
+  37 |   );
+  38 | }
+  39 |
+  Plugin: vite:react-babel
+  File: /home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/src/components/TurnMessage.tsx:36:10
+  34 |          />
+  35 |        </div>
+  36 |      </div>
+     |            ^
+  37 |    );
+  38 |  }
+      at constructor (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.jsxReadToken (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4448:20)
+      at TypeScriptParserMixin.getTokenFromCode (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4774:12)
+      at TypeScriptParserMixin.getTokenFromCode (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9987:11)
+      at TypeScriptParserMixin.nextToken (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:5782:10)
+      at TypeScriptParserMixin.next (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:5692:10)
+      at TypeScriptParserMixin.eat (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:5696:12)
+      at TypeScriptParserMixin.expect (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:6898:15)
+      at TypeScriptParserMixin.jsxParseClosingElementAt (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4680:10)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4695:37)
+      at TypeScriptParserMixin.jsxParseElementAt (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4698:32)
+      at TypeScriptParserMixin.jsxParseElement (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at /home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9775:39
+      at TypeScriptParserMixin.tryParse (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9775:18)
+      at /home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.parseReturnStatement (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:13142:28)
+      at TypeScriptParserMixin.parseStatementContent (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/home/fengde/Projects/full-stack/products/OpenSiliconBet/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+12:33:43 PM [vite] (client) hmr update /src/components/TurnMessage.tsx
+12:34:09 PM [vite] (client) hmr update /src/components/TurnMessage.css
+12:34:12 PM [vite] (client) hmr update /src/App.css
+12:34:21 PM [vite] (client) hmr update /src/App.css
+12:34:47 PM [vite] (client) hmr update /src/App.tsx
+12:46:06 PM [vite] (client) hmr update /src/App.tsx
+12:46:24 PM [vite] (client) hmr update /src/App.tsx
+12:46:31 PM [vite] (client) hmr update /src/App.tsx
+12:46:47 PM [vite] (client) hmr update /src/App.tsx
+12:47:02 PM [vite] (client) hmr update /src/App.css
+12:47:15 PM [vite] (client) hmr update /src/App.css
+12:52:00 PM [vite] (client) hmr update /src/App.tsx
+12:52:17 PM [vite] (client) hmr update /src/App.tsx
+12:52:33 PM [vite] (client) hmr update /src/App.css
+12:52:44 PM [vite] (client) hmr update /src/App.css
+12:54:20 PM [vite] (client) hmr update /src/App.tsx
+12:54:22 PM [vite] (client) hmr update /src/App.tsx
+12:56:21 PM [vite] (client) hmr update /src/App.tsx
+12:56:23 PM [vite] (client) hmr update /src/App.tsx
+12:58:56 PM [vite] (client) hmr update /src/App.tsx
+12:59:12 PM [vite] (client) hmr update /src/App.css
+1:00:48 PM [vite] (client) hmr update /src/App.tsx
+1:00:48 PM [vite] (client) hmr update /src/App.tsx

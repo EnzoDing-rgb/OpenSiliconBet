@@ -79,6 +79,13 @@ async def start_debate(background_tasks: BackgroundTasks):
     return StartDebateResponse(run_id=run_id)
 
 
+@app.post("/api/debate/skip-forum/{run_id}")
+async def skip_forum_to_jensen(run_id: str):
+    """跳过尚未生成的论坛尾段，直接进入黄仁勋视频串场（下一轮循环开始时生效）。"""
+    ok = runner.request_skip_to_jensen(run_id)
+    return {"ok": ok}
+
+
 @app.get("/api/debate/status/{run_id}", response_model=DebateStatusResponse)
 async def get_debate_status(run_id: str):
     """Get current debate status with accumulated turns"""

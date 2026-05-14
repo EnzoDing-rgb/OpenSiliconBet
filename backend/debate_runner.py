@@ -79,13 +79,16 @@ LIPTAN_SKILL_PATH = _skill_path("LIPTAN_SKILL_PATH", PROJECT_ROOT / "docs" / "ch
 COOK_SKILL_PATH = _skill_path("COOK_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "timcook-arm-perspective-SKILL.md")
 JENSEN_SKILL_PATH = _skill_path("JENSEN_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "jensen-huang-perspective-SKILL.md")
 LEX_SKILL_PATH = _skill_path("LEX_SKILL_PATH", PROJECT_ROOT / "docs" / "characters" / "lex-fridman-host-perspective-SKILL.md")
+JENSEN_CLOSING_PATH = _skill_path(
+    "JENSEN_CLOSING_PATH", PROJECT_ROOT / "docs" / "background" / "jensen-closing-speech.md"
+)
 
 # Dialogue topic（论坛交锋 demo）
-DEBATE_TOPIC = "RISC-V vs x86 vs ARM：Agent 时代的指令集与算力格局（中科院公众科学日分会场 · 论坛交锋）"
+DEBATE_TOPIC = "RISC-V vs x86 vs ARM：Agent 时代的指令集与算力格局（公众科学日分会场 · 论坛交锋）"
 
 MAX_RESPONSE_TOKENS = 400
 # 与宪章 GLOBAL 对齐：可见中文正文约 200 字（宁少勿灌水）
-RESPONSE_LEN_HINT_ZH = "中文可见正文约 200 字以内；宁少勿堆字，密度优先。"
+RESPONSE_LEN_HINT_ZH = "中文可见正文约 两百字以内（用汉字写「两百」仅作提示）；宁少勿堆字，密度优先。**念给语音听**：年限、比例、年份尽量用汉字（三十年、百分之六十），少用阿拉伯数字串。"
 FORUM_LLM_TEMPERATURE = 0.88
 DEFAULT_LLM_TEMPERATURE = 0.72
 DISPLAY_DELAY_SECONDS_PER_TURN = 7.0
@@ -123,7 +126,9 @@ def _interaction_wrapper(opponent_name_zh: str, opponent_last: Optional[str]) ->
 ORAL_FORUM_CONTRACT_ZH = """
 【本场表达契约 — 现场圆桌 + 语音给观众听】
 - 场合是**公众科学日分会场**：台下是真观众，你的话会走 **TTS 念出来**——要像**对着人和麦克风聊天**，有停顿、有口气；不要咨询备忘录、PR one-pager、研报「执行摘要」体。
-- **禁止**在正文里出现传棒符号：`@人名`、`@无`、`→@`、`→ @` 等（接话顺序由系统安排）；想点名就口语直呼「老陈」「库克这边」之类自然带过即可。
+- **念给 TTS 的中文数字**：阿拉伯数字易被读成「三零年」之类。**年限、年份、百分比、金额、型号里的数字尽量用汉字**：写「三十年」不要写「30年」，「百分之六十」不要写「60%」，「二零二五年」优于「2025」；若必须用数码，优先全角「３０」并少用。
+- **禁止**在正文里出现传棒符号：`@人名`、`@无`、`→@`、`→ @` 等——**仅限吴伟 / 陈立武 / 库克三位论坛嘉宾**；想点名就口语直呼「老陈」「库克这边」之类自然带过即可。
+- **黄仁勋（阶段二视频串场闭幕独白）例外**：须遵守 SKILL 末行 Baton，**仅允许** `→ @无` / `→ @所有人` / `→ @吴伟` / `→ @陈立武` / `→ @库克` 五选一，且放在**最后一行**。
 - **禁止**公文编号腔：不要写「Q1/Q2」「第1条」「1）共识」这种；宁可短句、偶尔自我打断「不对，我换个说法」。
 - **少用** markdown 大标题层级；**加粗**最多一两处真正要敲黑板的地方；不要为排版而排版。
 - 事实底盘在 system 里已给：心里有数即可，**口语里不必句句挂「§几」**；拿不准就说「这块我还得回去核一下」。
@@ -175,6 +180,106 @@ def _strip_redundant_speaker_head(text: str, speaker: Speaker) -> str:
     return t
 
 
+def _number_to_chinese(num_str: str) -> str:
+    """TTS 友好：把阿拉伯数字按口语读法转中文。
+    年份读法：2012 → 二零一二（非「两千零一十二」）
+    普通数字：30 → 三十，17 → 十七
+    百分比：60% → 百分之六十
+    """
+    digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
+
+    # 纯年份（4位数字）：逐字读
+    if re.match(r"^\d{4}$", num_str):
+        return "".join(digits[int(d)] for d in num_str)
+
+    # 普通数字：量读法
+    try:
+        n = int(num_str)
+        if n == 0:
+            return "零"
+        if n < 10:
+            return digits[n]
+        if n == 10:
+            return "十"
+        if n < 20:
+            return "十" + digits[n % 10]
+        if n < 100:
+            tens = n // 10
+            rest = n % 10
+            return digits[tens] + "十" + (digits[rest] if rest else "")
+        if n < 1000:
+            hundreds = n // 100
+            rest = n % 100
+            result = digits[hundreds] + "百"
+            if rest:
+                if rest < 10:
+                    result += "零" + digits[rest]
+                else:
+                    result += _number_to_chinese(str(rest))
+            return result
+        if n < 10000:
+            thousands = n // 1000
+            rest = n % 1000
+            result = digits[thousands] + "千"
+            if rest:
+                if rest < 100:
+                    result += "零" + _number_to_chinese(str(rest))
+                else:
+                    result += _number_to_chinese(str(rest))
+            return result
+        return num_str  # 超大数字保留原文
+    except ValueError:
+        return num_str
+
+
+def _convert_numerals_to_chinese_readable(text: str) -> str:
+    """把文本中的阿拉伯数字替换成 TTS 可读的中文口语。"""
+    if not text:
+        return text
+    t = text
+
+    # 百分比：60% → 百分之六十（先处理避免 % 被拆开）
+    def replace_percent(m: re.Match[str]) -> str:
+        return "百分之" + _number_to_chinese(m.group(1))
+
+    t = re.sub(r"(\d+(?:\.\d+)?)%", replace_percent, t)
+
+    # 年份：2025年 → 二零二五年
+    def replace_year(m: re.Match[str]) -> str:
+        year_chinese = "".join(["零一二三四五六七八九"[int(d)] for d in m.group(1)])
+        return year_chinese + m.group(2)
+
+    t = re.sub(r"(\d{4})(年)", replace_year, t)
+
+    # 普通数字（但避免已经转好的中文数字被二次处理）
+    # 只处理独立的、非特殊格式的阿拉伯数字
+    def replace_number(m: re.Match[str]) -> str:
+        num_str = m.group(1)
+        # 如果前后是中文，按语境读；否则保留原文
+        return _number_to_chinese(num_str)
+
+    # 处理 "第X轮" → "第X轮" 但 X 转中文
+    def replace_round(m: re.Match[str]) -> str:
+        return "第" + _number_to_chinese(m.group(1)) + "轮"
+
+    t = re.sub(r"第(\d+)轮", replace_round, t)
+
+    # 普通数字（1-3位）：周围是中文或空格
+    def replace_standalone_number(m: re.Match[str]) -> str:
+        before = m.group(1) or ""
+        num = m.group(2)
+        after = m.group(3) or ""
+        # 已经是特殊格式的不处理
+        if len(num) <= 4:
+            return before + _number_to_chinese(num) + after
+        return m.group(0)
+
+    t = re.sub(r"(\s|，|。|、|：|「|」|（|）|^)(\d+)(\s|，|。|、|：|「|」|（|）|$)",
+               replace_standalone_number, t)
+
+    return t
+
+
 def _clean_forum_live(text: str, *, speaker: Optional[Speaker] = None) -> str:
     """去掉自述头、末尾 @ 传棒等不适合 TTS/现场感的痕迹。"""
     if not text:
@@ -202,6 +307,8 @@ def _clean_forum_live(text: str, *, speaker: Optional[Speaker] = None) -> str:
     t = re.sub(r"[ \t]*[→＞>]\s*@\S+\s*$", "", t).strip()
     if speaker is not None:
         t = _strip_redundant_speaker_head(t, speaker)
+    # 强制把阿拉伯数字转成中文口语读法（TTS 友好）
+    t = _convert_numerals_to_chinese_readable(t)
     return t
 
 
@@ -283,6 +390,17 @@ DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
 ]
 
 
+def _format_turns_transcript_zh(turns: Sequence[Turn]) -> str:
+    transcript_lines: List[str] = []
+    current_round = 0
+    for t in turns:
+        if t.round != current_round:
+            current_round = t.round
+            transcript_lines.append(f"\n## 第 {current_round} 轮\n")
+        transcript_lines.append(f"{_speaker_zh(t.speaker)}：{t.text}\n")
+    return "\n".join(transcript_lines).strip()
+
+
 def _lex_review_system_prompt(lex_skill_body: str) -> str:
     """散场总结：Lex 口吻 + 仓库 Lex SKILL 注入（截断防爆上下文）。"""
     body = (lex_skill_body or "").strip()
@@ -304,25 +422,41 @@ def _lex_review_system_prompt(lex_skill_body: str) -> str:
         "- 像真人：短句、停顿感、好奇、先 steelman 再点出张力；**不判输赢**、不当裁判写判决书。\n"
         "- 禁止「1）2）3）」、禁止咨询报告 / 公文摘要腔、禁止「作为一个人工智能」类 meta。\n"
         "- 约 **3–6 段**口语；可加 **一两处加粗** 帮观众抓住关键词；宁像说完下车，不像机器人纪要。\n"
+        "- **口语数字**：年限、比例、年份多用汉字（三十年、百分之六十），少用阿拉伯数字串，避免念给 TTS 时读错。\n"
     )
 
 
-def _lex_review_user_prompt(topic: str, turns: List["Turn"]) -> str:
-    transcript_lines: List[str] = []
-    current_round = 0
-    for t in turns:
-        if t.round != current_round:
-            current_round = t.round
-            transcript_lines.append(f"\n## 第 {current_round} 轮\n")
-        transcript_lines.append(f"{_speaker_zh(t.speaker)}：{t.text}\n")
-
-    transcript = "\n".join(transcript_lines).strip()
+def _lex_review_user_prompt(topic: str, turns: List[Turn]) -> str:
+    transcript = _format_turns_transcript_zh(turns)
     return (
         f"主题：{topic}\n\n"
-        f"以下是圆桌口语实录（可能略乱，但别帮嘉宾改口风）：\n{transcript}\n\n"
+        f"以下是圆桌口语实录（含论坛与串场；别帮嘉宾改口风）：\n{transcript}\n\n"
         "现在请你 **以 Lex Fridman 的身份** 写散场总结（Lex 锐评）："
         "抓住每位嘉宾**最硬**的一点、今天**真正掐起来**的一处张力、再给观众 **2–3 个**散场后可自己去查证的方向（用口语点名即可，别列公文清单）。"
     )
+
+
+def _jensen_vc_user_prompt(turns_block: str, ammo: str) -> str:
+    return (
+        "论坛三位嘉宾已完成实录（见下）。你现在处于「阶段二 · 视频串场」：像刚接入的视频电话，短独白。\n\n"
+        f"--- 实录 ---\n{turns_block}\n\n"
+        f"--- 导演弹药（精读；可化用骨架与金句；勿发明实录没有的硬数字）---\n{ammo.strip()}\n\n"
+        "【硬要求】\n"
+        "- 中文可见正文 ≤ 两百字；口语数字：年限、比例、年份用汉字（如三十年、百分之六十），少用阿拉伯数字。\n"
+        "- 须让观众听清「你们都没赢」与「我赢了」两大块语义；推荐嵌进一整句，例如「其实你们都没赢，我赢了」。\n"
+        "- 末行 Baton：→ @无（或与 SKILL 一致的另四种之一）。\n"
+        "- 叙事仍落在 SKILL：三家都买你的栈、卖铲子、CUDA / horizontal moat。\n"
+    )
+
+
+def _ensure_jensen_golden_line(text: str) -> str:
+    t = (text or "").strip()
+    if "都没赢" in t and "我赢了" in t:
+        return t
+    graft = "其实你们都没赢，我赢了。"
+    if t:
+        return (t.rstrip() + "\n\n" + graft).strip()
+    return graft
 
 
 class DebateRunner:
@@ -452,6 +586,8 @@ class DebateRunner:
             for i, (speaker, base_prompt) in enumerate(DIALOGUE_TURNS, 1):
                 if run.status != RunStatus.RUNNING:
                     break
+                if run.skip_to_jensen:
+                    break
 
                 system_prompt = self._build_system_prompt(speaker)
                 opponent_name = _speaker_zh(last_speaker) if last_speaker else ""
@@ -479,6 +615,7 @@ class DebateRunner:
                     speaker=speaker,
                     text=response_text,
                     created_at=time.time(),
+                    kind="forum",
                 )
                 run.turns.append(turn)
                 last_text_by_speaker[speaker] = turn.text
@@ -487,15 +624,77 @@ class DebateRunner:
                 # Slow down text output so UI doesn't race ahead of audio playback.
                 await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
-            # Mark done
-            run.status = RunStatus.DONE
-            run.finished_at = time.time()
+            if run.status == RunStatus.RUNNING:
+                await self._append_jensen_vc_turn(run)
+            if run.status == RunStatus.RUNNING:
+                await self._append_liptan_tag_turn(run)
+
+            if run.status == RunStatus.RUNNING:
+                run.status = RunStatus.DONE
+                run.finished_at = time.time()
             self._save_result(run)
 
         except Exception as e:
             run.status = RunStatus.ERROR
             run.error = f"Unexpected error: {str(e)}"
             self._save_result(run)
+
+    async def _append_jensen_vc_turn(self, run: DebateRun) -> None:
+        """阶段二：黄仁勋视频串场闭幕独白（叠 Jensen SKILL + jensen-closing-speech 弹药）。"""
+        ammo = self._read_skill(JENSEN_CLOSING_PATH).strip()
+        if not ammo:
+            print("Warning: jensen-closing-speech.md missing or empty")
+            ammo = "（弹药文件缺失；仍请按 Jensen SKILL 完成闭幕独白。）"
+        transcript = _format_turns_transcript_zh(run.turns)
+        user = _jensen_vc_user_prompt(transcript, ammo)
+        system = self._build_system_prompt(Speaker.JENSEN)
+        raw = await self._call_llm(
+            system,
+            user,
+            temperature=FORUM_LLM_TEMPERATURE,
+            max_tokens=MAX_RESPONSE_TOKENS,
+        )
+        if not raw:
+            run.status = RunStatus.ERROR
+            run.error = "黄仁勋（视频串场）独白生成失败：模型无返回或 API 异常。"
+            return
+        fixed = _ensure_jensen_golden_line(_clean_model_output(raw))
+        fixed = _clean_forum_live(fixed or "", speaker=Speaker.JENSEN).strip()
+        run.turns.append(
+            Turn(
+                round=4,
+                speaker=Speaker.JENSEN,
+                text=fixed,
+                created_at=time.time(),
+                kind="jensen_vc",
+            )
+        )
+        await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
+
+    async def _append_liptan_tag_turn(self, run: DebateRun) -> None:
+        """黄仁勋之后：陈立武一句收束（吴伟不再接话）。"""
+        text = (
+            "Jensen，您刚那段我听见了。**说白了：我们都没赢——因为这场仗才刚开始。**"
+            "对，**这场仗才刚开始**；后面拼的是量产节奏、现金流、还有客户用脚投票，咱们别把终局今天就判死。"
+        )
+        cleaned = _clean_forum_live(text, speaker=Speaker.LIPTAN).strip()
+        run.turns.append(
+            Turn(
+                round=5,
+                speaker=Speaker.LIPTAN,
+                text=cleaned,
+                created_at=time.time(),
+                kind="liptan_tag",
+            )
+        )
+        await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
+
+    def request_skip_to_jensen(self, run_id: str) -> bool:
+        run = self.runs.get(run_id)
+        if not run or run.status != RunStatus.RUNNING:
+            return False
+        run.skip_to_jensen = True
+        return True
 
     async def _call_llm(
         self,
@@ -679,7 +878,13 @@ class DebateRunner:
         for turn in run.turns:
             if turn.round != current_round:
                 current_round = turn.round
-                lines.append(f"## 第 {current_round} 轮")
+                k = getattr(turn, "kind", "forum") or "forum"
+                if k == "jensen_vc":
+                    lines.append("## 黄仁勋 · 视频串场（示意）")
+                elif k == "liptan_tag":
+                    lines.append("## 陈立武 · 散场接话")
+                else:
+                    lines.append(f"## 第 {current_round} 轮")
                 lines.append("")
 
             speaker_name = _speaker_zh(turn.speaker)

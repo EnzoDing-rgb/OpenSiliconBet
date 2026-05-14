@@ -10,6 +10,12 @@ export async function startDebate(): Promise<string> {
   return data.run_id;
 }
 
+export async function skipForumToJensen(runId: string): Promise<boolean> {
+  const response = await fetch(`${API_BASE}/debate/skip-forum/${runId}`, { method: 'POST' });
+  const data = (await response.json()) as { ok?: boolean };
+  return !!data.ok;
+}
+
 export async function getDebateStatus(runId: string): Promise<DebateStatusResponse> {
   const response = await fetch(`${API_BASE}/debate/status/${runId}`);
   return await response.json();

@@ -1,707 +1,96 @@
-INFO:     Started server process [917522]
+INFO:     Started server process [982765]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:9000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:43886 - "GET /api/health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44006 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44018 - "WebSocket /ws/debate-audio?run_id=fbcf4829-8d98-40f3-a4d6-ae7835cab722" [accepted]
+INFO:     127.0.0.1:50648 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42176 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42176 - "GET /assets/index-CFleD7un.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42188 - "GET /assets/index-CjGbcy5L.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42176 - "GET /images/summit-cas-iss-keynote.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42188 - "GET /assets/lex-rHUaZNAv.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42196 - "GET /assets/wuwei-DkZMvYo9.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42210 - "GET /assets/liptan-552Z-Mkl.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /assets/jensen-DPSP0RV_.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42218 - "GET /assets/cook-BvLX5oOt.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /favicon.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /audio/lex-opening-long.mp3 HTTP/1.1" 206 Partial Content
+INFO:     127.0.0.1:42222 - "GET /audio/lex-opening-short.mp3 HTTP/1.1" 206 Partial Content
+INFO:     127.0.0.1:42222 - "POST /api/debate/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49396 - "WebSocket /ws/debate-audio?run_id=1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8" [accepted]
 INFO:     connection open
-INFO:     127.0.0.1:44022 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44038 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44052 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55294 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55302 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55314 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55322 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55332 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55336 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55618 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55632 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55646 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55654 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55664 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55674 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55682 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59904 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59914 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59930 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59944 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59960 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59972 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59980 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56692 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56704 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56716 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56720 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56732 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56740 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51940 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51948 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51960 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51964 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51968 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51970 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51982 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50078 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50084 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50094 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50098 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50108 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50114 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49408 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34610 - "POST /api/debate/skip-forum/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34610 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
 Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:50124 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55292 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55296 - "GET /api/debate/status/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34562 - "POST /api/debate/chat/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54802 - "POST /api/debate/chat/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57992 - "POST /api/debate/chat/fbcf4829-8d98-40f3-a4d6-ae7835cab722 HTTP/1.1" 200 OK
-INFO:     connection closed
-INFO:     127.0.0.1:37004 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37012 - "WebSocket /ws/debate-audio?run_id=496efbb5-88e5-4c81-886f-f3d1258dd2a0" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:37022 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37024 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37030 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37036 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:37038 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56032 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56044 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56048 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56058 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56062 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56072 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46472 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46480 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46494 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46502 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46504 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46510 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46526 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53284 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53300 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53304 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53306 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53310 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53320 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53336 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39940 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39946 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39958 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39964 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39970 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39986 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41208 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41220 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41226 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41230 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41232 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41238 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41246 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34310 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34316 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:34324 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34340 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34342 - "GET /api/debate/status/496efbb5-88e5-4c81-886f-f3d1258dd2a0 HTTP/1.1" 200 OK
-INFO:     connection closed
-INFO:     127.0.0.1:45420 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45432 - "WebSocket /ws/debate-audio?run_id=b4ced1e4-04fb-41e9-8205-545ec0334b3b" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:56674 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56686 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56702 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56704 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56714 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56720 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56722 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56736 - "POST /api/debate/skip-forum/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:44408 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44412 - "POST /api/debate/skip-forum/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:44428 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44438 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44452 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44460 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44468 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44476 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48384 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48396 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48406 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48416 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48418 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48430 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40518 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40522 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40524 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40536 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40552 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40560 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40576 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51612 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51614 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51628 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51636 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51648 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51656 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42708 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42712 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42724 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42732 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42746 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42752 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42768 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55162 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55174 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55182 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55186 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55198 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:55214 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56050 - "GET /api/debate/status/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34610 - "POST /api/debate/skip-forum/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:34616 - "POST /api/debate/skip-forum/b4ced1e4-04fb-41e9-8205-545ec0334b3b HTTP/1.1" 405 Method Not Allowed
-INFO:     connection closed
-INFO:     127.0.0.1:50172 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50174 - "WebSocket /ws/debate-audio?run_id=9869fa3a-efc4-4823-9cd6-25c1a4227e3d" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:50180 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50196 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50206 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50216 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50228 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50240 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43946 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43952 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43960 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43966 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43982 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43992 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56804 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56806 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56818 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56828 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56838 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56842 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56848 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53092 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53104 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53120 - "POST /api/debate/skip-forum/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:53128 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53140 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53156 - "POST /api/debate/skip-forum/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:53160 - "POST /api/debate/skip-forum/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:53172 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53182 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53186 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57888 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57894 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57908 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57920 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57928 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49496 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     connection closed
-INFO:     127.0.0.1:49512 - "WebSocket /ws/debate-audio?run_id=9869fa3a-efc4-4823-9cd6-25c1a4227e3d" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:49526 - "WebSocket /ws/debate-audio?run_id=9869fa3a-efc4-4823-9cd6-25c1a4227e3d" [accepted]
-INFO:     connection open
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 239, in run_asgi
-    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
-    await super().__call__(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 151, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 80, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
-    await route.handle(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 350, in handle
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 160, in app
-    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 157, in app
-    await func(session)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 764, in app
-    await dependant.call(**solved_result.values)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/app.py", line 150, in websocket_debate_audio
-    - meta {"type":"meta", "format": "...", "speaker": "...", "round": N}
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/tts_manager.py", line 385, in handle_connection
-    if run_id and not is_test:
-       ^^^^^^
-UnboundLocalError: cannot access local variable 'run_id' where it is not associated with a value
-INFO:     connection closed
-INFO:     connection closed
-INFO:     127.0.0.1:49532 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49534 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49544 - "POST /api/debate/skip-forum/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:49558 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49562 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49578 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49580 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 239, in run_asgi
-    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
-    await super().__call__(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 151, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 80, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
-    await route.handle(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 350, in handle
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 160, in app
-    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 157, in app
-    await func(session)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 764, in app
-    await dependant.call(**solved_result.values)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/app.py", line 150, in websocket_debate_audio
-    - meta {"type":"meta", "format": "...", "speaker": "...", "round": N}
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/tts_manager.py", line 346, in handle_connection
-    await session.run()
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/tts_manager.py", line 258, in run
-    await self._emit_phase("completed", message="本段语音已生成完毕")
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/tts_manager.py", line 143, in _emit_phase
-    await self.websocket.send_text(json.dumps(payload))
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/websockets.py", line 166, in send_text
-    await self.send({"type": "websocket.send", "text": data})
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/websockets.py", line 98, in send
-    raise RuntimeError('Cannot call "send" once a close message has been sent.')
-RuntimeError: Cannot call "send" once a close message has been sent.
-INFO:     127.0.0.1:49050 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49060 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49066 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49078 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49086 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:49094 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52820 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52836 - "GET /api/debate/status/9869fa3a-efc4-4823-9cd6-25c1a4227e3d HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35820 - "WebSocket /ws/debate-audio?run_id=9869fa3a-efc4-4823-9cd6-25c1a4227e3d" [accepted]
-INFO:     connection open
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 239, in run_asgi
-    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
-    await super().__call__(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 151, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 80, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
-    await route.handle(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 350, in handle
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 160, in app
-    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 157, in app
-    await func(session)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 764, in app
-    await dependant.call(**solved_result.values)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/app.py", line 150, in websocket_debate_audio
-    - meta {"type":"meta", "format": "...", "speaker": "...", "round": N}
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/tts_manager.py", line 385, in handle_connection
-    if run_id and not is_test:
-       ^^^^^^
-UnboundLocalError: cannot access local variable 'run_id' where it is not associated with a value
-INFO:     connection closed
-INFO:     127.0.0.1:35834 - "WebSocket /ws/debate-audio?run_id=9869fa3a-efc4-4823-9cd6-25c1a4227e3d" [accepted]
-INFO:     connection open
-INFO:     connection closed
-INFO:     127.0.0.1:57174 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57176 - "WebSocket /ws/debate-audio?run_id=3122ec26-51aa-4361-8db1-a94a7744d33e" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:57192 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57198 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57204 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57216 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57224 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55986 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55996 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56012 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56022 - "POST /api/debate/skip-forum/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:56030 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56034 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56042 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56050 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40766 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40770 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40786 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40798 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40806 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40816 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52170 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52182 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52192 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52198 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52202 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52212 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46740 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46746 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46750 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46758 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46766 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46770 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46778 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52524 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52534 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52540 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52548 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52554 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52556 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52570 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34694 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34706 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34708 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34722 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:34724 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50584 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50600 - "GET /api/debate/status/3122ec26-51aa-4361-8db1-a94a7744d33e HTTP/1.1" 200 OK
-INFO:     connection closed
-INFO:     127.0.0.1:46504 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46514 - "WebSocket /ws/debate-audio?run_id=8b508e4d-bbf7-4ace-8810-0375c1732fca" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:46516 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46518 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46522 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53226 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53236 - "POST /api/debate/skip-forum/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:53240 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53248 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53256 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53258 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53274 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53276 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42888 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42896 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42906 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42914 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42930 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42946 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42962 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34012 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34024 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34036 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34042 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34056 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34072 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58144 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58156 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58172 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58174 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58188 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58194 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58200 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44622 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44626 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44640 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44642 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44648 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44652 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44656 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55290 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55302 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55310 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55320 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55322 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55336 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:33620 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     127.0.0.1:33626 - "GET /api/debate/status/8b508e4d-bbf7-4ace-8810-0375c1732fca HTTP/1.1" 200 OK
-INFO:     connection closed
-INFO:     127.0.0.1:32776 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:32778 - "WebSocket /ws/debate-audio?run_id=a00a59f3-eff1-4ae9-9847-c86e35f1dcc8" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:32786 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:32802 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:32814 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-websocket closed due to [Errno 104] Connection reset by peer
-INFO:     127.0.0.1:39326 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39330 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39334 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39350 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39360 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39368 - "POST /api/debate/skip-forum/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:39370 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35018 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35022 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35024 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35038 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35046 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35060 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:35066 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56224 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56238 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56254 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56270 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56278 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56286 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56296 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49588 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49596 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49612 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49620 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49622 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49636 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40766 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40778 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40794 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40808 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40814 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40816 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40830 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55658 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55662 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55676 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55690 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55698 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55714 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:55728 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38028 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38034 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:38036 - "GET /api/debate/status/a00a59f3-eff1-4ae9-9847-c86e35f1dcc8 HTTP/1.1" 200 OK
-INFO:     connection closed
-INFO:     127.0.0.1:44956 - "WebSocket /ws/debate-audio?run_id=a00a59f3-eff1-4ae9-9847-c86e35f1dcc8" [accepted]
-INFO:     127.0.0.1:44968 - "WebSocket /ws/debate-audio?run_id=a00a59f3-eff1-4ae9-9847-c86e35f1dcc8" [accepted]
-INFO:     connection open
-INFO:     connection open
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 239, in run_asgi
-    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 56, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1159, in __call__
-    await super().__call__(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 151, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 80, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
-    await route.handle(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/routing.py", line 350, in handle
-    await self.app(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 160, in app
-    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 157, in app
-    await func(session)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 764, in app
-    await dependant.call(**solved_result.values)
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/app.py", line 150, in websocket_debate_audio
-    """WebSocket endpoint for real-time debate audio streaming.
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fengde/Projects/full-stack/products/OpenSiliconBet/backend/tts_manager.py", line 385, in handle_connection
-UnboundLocalError: cannot access local variable 'run_id' where it is not associated with a value
-INFO:     connection closed
-INFO:     connection closed
-INFO:     127.0.0.1:40420 - "POST /api/debate/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40436 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40438 - "WebSocket /ws/debate-audio?run_id=cb29b28a-64fb-4135-a935-4023ad638394" [accepted]
-INFO:     connection open
-INFO:     127.0.0.1:40448 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40458 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40470 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40478 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40494 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:40502 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51218 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51220 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51228 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51244 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51254 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51260 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51274 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51290 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51306 - "POST /api/debate/skip-forum/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:51320 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51324 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51328 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51336 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51340 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51354 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51356 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51362 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51376 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36812 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36814 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36822 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36828 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36836 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36852 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36864 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36876 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36886 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36900 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36914 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36928 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36934 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36950 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36966 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36978 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36980 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45422 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45436 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45446 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45452 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45468 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45474 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45488 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45490 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45496 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45500 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45508 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45522 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45538 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45548 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45556 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45572 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:45574 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49056 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49070 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49072 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49078 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49088 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49092 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49098 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49108 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49110 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49120 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49128 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49140 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49144 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49154 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49166 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49172 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57330 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57346 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57352 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57358 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57366 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57380 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57384 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57390 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57400 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57416 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57418 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57424 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57436 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57440 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57450 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57460 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57466 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43798 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43814 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43820 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43834 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43840 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43842 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43854 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43870 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43884 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43900 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43906 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43918 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43920 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43926 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34156 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34158 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34170 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34186 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34198 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34212 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34226 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34238 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34240 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-Debate saved to /home/fengde/Projects/full-stack/products/OpenSiliconBet/docs/_archieved_mds/debate_result.md
-INFO:     127.0.0.1:34256 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53748 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53754 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53760 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53770 - "GET /api/debate/status/cb29b28a-64fb-4135-a935-4023ad638394 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54918 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54918 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54918 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54918 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42222 - "GET /api/debate/status/1cf22df3-cdb6-4c3a-a8f5-815f5a0d20b8 HTTP/1.1" 200 OK

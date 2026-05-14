@@ -18,6 +18,7 @@ type AudioMeta = {
   speaker: Speaker
   round: number
   turn_index: number
+  selection?: boolean
 }
 
 type PhaseMsg = {
@@ -32,7 +33,7 @@ type PhaseMsg = {
 type ControlMsg =
   | AudioMeta
   | PhaseMsg
-  | { type: 'turn_done'; speaker: Speaker; round: number; turn_index: number; skip_playback?: boolean }
+  | { type: 'turn_done'; speaker: Speaker; round: number; turn_index: number; skip_playback?: boolean; selection?: boolean }
   | { type: 'all_done' }
   | { type: 'error'; message: string }
 
@@ -44,6 +45,8 @@ function speakerZh(s: Speaker | undefined): string | null {
 export type DebateAudioHandle = {
   /** Video Call：打断当前段合成/播放，跳过队列中非黄仁勋段，只播 jensen_vc */
   skipNonJensenAudioToJensen: () => void
+  /** 选中气泡内文字：用对应讲者 Voice ID 播一段（仅 jensen / liptan） */
+  speakSelection: (speaker: Speaker, text: string) => void
 }
 
 export const DebateAudio = forwardRef<
@@ -78,6 +81,13 @@ export const DebateAudio = forwardRef<
           ws.send(JSON.stringify({ type: 'ack_turn_done', turn_index: pending }))
           pendingAckRef.current = null
         }
+      },
+      speakSelection: (speaker: Speaker, text: string) => {
+        const t = text.trim().slice(0, 1500)
+        if (t.length < 2) return
+        const ws = wsRef.current
+        if (!ws || ws.readyState !== WebSocket.OPEN) return
+        ws.send(JSON.stringify({ type: 'speak_selection', speaker, text: t }))
       },
     }),
     [player],
@@ -151,6 +161,14 @@ export const DebateAudio = forwardRef<
         if (msg.type === 'error') setError(msg.message)
         if (msg.type === 'all_done') setDone(true)
         if (msg.type === 'turn_done') {
+          if (msg.selection && msg.turn_index === -1) {
+            const wsNow = wsRef.current
+            if (wsNow && wsNow.readyState === WebSocket.OPEN) {
+              wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: -1 }))
+            }
+            pendingAckRef.current = null
+            return
+          }
           pendingAckRef.current = msg.turn_index
           if (msg.skip_playback) {
             const wsNow = wsRef.current

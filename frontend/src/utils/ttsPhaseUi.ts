@@ -9,7 +9,10 @@ export function friendlyTtsPhaseDetail(params: {
   const who = speakerLabel ?? '当前讲者'
   const r = round != null ? `第 ${round} 轮` : ''
   const turnHint =
-    turnIndex != null && totalTurns != null && totalTurns > 0
+    turnIndex != null &&
+    turnIndex >= 0 &&
+    totalTurns != null &&
+    totalTurns > 0
       ? `（第 ${turnIndex + 1} / ${totalTurns} 段）`
       : ''
 

@@ -4,7 +4,7 @@ import json
 import re
 import threading
 import time
-from typing import Optional, Callable, List, Any
+from typing import Optional, Callable, List, Any, Dict
 import dashscope
 from dashscope.audio.qwen_tts_realtime import QwenTtsRealtime, QwenTtsRealtimeCallback
 from fastapi import WebSocket, WebSocketDisconnect
@@ -115,6 +115,7 @@ class TtsSession:
         runner: Any = None,
         run_id: Optional[str] = None,
         turn_kind: str = "forum",
+        selection_one_shot: bool = False,
     ):
         self.websocket = websocket
         self.speaker = speaker
@@ -124,12 +125,15 @@ class TtsSession:
         self.runner = runner
         self.run_id = run_id
         self.turn_kind = turn_kind or "forum"
+        self.selection_one_shot = selection_one_shot
         self.chunker = TextChunker()
         self._done = asyncio.Event()
         self._error: Optional[Exception] = None
         self._phase_playing_sent = False
 
     def _should_abort_tts(self) -> bool:
+        if self.turn_kind == "speak_sel":
+            return False
         if not self.runner or not self.run_id:
             return False
         run = self.runner.get_run_status(self.run_id)
@@ -161,13 +165,15 @@ class TtsSession:
         """Run the full session: chunk text → send to aliyun → forward audio to browser"""
         # 1. Send meta to browser first
         # Format: PCM_24000HZ_MONO_16BIT matches what dashscope returns
-        meta = {
+        meta: Dict[str, Any] = {
             "type": "meta",
             "format": "PCM_24000HZ_MONO_16BIT",
             "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
             "round": self.round_num,
             "turn_index": self.turn_index,
         }
+        if self.selection_one_shot:
+            meta["selection"] = True
         await self.websocket.send_text(json.dumps(meta))
         await self._emit_phase("connecting", message="正在连接语音合成服务…")
 
@@ -284,13 +290,16 @@ class TtsSession:
 
         # 5. Done, notify browser
         await self._emit_phase("completed", message="本段语音已生成完毕")
-        await self.websocket.send_text(json.dumps({
+        done_payload: Dict[str, Any] = {
             "type": "turn_done",
             "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
             "round": self.round_num,
             "turn_index": self.turn_index,
             "skip_playback": aborted_early,
-        }))
+        }
+        if self.selection_one_shot:
+            done_payload["selection"] = True
+        await self.websocket.send_text(json.dumps(done_payload))
         self._done.set()
 
     async def wait_done(self) -> None:
@@ -357,6 +366,69 @@ class TtsManager:
 
             # Stream turns as they appear while debate is running
             cmd_queue: asyncio.Queue = asyncio.Queue()
+            deferred_selection: List[dict] = []
+
+            async def play_speak_selection(sel: dict) -> None:
+                """鼠标选中片段：仅 jensen / liptan，走各自 Voice ID。"""
+                raw_sp = sel.get("speaker")
+                text_raw = (sel.get("text") or "").strip()
+                if not text_raw or len(text_raw) > 1500:
+                    return
+                try:
+                    sp = Speaker(raw_sp)
+                except ValueError:
+                    return
+                if sp not in (Speaker.JENSEN, Speaker.LIPTAN):
+                    return
+                from .debate_runner import _tts_speech_optimization
+
+                tts_text = _tts_speech_optimization(text_raw)
+                if not tts_text.strip():
+                    return
+                session = TtsSession(
+                    websocket,
+                    sp,
+                    tts_text,
+                    0,
+                    turn_index=-1,
+                    runner=runner,
+                    run_id=run_id,
+                    turn_kind="speak_sel",
+                    selection_one_shot=True,
+                )
+                self._current_session = session
+                await session.run()
+                self._current_session = None
+                while True:
+                    msg = await cmd_queue.get()
+                    if msg.get("type") == "__disconnect__":
+                        return
+                    if msg.get("type") == "speak_selection":
+                        deferred_selection.append(msg)
+                        continue
+                    if msg.get("type") == "skip_audio_until_jensen":
+                        r = runner.get_run_status(run_id) if run_id else None
+                        if r is not None:
+                            r.tts_skip_to_jensen = True
+                        continue
+                    if msg.get("type") == "ack_turn_done" and msg.get("turn_index") == -1:
+                        return
+
+            async def wait_ack(expected_turn: int) -> bool:
+                while True:
+                    msg = await cmd_queue.get()
+                    if msg.get("type") == "__disconnect__":
+                        return False
+                    if msg.get("type") == "speak_selection":
+                        deferred_selection.append(msg)
+                        continue
+                    if msg.get("type") == "skip_audio_until_jensen":
+                        r = runner.get_run_status(run_id) if run_id else None
+                        if r is not None:
+                            r.tts_skip_to_jensen = True
+                        continue
+                    if msg.get("type") == "ack_turn_done" and msg.get("turn_index") == expected_turn:
+                        return True
 
             async def pump_ws() -> None:
                 try:
@@ -372,24 +444,14 @@ class TtsManager:
                 except WebSocketDisconnect:
                     await cmd_queue.put({"type": "__disconnect__"})
 
-            async def wait_ack(expected_turn: int) -> bool:
-                while True:
-                    msg = await cmd_queue.get()
-                    if msg.get("type") == "__disconnect__":
-                        return False
-                    if msg.get("type") == "skip_audio_until_jensen":
-                        r = runner.get_run_status(run_id) if run_id else None
-                        if r is not None:
-                            r.tts_skip_to_jensen = True
-                        continue
-                    if msg.get("type") == "ack_turn_done" and msg.get("turn_index") == expected_turn:
-                        return True
-
             pump_task = asyncio.create_task(pump_ws())
             turn_index = 0
             last_wait_phase = 0.0
             try:
                 while True:
+                    while deferred_selection:
+                        await play_speak_selection(deferred_selection.pop(0))
+
                     run = runner.get_run_status(run_id) if run_id else runner.get_current_run()
                     if not run:
                         await websocket.send_text(json.dumps({"type": "error", "message": "Run not found"}))
@@ -416,6 +478,8 @@ class TtsManager:
                             ok = await wait_ack(turn_index)
                             if not ok:
                                 return
+                            while deferred_selection:
+                                await play_speak_selection(deferred_selection.pop(0))
                             turn_index += 1
                             continue
 
@@ -440,6 +504,8 @@ class TtsManager:
                         ok = await wait_ack(turn_index)
                         if not ok:
                             return
+                        while deferred_selection:
+                            await play_speak_selection(deferred_selection.pop(0))
                         turn_index += 1
                         continue
 

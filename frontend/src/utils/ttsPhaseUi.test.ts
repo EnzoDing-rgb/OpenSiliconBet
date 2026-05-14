@@ -34,4 +34,16 @@ describe('friendlyTtsPhaseDetail', () => {
     expect(playing).toContain('2')
     expect(playing).toContain('2 / 6')
   })
+
+  it('omits segment hint when turnIndex is selection (-1)', () => {
+    const s = friendlyTtsPhaseDetail({
+      phase: 'playing',
+      speakerLabel: '黄仁勋',
+      round: 1,
+      turnIndex: -1,
+      totalTurns: 6,
+    })
+    expect(s).not.toMatch(/第\s*0\s*\//)
+    expect(s).not.toMatch(/1\s*\/\s*6/)
+  })
 })

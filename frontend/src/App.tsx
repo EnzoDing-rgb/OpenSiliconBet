@@ -315,6 +315,11 @@ function App() {
                             : undefined
                           : undefined
                       }
+                      onSpeakSelection={
+                        audioEnabled && runId
+                          ? (speaker, text) => debateAudioRef.current?.speakSelection(speaker, text)
+                          : undefined
+                      }
                     />,
                   )
                 })

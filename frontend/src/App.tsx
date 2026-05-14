@@ -220,7 +220,13 @@ function App() {
           )}
         </div>
 
-        <DebateAudio ref={debateAudioRef} runId={runId} enabled={audioEnabled} totalTurns={8} />
+        <DebateAudio
+          ref={debateAudioRef}
+          runId={runId}
+          enabled={audioEnabled}
+          skipToJensenActive={skipForumSent}
+          totalTurns={8}
+        />
 
         {error && (
           <div className="error-box">

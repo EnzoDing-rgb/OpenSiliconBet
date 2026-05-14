@@ -81,11 +81,15 @@ export class PcmPlayer {
     }
   }
 
-  stop() {
+  clear() {
     this.queue = []
     this.queuedSamples = 0
     this.readOffset = 0
     this.currentChunk = null
+  }
+
+  stop() {
+    this.clear()
     if (this.node) {
       try {
         this.node.disconnect()

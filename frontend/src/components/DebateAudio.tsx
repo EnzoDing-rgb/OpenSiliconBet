@@ -54,10 +54,11 @@ export const DebateAudio = forwardRef<
   {
     runId: string | null
     enabled: boolean
+    skipToJensenActive?: boolean
     /** Expected dialogue segments (e.g. 6 for 3 rounds × 2). Shown as progress hint. */
     totalTurns?: number | null
   }
->(function DebateAudio({ runId, enabled, totalTurns = null }, ref) {
+>(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null }, ref) {
   const [meta, setMeta] = useState<AudioMeta | null>(null)
   const [serverPhase, setServerPhase] = useState<string>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -71,7 +72,9 @@ export const DebateAudio = forwardRef<
     ref,
     () => ({
       skipNonJensenAudioToJensen: () => {
-        player.stop()
+        player.clear()
+        void player.resumeIfNeeded()
+        setManualPaused(false)
         const ws = wsRef.current
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'skip_audio_until_jensen' }))
@@ -109,10 +112,16 @@ export const DebateAudio = forwardRef<
   }, [error, done, meta, serverPhase, totalTurns])
 
   useEffect(() => {
-    if (!meta) return
+    if (!meta || skipToJensenActive) return
     setManualPaused(false)
     void player.resumePlayback()
-  }, [meta?.turn_index, meta, player])
+  }, [meta?.turn_index, meta, player, skipToJensenActive])
+
+  useEffect(() => {
+    if (!skipToJensenActive) return
+    setManualPaused(false)
+    void player.resumeIfNeeded()
+  }, [player, skipToJensenActive])
 
   const togglePause = useCallback(async () => {
     try {
@@ -217,7 +226,7 @@ export const DebateAudio = forwardRef<
 
   if (!enabled || !runId) return null
 
-  const showPause = !error && !done && !!meta
+  const showPause = !skipToJensenActive && !error && !done && !!meta
 
   return (
     <div className="audio-status">

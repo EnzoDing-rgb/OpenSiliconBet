@@ -132,7 +132,7 @@ class TtsSession:
         self._phase_playing_sent = False
 
     def _should_abort_tts(self) -> bool:
-        if self.turn_kind == "speak_sel":
+        if self.turn_kind in ("speak_sel", "lex_judge"):
             return False
         if not self.runner or not self.run_id:
             return False
@@ -367,6 +367,11 @@ class TtsManager:
             # Stream turns as they appear while debate is running
             cmd_queue: asyncio.Queue = asyncio.Queue()
             deferred_selection: List[dict] = []
+            from .debate_runner import (
+                _clean_forum_live,
+                _is_jensen_server_placeholder_turn,
+                _tts_speech_optimization,
+            )
 
             async def play_speak_selection(sel: dict) -> None:
                 """鼠标选中片段：仅 jensen / liptan，走各自 Voice ID。"""
@@ -380,7 +385,6 @@ class TtsManager:
                     return
                 if sp not in (Speaker.JENSEN, Speaker.LIPTAN):
                     return
-                from .debate_runner import _tts_speech_optimization
 
                 tts_text = _tts_speech_optimization(text_raw)
                 if not tts_text.strip():
@@ -464,10 +468,14 @@ class TtsManager:
                         return
 
                     if turn_index < len(run.turns):
+                        run = runner.get_run_status(run_id) if run_id else runner.get_current_run()
+                        if not run:
+                            await websocket.send_text(json.dumps({"type": "error", "message": "Run not found"}))
+                            await websocket.close()
+                            return
                         turn = run.turns[turn_index]
-                        run = runner.get_run_status(run_id) if run_id else run
                         tkind = getattr(turn, "kind", None) or "forum"
-                        if run is not None and getattr(run, "tts_skip_to_jensen", False) and tkind != "jensen_vc":
+                        if getattr(run, "tts_skip_to_jensen", False) and tkind != "jensen_vc":
                             await websocket.send_text(json.dumps({
                                 "type": "turn_done",
                                 "speaker": turn.speaker.value if hasattr(turn.speaker, "value") else str(turn.speaker),
@@ -483,10 +491,27 @@ class TtsManager:
                             turn_index += 1
                             continue
 
-                        if tkind == "jensen_vc" and run is not None and getattr(run, "tts_skip_to_jensen", False):
+                        if tkind == "jensen_vc" and getattr(run, "tts_skip_to_jensen", False):
                             run.tts_skip_to_jensen = False
 
-                        from .debate_runner import _tts_speech_optimization
+                        # 占位 / 流式：终稿 model_copy 后列表槽位是新对象，须重取；流式未结束前勿 TTS 半句
+                        if tkind == "jensen_vc":
+                            while True:
+                                run = runner.get_run_status(run_id) if run_id else run
+                                if not run or turn_index >= len(run.turns):
+                                    break
+                                turn = run.turns[turn_index]
+                                if not _is_jensen_server_placeholder_turn(turn) and getattr(
+                                    run, "jensen_stream_text", None
+                                ) is None:
+                                    break
+                                await asyncio.sleep(0.12)
+
+                        run = runner.get_run_status(run_id) if run_id else run
+                        if not run or turn_index >= len(run.turns):
+                            continue
+                        turn = run.turns[turn_index]
+                        tkind = getattr(turn, "kind", None) or "forum"
                         tts_text = _tts_speech_optimization(turn.text)
                         session = TtsSession(
                             websocket,
@@ -508,6 +533,47 @@ class TtsManager:
                             await play_speak_selection(deferred_selection.pop(0))
                         turn_index += 1
                         continue
+
+                    run = runner.get_run_status(run_id) if run_id else runner.get_current_run()
+                    if not run:
+                        break
+
+                    # Lex 锐评：所有对话 turn 已播完；judge 在 _save_result 里生成，可能略晚于 status=DONE
+                    if run.status == RunStatus.DONE and turn_index >= len(run.turns):
+                        _judge_deadline = time.monotonic() + 180.0
+                        while time.monotonic() < _judge_deadline:
+                            run = runner.get_run_status(run_id) if run_id else run
+                            if not run:
+                                break
+                            if (run.judge_result or "").strip():
+                                break
+                            await asyncio.sleep(0.2)
+                        run = runner.get_run_status(run_id) if run_id else run
+                        if run and (run.judge_result or "").strip():
+                            jr_tts = _tts_speech_optimization(
+                                _clean_forum_live(run.judge_result.strip(), speaker=Speaker.LEX)
+                            )
+                            if jr_tts.strip():
+                                lex_session = TtsSession(
+                                    websocket,
+                                    Speaker.LEX,
+                                    jr_tts,
+                                    0,
+                                    turn_index=turn_index,
+                                    runner=runner,
+                                    run_id=run_id,
+                                    turn_kind="lex_judge",
+                                )
+                                self._current_session = lex_session
+                                await lex_session.run()
+                                self._current_session = None
+                                ok = await wait_ack(turn_index)
+                                if not ok:
+                                    return
+                                while deferred_selection:
+                                    await play_speak_selection(deferred_selection.pop(0))
+                                turn_index += 1
+                        break
 
                     if run.status == RunStatus.DONE:
                         break

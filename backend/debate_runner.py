@@ -497,7 +497,12 @@ def _is_jensen_server_placeholder_turn(t: Turn) -> bool:
     tx = (t.text or "").strip()
     if "失败" in tx or "异常" in tx:
         return False
-    return "正在生成" in tx or "视频接入" in tx or tx.startswith("（正在生成")
+    # 勿用子串「视频接入」——终稿口语可能含接入/视频，误判会卡死 TTS
+    if tx.startswith("（正在生成") or "（正在生成黄仁勋串场" in tx:
+        return True
+    if tx.startswith("[视频接入") or ("视频接入中" in tx and "黄仁勋正在发言" in tx):
+        return True
+    return False
 
 
 def _turns_excluding_jensen_placeholder_for_prompt(turns: Sequence[Turn]) -> List[Turn]:
@@ -815,8 +820,8 @@ class DebateRunner:
                 FORUM_LLM_TEMPERATURE,
                 stream_turn_index=ji,
             )
-        run.jensen_stream_text = None
         if not raw:
+            run.jensen_stream_text = None
             run.status = RunStatus.ERROR
             run.error = "黄仁勋（视频串场）独白生成失败：模型无返回或 API 异常。"
             if ji is not None:
@@ -840,6 +845,7 @@ class DebateRunner:
                     kind="jensen_vc",
                 )
             )
+        run.jensen_stream_text = None
         await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
     async def _append_liptan_tag_turn(self, run: DebateRun) -> None:

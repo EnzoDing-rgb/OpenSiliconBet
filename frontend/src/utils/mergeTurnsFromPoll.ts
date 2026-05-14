@@ -6,10 +6,10 @@ export function isJensenVcPlaceholder(t: Turn): boolean {
   const s = t.text
   if (s.includes('失败') || s.includes('异常')) return false
   return (
-    s.includes('视频接入') ||
-    s.includes('正在生成') ||
-    s.includes('（正在生成') ||
-    s.includes('生成中')
+    s.startsWith('（正在生成') ||
+    s.includes('（正在生成黄仁勋串场') ||
+    (s.includes('视频接入中') && s.includes('黄仁勋正在发言')) ||
+    s.startsWith('[视频接入')
   )
 }
 

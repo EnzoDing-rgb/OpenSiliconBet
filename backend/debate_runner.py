@@ -92,6 +92,10 @@ DISPLAY_DELAY_SECONDS_PER_TURN = 7.0
 
 # Judge output needs to be longer than debater turns; otherwise it gets cut off.
 JUDGE_MAX_RESPONSE_TOKENS = 500
+# Lex 散场锐评：略拉高温度，口语更像人（仍受模型上限约束）
+JUDGE_LLM_TEMPERATURE = 0.86
+# 注入 Lex SKILL 全文可能过长；保留前缀保证角色 DNA + 心智模型进上下文
+LEX_REVIEW_SKILL_MAX_CHARS = 14000
 
 # Master chat should allow longer, multi-turn replies.
 CHAT_MAX_RESPONSE_TOKENS = 500
@@ -279,16 +283,31 @@ DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
 ]
 
 
-def _judge_system_prompt() -> str:
+def _lex_review_system_prompt(lex_skill_body: str) -> str:
+    """散场总结：Lex 口吻 + 仓库 Lex SKILL 注入（截断防爆上下文）。"""
+    body = (lex_skill_body or "").strip()
+    if not body:
+        body = "（未找到 lex-fridman-host-perspective-SKILL：请你仍以 Lex Fridman 式中文口播收尾——好奇、短句、steelman、不站队、少套话。）"
+    elif len(body) > LEX_REVIEW_SKILL_MAX_CHARS:
+        body = body[:LEX_REVIEW_SKILL_MAX_CHARS].rstrip() + "\n\n[Lex SKILL 已截断：token 预算]\n"
+
     return (
-        "你是现场主持人，散场前对着观众**口播收束**（这段也会给人读/念出来）。"
-        "只基于下面 transcript，不要引入场外新事实。"
-        "用**三四段短口语**：大家各自最硬的一个点、真正掐起来的一个分歧、两三件观众散场后可以自己去查证的事。"
-        "不要用「1）2）3）」公文编号；不要写成咨询报告摘要。"
+        "你是 **Lex Fridman**。下面整段来自本仓库 `docs/characters/lex-fridman-host-perspective-SKILL.md`，"
+        "等于你的表达 DNA / 心智模型 / demo 约束。\n"
+        "**本回合任务类型**：散场后的「Lex 口述锐评」——像 podcast 尾声对着观众收束，不是 live 主持抢话；"
+        "但仍必须听起来像你本人（中文为主，招牌英文每整段 ≤1 句且紧跟中文，见 SKILL）。\n\n"
+        "---BEGIN LEX SKILL---\n"
+        f"{body}\n"
+        "---END LEX SKILL---\n\n"
+        "【Lex 锐评 — 硬规则】\n"
+        "- 只根据 user 消息里的 transcript；**禁止**发明 transcript 没有的硬数字、公司内幕、场外事实。\n"
+        "- 像真人：短句、停顿感、好奇、先 steelman 再点出张力；**不判输赢**、不当裁判写判决书。\n"
+        "- 禁止「1）2）3）」、禁止咨询报告 / 公文摘要腔、禁止「作为一个人工智能」类 meta。\n"
+        "- 约 **3–6 段**口语；可加 **一两处加粗** 帮观众抓住关键词；宁像说完下车，不像机器人纪要。\n"
     )
 
 
-def _judge_user_prompt(topic: str, turns: List["Turn"]) -> str:
+def _lex_review_user_prompt(topic: str, turns: List["Turn"]) -> str:
     transcript_lines: List[str] = []
     current_round = 0
     for t in turns:
@@ -301,8 +320,8 @@ def _judge_user_prompt(topic: str, turns: List["Turn"]) -> str:
     return (
         f"主题：{topic}\n\n"
         f"以下是圆桌口语实录（可能略乱，但别帮嘉宾改口风）：\n{transcript}\n\n"
-        "请你用**主持人散场口播**写出来：语气轻松、句子短；最多用 **一两处加粗** 帮观众抓住关键词。"
-        "不要输出「1）2）3）」那种模板；不要替嘉宾补充他们没说过的硬数字。"
+        "现在请你 **以 Lex Fridman 的身份** 写散场总结（Lex 锐评）："
+        "抓住每位嘉宾**最硬**的一点、今天**真正掐起来**的一处张力、再给观众 **2–3 个**散场后可自己去查证的方向（用口语点名即可，别列公文清单）。"
     )
 
 
@@ -488,7 +507,10 @@ class DebateRunner:
     ) -> Optional[str]:
         """Call LLM with error handling (supports 2 protocols)."""
         if self.protocol == "anthropic":
-            return await asyncio.to_thread(self._call_anthropic, system_prompt, user_prompt, max_tokens)
+            t = temperature if temperature is not None else DEFAULT_LLM_TEMPERATURE
+            return await asyncio.to_thread(
+                self._call_anthropic, system_prompt, user_prompt, max_tokens, t
+            )
         return await asyncio.to_thread(
             self._call_openai,
             system_prompt,
@@ -577,12 +599,18 @@ class DebateRunner:
     ) -> Optional[str]:
         return self._openai_chat_with_quota_fallback(messages, max_tokens, temperature)
 
-    def _call_anthropic(self, system_prompt: str, user_prompt: str, max_tokens: int = MAX_RESPONSE_TOKENS) -> Optional[str]:
+    def _call_anthropic(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int = MAX_RESPONSE_TOKENS,
+        temperature: float = 0.7,
+    ) -> Optional[str]:
         try:
             message = self.client.messages.create(
                 model=self.model,
                 max_tokens=max_tokens,
-                temperature=0.7,
+                temperature=temperature,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}],
             )
@@ -607,17 +635,20 @@ class DebateRunner:
         judge_md: Optional[str] = None
         if run.status == RunStatus.DONE and run.turns:
             try:
+                lex_body = self._skills.get(Speaker.LEX, "") or ""
                 judge_text = (
                     self._call_openai(
-                        _judge_system_prompt(),
-                        _judge_user_prompt(run.topic, run.turns),
+                        _lex_review_system_prompt(lex_body),
+                        _lex_review_user_prompt(run.topic, run.turns),
                         JUDGE_MAX_RESPONSE_TOKENS,
+                        JUDGE_LLM_TEMPERATURE,
                     )
                     if self.protocol != "anthropic"
                     else self._call_anthropic(
-                        _judge_system_prompt(),
-                        _judge_user_prompt(run.topic, run.turns),
+                        _lex_review_system_prompt(lex_body),
+                        _lex_review_user_prompt(run.topic, run.turns),
                         JUDGE_MAX_RESPONSE_TOKENS,
+                        JUDGE_LLM_TEMPERATURE,
                     )
                 )
                 if judge_text:
@@ -660,7 +691,7 @@ class DebateRunner:
         if judge_md:
             lines.append("---")
             lines.append("")
-            lines.append("## 论坛纪要")
+            lines.append("## Lex 锐评")
             lines.append("")
             lines.append(judge_md)
             lines.append("")

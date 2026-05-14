@@ -32,7 +32,7 @@
      - `voice_mearsheimer`
      - 记下来，写到后端配置里（多人时同理扩展为多条 env 或配置表）。
 
-> **RISC-V 三国杀 Lex 0.5**：预录长/短轨可用现有 `VOICE_ID_MEARSHEIMER` 合成，见 [`../background/lex-opening-script.md`](../background/lex-opening-script.md)；与本节的「论坛/实时 TTS」是两条线。
+> **RISC-V 三国杀 Lex 0.5**：预录长/短轨见 [`../background/lex-opening-script.md`](../background/lex-opening-script.md)；生成命令 `python3 scripts/pregen_lex_opening.py`（默认 **`VOICE_ID_LEX`**）。与本节「论坛/实时 TTS」共用同一 realtime 模型与 DashScope Key。
 
 ### 3. 确认实时合成模型名称
 就用你复刻时选的目标模型名，比如：

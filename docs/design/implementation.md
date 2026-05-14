@@ -29,7 +29,7 @@
 | 已完成 | [./architecture.md](./architecture.md)（宪章） |
 | 已完成 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md)（阶段 2 **必注弹药**；见 §4 B、§6 **D.6b**） |
 | 待办 | `backend/free_qa.py` + `FreeQAPanel`；Summary + Intent；五人窗 |
-| 待办 | `scripts/pregen_lex_opening.py` + `public/audio` 两 mp3 + `OpeningPlayer.tsx` |
+| 待办 | `OpeningPlayer.tsx` 联调；`scripts/pregen_lex_opening.py` 已提供，长/短 mp3 入 `frontend/public/audio/` |
 | 已完成 | Speaker 五枚举；`models` / `types` / `DebateAudio` / `tts_manager` / `baton` eligible pool + pytest |
 | 待办 | `debate_runner`：v2 Director；6 guest turns 收口；2.5 Lex 转场；baton + D.0 |
 | 待办 | `avatars`、顶栏、阶段 2 CSS、`SpeakerWindow`、当前说话人高亮 |
@@ -47,7 +47,7 @@
 | V2 架构蓝图 | [./architecture.md](./architecture.md) **已在仓** |
 | 架构入口 | 本目录 `design/`；旧双人长文 → [`../_archieved_mds/architecture-legacy-didi-manus.md`](../_archieved_mds/architecture-legacy-didi-manus.md) |
 | Jensen 弹药 | [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) — 阶段 2 **强制**并入 prompt（已在仓） |
-| 仍缺实现 | `scripts/pregen_lex_opening.py`、两轨 mp3、`OpeningPlayer.tsx`、`free_qa.py`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`、五 speaker + v2 Director + 三级 baton + 回合级 TTS |
+| 仍缺实现 | `free_qa.py`、`FreeQAPanel.tsx`、`SpeakerWindow.tsx`、五 speaker + v2 Director + 三级 baton + 回合级 TTS（Lex 0.5 预录脚本与 mp3 已齐：`pregen_lex_opening.py` + `public/audio/`） |
 | 运行栈 | `app.py` + `tts_manager.py`；`.env` 五 `VOICE_ID_*` + 可选 `JERVIS`/`MEARSHEIMER` 回退 |
 
 ---
@@ -83,7 +83,7 @@
 ## 5. C. 叙事阶段
 
 1. **0** Lex 极简 + 顶栏副标题。  
-2. **0.5** 播 `lex-opening-long.mp3`；**跳过** → 停长播 `lex-opening-short.mp3`（「好的，那让我们直接开始。」）→ 进 **1**。`voice_id` = `VOICE_ID_MEARSHEIMER`。  
+2. **0.5** 播 `lex-opening-long.mp3`；**跳过** → 停长播 `lex-opening-short.mp3`（「好的，那让我们直接开始。」）→ 进 **1**。预录默认 **`VOICE_ID_LEX`**（`scripts/pregen_lex_opening.py`）；无 Lex 时可退回 **`VOICE_ID_MEARSHEIMER`**。  
 3. **1 论坛交锋** 三级 baton（见 **§7** 与宪章 §3）。Lex **不接棒**。**收口**：每人 2 段、**共 6** 条 guest turn；第 6 段播完 → **2**。  
 4. **2** Lex **主持引介** → **视频连线** UI（纯 CSS）→ 黄仁勋独白 ≤200 字（**必带** [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) 弹药上下文）→ 小窗。  
 5. **2.5（必选）** 黄播完后 Lex：**「好，观众朋友们，我们现在进入观众提问环节。」** 播完 → **3**。  
@@ -114,7 +114,7 @@ Lex 转场句：**当场 TTS + 固定字符串**（与 [./architecture.md](./arc
 
 **D.5** `free_qa.py`：SummaryLLM + IntentTargetLLM；JSON：`intent,target,confidence,rephrased_question`；攻击/失败 → Lex 软回应。
 
-**D.6** 0.5：[`../background/lex-opening-script.md`](../background/lex-opening-script.md) + `scripts/pregen_lex_opening.py` + `lex-opening-{long,short}.mp3` + `OpeningPlayer.tsx`。
+**D.6** 0.5：[`../background/lex-opening-script.md`](../background/lex-opening-script.md) + `scripts/pregen_lex_opening.py` + `lex-opening-{long,short}.mp3` + `LexOpeningStage.tsx`。
 
 **D.6b 阶段 2 · Jensen 弹药**  
 [`../background/jensen-closing-speech.md`](../background/jensen-closing-speech.md) 为 **必选附件**：每次生成 Jensen 阶段 2 独白前 **必须**读入并注入其「可核验锚点」「金句池」「独白骨架」全文；文件缺失或读失败 → **报错 / 构建失败**，禁止静默降级。

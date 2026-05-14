@@ -9,10 +9,11 @@
 | 长版音频 | `frontend/public/audio/lex-opening-long.mp3` |
 | 短版音频（Skip） | `frontend/public/audio/lex-opening-short.mp3` |
 | 合成 API | DashScope TTS（与仓库现有链路一致） |
-| **本阶段 `voice_id`** | **`VOICE_ID_MEARSHEIMER`**（沿用 `.env` 里米尔斯海默克隆；Lex 独立克隆不做，日程紧时先跑通） |
+| **本阶段 `voice_id`** | **`VOICE_ID_LEX`**（推荐；与实时论坛 TTS 同一克隆）。未配置时可退回 **`VOICE_ID_MEARSHEIMER`** |
+| 预生成命令 | 仓库根目录：`.venv/bin/python scripts/pregen_lex_opening.py`（读上文 Markdown 文案 → 写 `frontend/public/audio/*.mp3`，依赖 `DASHSCOPE_API_KEY` + `ffmpeg`） |
 | 前端 | `OpeningPlayer`：默认播 long；用户点 **跳过** → 停止 long，**立即**播 short，结束后进入论坛交锋（阶段 1） |
 
-文案变更后需重新跑 `scripts/pregen_lex_opening.py`（或等价脚本）生成上述两个 mp3。
+文案变更后需重新跑 `scripts/pregen_lex_opening.py` 生成上述两个 mp3。
 
 ---
 

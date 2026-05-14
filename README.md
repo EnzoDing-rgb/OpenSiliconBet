@@ -57,7 +57,7 @@ API_KEY=你的ArkKey
 MODEL=ark-code-latest
 ```
 
-可选 TTS（DashScope）：根目录 `.env` 配 **`DASHSCOPE_API_KEY`**、**`TTS_MODEL`**（默认 `qwen3-tts-vc-realtime-2026-01-15`）、五辩手 **`VOICE_ID_LEX` / `VOICE_ID_WUWEI` / `VOICE_ID_LIPTAN` / `VOICE_ID_COOK` / `VOICE_ID_JENSEN`**（未填则回退 `VOICE_ID_DEFAULT` → `MEARSHEIMER` → `JERVIS`）。音频放 `assets/` 后一键复刻：`python3 scripts/enroll_voices.py`。详见 [`docs/design/architecture.md`](docs/design/architecture.md)、[`docs/design/realtime-tts-architecture.md`](docs/design/realtime-tts-architecture.md)、[`.env.example`](.env.example)。
+可选 TTS（DashScope）：根目录 `.env` 配 **`DASHSCOPE_API_KEY`**、**`TTS_MODEL`**（默认 `qwen3-tts-vc-realtime-2026-01-15`）、五辩手 **`VOICE_ID_LEX` / `VOICE_ID_WUWEI` / `VOICE_ID_LIPTAN` / `VOICE_ID_COOK` / `VOICE_ID_JENSEN`**（未填则回退 `VOICE_ID_DEFAULT` → `MEARSHEIMER` → `JERVIS`）。音频放 `assets/` 后一键复刻：`python3 scripts/enroll_voices.py`。Lex 0.5 预录开场 mp3：`python3 scripts/pregen_lex_opening.py`（写 `frontend/public/audio/`，需本机 `ffmpeg`）。详见 [`docs/design/architecture.md`](docs/design/architecture.md)、[`docs/design/realtime-tts-architecture.md`](docs/design/realtime-tts-architecture.md)、[`.env.example`](.env.example)。
 
 ## Cloudflare 与北京网络
 

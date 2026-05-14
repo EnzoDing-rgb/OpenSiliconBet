@@ -242,7 +242,7 @@ function App() {
 
         {judgeResult && (
           <div className="judge-box">
-            <h2 className="judge-title">论坛纪要</h2>
+            <h2 className="judge-title">Lex 锐评</h2>
             <div className="judge-content">
               {renderCompareMarkdown(judgeResult)}
             </div>

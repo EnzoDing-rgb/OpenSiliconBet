@@ -24,6 +24,8 @@ class Turn(BaseModel):
     speaker: Speaker
     text: str
     created_at: float
+    # forum | jensen_vc | liptan_tag — 前端可渲染串场/收尾样式
+    kind: str = "forum"
 
 
 class ChatMessage(BaseModel):
@@ -43,6 +45,8 @@ class DebateRun(BaseModel):
     finished_at: Optional[float] = None
     judge_result: Optional[str] = None
     chat_history: List[ChatMessage] = []
+    # 为 True 时：下一轮论坛发言开始前跳出循环，直接进入黄仁勋串场
+    skip_to_jensen: bool = False
 
 
 class StartDebateResponse(BaseModel):

@@ -480,10 +480,46 @@ def _lex_review_user_prompt(topic: str, turns: List[Turn]) -> str:
     )
 
 
-def _jensen_vc_user_prompt(turns_block: str, ammo: str) -> str:
+def _has_jensen_vc_turn(turns: Sequence[Turn]) -> bool:
+    return any((getattr(t, "kind", None) or "forum") == "jensen_vc" for t in turns)
+
+
+def _last_jensen_vc_index(turns: Sequence[Turn]) -> Optional[int]:
+    for i in range(len(turns) - 1, -1, -1):
+        if (getattr(turns[i], "kind", None) or "forum") == "jensen_vc":
+            return i
+    return None
+
+
+def _is_jensen_server_placeholder_turn(t: Turn) -> bool:
+    if (getattr(t, "kind", None) or "forum") != "jensen_vc":
+        return False
+    tx = (t.text or "").strip()
+    if "失败" in tx or "异常" in tx:
+        return False
+    return "正在生成" in tx or "视频接入" in tx or tx.startswith("（正在生成")
+
+
+def _turns_excluding_jensen_placeholder_for_prompt(turns: Sequence[Turn]) -> List[Turn]:
+    """串场占位条不进 transcript，避免喂给模型噪声。"""
+    return [
+        t
+        for t in turns
+        if (getattr(t, "kind", None) or "forum") != "jensen_vc" or not _is_jensen_server_placeholder_turn(t)
+    ]
+
+
+def _jensen_vc_user_prompt(turns_block: str, ammo: str, topic: str) -> str:
+    block = (turns_block or "").strip()
+    if not block:
+        block = (
+            f"（论坛实录尚无或用户已跳过：圆桌可能尚未开始。主题：{topic}。"
+            "请仍以黄仁勋（Jensen Huang）身份做「视频串场」短独白，接 Lex 开场与议题氛围即可，"
+            "勿编造实录没有的硬数字；口语里可自然带一两句英文招牌句式，紧接中文。）"
+        )
     return (
-        "论坛三位嘉宾已完成实录（见下）。你现在处于「阶段二 · 视频串场」：像刚接入的视频电话，短独白。\n\n"
-        f"--- 实录 ---\n{turns_block}\n\n"
+        "论坛三位嘉宾的对话实录见下（可能为空或不全）。你现在处于「阶段二 · 视频串场」：像刚接入的视频电话，短独白。\n\n"
+        f"--- 实录 ---\n{block}\n\n"
         f"--- 导演弹药（精读；可化用骨架与金句；勿发明实录没有的硬数字）---\n{ammo.strip()}\n\n"
         "【硬要求】\n"
         "- 中文可见正文 ≤ 两百字；口语数字：年限、比例、年份用汉字（如三十年、百分之六十），少用阿拉伯数字。\n"
@@ -572,6 +608,8 @@ class DebateRunner:
 
         # In-memory storage for active runs
         self.runs: Dict[str, DebateRun] = {}
+        # Video Call 触发的黄仁勋 eager 生成（与论坛主循环并行；run_debate 在串场点 await）
+        self._eager_jensen_tasks: Dict[str, asyncio.Task] = {}
 
     def _read_skill(self, path: Path) -> str:
         """Read skill content from file, return empty if not exists"""
@@ -643,6 +681,8 @@ class DebateRunner:
                     user_prompt,
                     temperature=FORUM_LLM_TEMPERATURE,
                 )
+                if run.skip_to_jensen:
+                    continue
                 if response_text is None:
                     run.status = RunStatus.ERROR
                     run.error = f"第 {i} 轮（{speaker}）未能获取模型回复：请检查 API 配置、网络或模型可用性。"
@@ -668,6 +708,15 @@ class DebateRunner:
                 # Slow down text output so UI doesn't race ahead of audio playback.
                 await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
+            t_eager = self._eager_jensen_tasks.pop(run_id, None)
+            if t_eager is not None:
+                try:
+                    await t_eager
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    print(f"[eager jensen] task failed (main loop continues): {e}")
+
             if run.status == RunStatus.RUNNING:
                 await self._append_jensen_vc_turn(run)
             if run.status == RunStatus.RUNNING:
@@ -683,42 +732,114 @@ class DebateRunner:
             run.error = f"Unexpected error: {str(e)}"
             self._save_result(run)
 
-    async def _append_jensen_vc_turn(self, run: DebateRun) -> None:
-        """阶段二：黄仁勋视频串场闭幕独白（叠 Jensen SKILL + jensen-closing-speech 弹药）。"""
+    def _prepare_jensen_vc_prompts(self, run: DebateRun) -> Tuple[str, str]:
         ammo = self._read_skill(JENSEN_CLOSING_PATH).strip()
         if not ammo:
             print("Warning: jensen-closing-speech.md missing or empty")
             ammo = "（弹药文件缺失；仍请按 Jensen SKILL 完成闭幕独白。）"
-        transcript = _format_turns_transcript_zh(run.turns)
+        transcript = _format_turns_transcript_zh(_turns_excluding_jensen_placeholder_for_prompt(run.turns))
         _jvc_tmax = 12000
         if len(transcript) > _jvc_tmax:
             transcript = "…[论坛前段已省略以加速串场]\n" + transcript[-_jvc_tmax:]
-        user = _jensen_vc_user_prompt(transcript, ammo)
+        user = _jensen_vc_user_prompt(transcript, ammo, run.topic)
         system = self._build_system_prompt(Speaker.JENSEN)
         _jvc_smax = 28000
         if len(system) > _jvc_smax:
             system = system[:_jvc_smax].rstrip() + "\n\n[为串场独白加速：system 尾部已截断]\n"
-        raw = await self._call_llm(
-            system,
-            user,
-            temperature=FORUM_LLM_TEMPERATURE,
-            max_tokens=min(600, MAX_RESPONSE_TOKENS + 200),
-        )
+        return system, user
+
+    def _openai_jensen_stream_with_run(
+        self,
+        run: DebateRun,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+        temperature: float,
+        *,
+        stream_turn_index: Optional[int] = None,
+    ) -> Optional[str]:
+        """同步：流式调用主 OpenAI 客户端，边生成边写入 run.jensen_stream_text；可选同步写 turns 占位条正文。"""
+        acc: List[str] = []
+        try:
+            stream = self._primary_client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+            )
+            for chunk in stream:
+                delta = None
+                if chunk.choices:
+                    delta = getattr(chunk.choices[0].delta, "content", None)
+                if delta:
+                    acc.append(delta)
+                    partial = "".join(acc)
+                    run.jensen_stream_text = partial
+                    if stream_turn_index is not None and 0 <= stream_turn_index < len(run.turns):
+                        cur = run.turns[stream_turn_index]
+                        run.turns[stream_turn_index] = cur.model_copy(update={"text": partial})
+            out = "".join(acc).strip()
+            return out if out else None
+        except Exception as e:
+            print(f"[jensen stream] {e}; fallback non-stream")
+            fb = self._openai_chat_with_quota_fallback(messages, max_tokens, temperature)
+            if fb:
+                run.jensen_stream_text = fb.strip()
+            return fb.strip() if fb else None
+
+    async def _append_jensen_vc_turn(self, run: DebateRun) -> None:
+        """阶段二：黄仁勋视频串场闭幕独白（叠 Jensen SKILL + jensen-closing-speech 弹药）。"""
+        ji = _last_jensen_vc_index(run.turns)
+        if ji is not None and not _is_jensen_server_placeholder_turn(run.turns[ji]):
+            return
+        system, user = self._prepare_jensen_vc_prompts(run)
+        max_tok = min(600, MAX_RESPONSE_TOKENS + 200)
+        raw: Optional[str]
+        if self.protocol == "anthropic":
+            raw = await self._call_llm(
+                system,
+                user,
+                temperature=FORUM_LLM_TEMPERATURE,
+                max_tokens=max_tok,
+            )
+        else:
+            messages = [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ]
+            raw = await asyncio.to_thread(
+                self._openai_jensen_stream_with_run,
+                run,
+                messages,
+                max_tok,
+                FORUM_LLM_TEMPERATURE,
+                stream_turn_index=ji,
+            )
+        run.jensen_stream_text = None
         if not raw:
             run.status = RunStatus.ERROR
             run.error = "黄仁勋（视频串场）独白生成失败：模型无返回或 API 异常。"
+            if ji is not None:
+                cur = run.turns[ji]
+                run.turns[ji] = cur.model_copy(
+                    update={"text": "（串场生成失败：模型无返回或 API 异常，请检查配置与网络。）"}
+                )
             return
         fixed = _ensure_jensen_golden_line(_clean_model_output(raw))
         fixed = _clean_forum_live(fixed or "", speaker=Speaker.JENSEN).strip()
-        run.turns.append(
-            Turn(
-                round=4,
-                speaker=Speaker.JENSEN,
-                text=fixed,
-                created_at=time.time(),
-                kind="jensen_vc",
+        if ji is not None:
+            cur = run.turns[ji]
+            run.turns[ji] = cur.model_copy(update={"text": fixed})
+        else:
+            run.turns.append(
+                Turn(
+                    round=4,
+                    speaker=Speaker.JENSEN,
+                    text=fixed,
+                    created_at=time.time(),
+                    kind="jensen_vc",
+                )
             )
-        )
         await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
     async def _append_liptan_tag_turn(self, run: DebateRun) -> None:
@@ -744,7 +865,100 @@ class DebateRunner:
         if not run or run.status != RunStatus.RUNNING:
             return False
         run.skip_to_jensen = True
+        run.tts_skip_to_jensen = True
+        # 立刻写入服务端占位条 → 轮询即可见字（与其它嘉宾同一条 turns 抽象）
+        if not _has_jensen_vc_turn(run.turns):
+            run.turns.append(
+                Turn(
+                    round=4,
+                    speaker=Speaker.JENSEN,
+                    text="（正在生成黄仁勋串场独白…）",
+                    created_at=time.time(),
+                    kind="jensen_vc",
+                )
+            )
         return True
+
+    def register_eager_jensen_task(self, run_id: str, task: asyncio.Task) -> None:
+        old = self._eager_jensen_tasks.get(run_id)
+        if old is not None and not old.done():
+            old.cancel()
+        self._eager_jensen_tasks[run_id] = task
+
+    async def eager_jensen_vc_after_skip(self, run_id: str) -> None:
+        """Video Call：与卡住的论坛 LLM 并行，立刻流式生成黄仁勋串场并写入 turns。"""
+        run = self.runs.get(run_id)
+        if not run or run.status != RunStatus.RUNNING:
+            return
+        ji = _last_jensen_vc_index(run.turns)
+        if ji is None:
+            run.turns.append(
+                Turn(
+                    round=4,
+                    speaker=Speaker.JENSEN,
+                    text="（正在生成黄仁勋串场独白…）",
+                    created_at=time.time(),
+                    kind="jensen_vc",
+                )
+            )
+            ji = len(run.turns) - 1
+        elif not _is_jensen_server_placeholder_turn(run.turns[ji]):
+            return
+        run.jensen_stream_text = ""
+        try:
+            system, user = self._prepare_jensen_vc_prompts(run)
+            max_tok = min(600, MAX_RESPONSE_TOKENS + 200)
+            raw: Optional[str]
+            if self.protocol == "anthropic":
+                run.jensen_stream_text = "正在生成中…"
+                raw = await self._call_llm(
+                    system,
+                    user,
+                    temperature=FORUM_LLM_TEMPERATURE,
+                    max_tokens=max_tok,
+                )
+            else:
+                messages = [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ]
+                raw = await asyncio.to_thread(
+                    self._openai_jensen_stream_with_run,
+                    run,
+                    messages,
+                    max_tok,
+                    FORUM_LLM_TEMPERATURE,
+                    stream_turn_index=ji,
+                )
+            if not raw:
+                run.status = RunStatus.ERROR
+                run.error = "黄仁勋（视频串场）独白生成失败：模型无返回或 API 异常。"
+                cur = run.turns[ji]
+                run.turns[ji] = cur.model_copy(
+                    update={"text": "（串场生成失败：模型无返回或 API 异常，请检查配置与网络。）"}
+                )
+                return
+            if run.status != RunStatus.RUNNING:
+                return
+            fixed = _ensure_jensen_golden_line(_clean_model_output(raw))
+            fixed = _clean_forum_live(fixed or "", speaker=Speaker.JENSEN).strip()
+            cur = run.turns[ji]
+            run.turns[ji] = cur.model_copy(update={"text": fixed})
+            await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
+        except Exception as e:
+            run.status = RunStatus.ERROR
+            run.error = f"黄仁勋（视频串场）生成异常：{e}"
+            print(f"[eager jensen] {e}")
+            if ji is not None and ji < len(run.turns):
+                cur = run.turns[ji]
+                msg = str(e)
+                if len(msg) > 120:
+                    msg = msg[:117] + "…"
+                run.turns[ji] = cur.model_copy(
+                    update={"text": f"（串场生成异常：{msg}）"},
+                )
+        finally:
+            run.jensen_stream_text = None
 
     async def _call_llm(
         self,

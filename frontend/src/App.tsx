@@ -3,14 +3,14 @@ import './App.css'
 import { RoleCard } from './components/RoleCard'
 import { TurnMessage } from './components/TurnMessage'
 import { MasterChat } from './components/MasterChat.tsx'
-import { DebateAudio } from './components/DebateAudio'
+import { DebateAudio, type DebateAudioHandle } from './components/DebateAudio'
 import { LexOpeningStage } from './components/LexOpeningStage'
 import { AudienceBetPanel } from './components/AudienceBetPanel'
 import { speakerMeta } from './utils/avatars'
 import { markdownToSafeHtml } from './utils/markdownRender'
 import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, skipForumToJensen } from './api'
 import type { Turn, RunStatus } from './types'
-import { mergeTurnsFromPoll, hasServerJensenVc } from './utils/mergeTurnsFromPoll'
+import { mergeTurnsFromPoll, hasServerJensenVc, isJensenVcPlaceholder } from './utils/mergeTurnsFromPoll'
 
 const KEYNOTE_IMAGE_SRC = '/images/summit-cas-iss-keynote.png'
 
@@ -26,6 +26,8 @@ function App() {
   const [lexPreamble, setLexPreamble] = useState(false)
   const [skipForumSent, setSkipForumSent] = useState(false)
   const skipForumSentRef = useRef(false)
+  const [jensenStreamText, setJensenStreamText] = useState<string | null>(null)
+  const debateAudioRef = useRef<DebateAudioHandle>(null)
   const jensenPlaceholderRef = useRef<Turn | null>(null)
 
   useEffect(() => {
@@ -45,6 +47,7 @@ function App() {
     setJudgeResult(null)
     setSkipForumSent(false)
     jensenPlaceholderRef.current = null
+    setJensenStreamText(null)
     try {
       const id = await startDebate()
       setRunId(id)
@@ -67,7 +70,7 @@ function App() {
     downloadMarkdown(content, 'riscv_forum_result.md')
   }, [runId])
 
-  // Polling
+  // Polling（黄仁勋流式时加快）
   useEffect(() => {
     if (!runId || status === 'done' || status === 'error') {
       if (status === 'done' || status === 'error') {
@@ -76,16 +79,22 @@ function App() {
       return
     }
 
-    const interval = setInterval(async () => {
+    const tick = async () => {
       if (!runId) return
       try {
         const data = await getDebateStatus(runId)
         setStatus(data.status)
+        setJensenStreamText(
+          data.jensen_stream_text === undefined || data.jensen_stream_text === null
+            ? null
+            : data.jensen_stream_text,
+        )
         setTurns(
           mergeTurnsFromPoll(data.turns, skipForumSentRef.current, jensenPlaceholderRef.current),
         )
         if (hasServerJensenVc(data.turns)) {
           jensenPlaceholderRef.current = null
+          setJensenStreamText(null)
         }
         if (data.error) {
           setError(data.error)
@@ -96,8 +105,10 @@ function App() {
       } catch (e) {
         console.error('Polling error', e)
       }
-    }, 1500)
+    }
 
+    void tick()
+    const interval = setInterval(() => void tick(), 600)
     return () => clearInterval(interval)
   }, [runId, status])
 
@@ -209,7 +220,7 @@ function App() {
           )}
         </div>
 
-        <DebateAudio runId={runId} enabled={audioEnabled} totalTurns={8} />
+        <DebateAudio ref={debateAudioRef} runId={runId} enabled={audioEnabled} totalTurns={8} />
 
         {error && (
           <div className="error-box">
@@ -242,6 +253,7 @@ function App() {
                           type="button"
                           className="jensen-vc-btn"
                           onClick={() => {
+                            debateAudioRef.current?.skipNonJensenAudioToJensen()
                             const ph: Turn = {
                               round: 4,
                               speaker: 'jensen',
@@ -290,7 +302,21 @@ function App() {
                       </div>
                     )
                   }
-                  elements.push(<TurnMessage key={`turn-${turn.created_at}`} turn={turn} />)
+                  elements.push(
+                    <TurnMessage
+                      key={`turn-${turn.created_at}`}
+                      turn={turn}
+                      displayTextOverride={
+                        isJensenVcPlaceholder(turn)
+                          ? jensenStreamText != null
+                            ? jensenStreamText.length > 0
+                              ? jensenStreamText
+                              : '（模型流式输出中…）'
+                            : undefined
+                          : undefined
+                      }
+                    />,
+                  )
                 })
 
                 return elements

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+} from 'react'
 import { PcmPlayer } from '../audio/pcmPlayer'
 import { friendlyTtsPhaseDetail } from '../utils/ttsPhaseUi'
 import type { Speaker } from '../types'
@@ -24,7 +32,7 @@ type PhaseMsg = {
 type ControlMsg =
   | AudioMeta
   | PhaseMsg
-  | { type: 'turn_done'; speaker: Speaker; round: number; turn_index: number }
+  | { type: 'turn_done'; speaker: Speaker; round: number; turn_index: number; skip_playback?: boolean }
   | { type: 'all_done' }
   | { type: 'error'; message: string }
 
@@ -33,16 +41,20 @@ function speakerZh(s: Speaker | undefined): string | null {
   return speakerLabelZh(s)
 }
 
-export function DebateAudio({
-  runId,
-  enabled,
-  totalTurns = null,
-}: {
-  runId: string | null
-  enabled: boolean
-  /** Expected dialogue segments (e.g. 6 for 3 rounds × 2). Shown as progress hint. */
-  totalTurns?: number | null
-}) {
+export type DebateAudioHandle = {
+  /** Video Call：打断当前段合成/播放，跳过队列中非黄仁勋段，只播 jensen_vc */
+  skipNonJensenAudioToJensen: () => void
+}
+
+export const DebateAudio = forwardRef<
+  DebateAudioHandle,
+  {
+    runId: string | null
+    enabled: boolean
+    /** Expected dialogue segments (e.g. 6 for 3 rounds × 2). Shown as progress hint. */
+    totalTurns?: number | null
+  }
+>(function DebateAudio({ runId, enabled, totalTurns = null }, ref) {
   const [meta, setMeta] = useState<AudioMeta | null>(null)
   const [serverPhase, setServerPhase] = useState<string>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +63,25 @@ export function DebateAudio({
   const wsRef = useRef<WebSocket | null>(null)
   const player = useMemo(() => new PcmPlayer(), [])
   const pendingAckRef = useRef<number | null>(null)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      skipNonJensenAudioToJensen: () => {
+        player.stop()
+        const ws = wsRef.current
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'skip_audio_until_jensen' }))
+        }
+        const pending = pendingAckRef.current
+        if (pending != null && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ack_turn_done', turn_index: pending }))
+          pendingAckRef.current = null
+        }
+      },
+    }),
+    [player],
+  )
 
   const statusDetail = useMemo(() => {
     if (error) return error
@@ -98,9 +129,9 @@ export function DebateAudio({
     setServerPhase('idle')
     pendingAckRef.current = null
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsHost = window.location.host || 'localhost'
-    const ws = new WebSocket(`${wsProtocol}://${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
+    const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
     ws.binaryType = 'arraybuffer'
     wsRef.current = ws
 
@@ -121,6 +152,13 @@ export function DebateAudio({
         if (msg.type === 'all_done') setDone(true)
         if (msg.type === 'turn_done') {
           pendingAckRef.current = msg.turn_index
+          if (msg.skip_playback) {
+            const wsNow = wsRef.current
+            if (wsNow && wsNow.readyState === WebSocket.OPEN) {
+              wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: msg.turn_index }))
+              pendingAckRef.current = null
+            }
+          }
         }
         return
       }
@@ -178,4 +216,4 @@ export function DebateAudio({
       </div>
     </div>
   )
-}
+})

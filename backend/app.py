@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from dotenv import load_dotenv
@@ -81,8 +82,11 @@ async def start_debate(background_tasks: BackgroundTasks):
 
 @app.post("/api/debate/skip-forum/{run_id}")
 async def skip_forum_to_jensen(run_id: str):
-    """跳过尚未生成的论坛尾段，直接进入黄仁勋视频串场（下一轮循环开始时生效）。"""
+    """跳过论坛尾段：立刻并行触发黄仁勋串场 LLM（流式），并令 TTS 跳过非黄仁勋段。"""
     ok = runner.request_skip_to_jensen(run_id)
+    if ok:
+        task = asyncio.create_task(runner.eager_jensen_vc_after_skip(run_id))
+        runner.register_eager_jensen_task(run_id, task)
     return {"ok": ok}
 
 
@@ -104,7 +108,8 @@ async def get_debate_status(run_id: str):
         current_round=current_round,
         turns=run.turns,
         error=run.error,
-        judge_result=run.judge_result
+        judge_result=run.judge_result,
+        jensen_stream_text=run.jensen_stream_text,
     )
 
 

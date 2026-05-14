@@ -2,12 +2,20 @@ import type { Turn } from '../types'
 
 /** 前端插入的串场占位，轮询应用 server turns 时需保留直到真身到达 */
 export function isJensenVcPlaceholder(t: Turn): boolean {
-  return t.kind === 'jensen_vc' && (t.text.includes('视频接入') || t.text.includes('正在生成'))
+  if (t.kind !== 'jensen_vc') return false
+  const s = t.text
+  if (s.includes('失败') || s.includes('异常')) return false
+  return (
+    s.includes('视频接入') ||
+    s.includes('正在生成') ||
+    s.includes('（正在生成') ||
+    s.includes('生成中')
+  )
 }
 
-/** server 已返回黄仁勋独白正文（非占位） */
+/** server 已写入黄仁勋 jensen_vc 条（非前端占位） */
 export function hasServerJensenVc(turns: Turn[]): boolean {
-  return turns.some((t) => t.kind === 'jensen_vc' && !isJensenVcPlaceholder(t))
+  return turns.some((t) => t.kind === 'jensen_vc')
 }
 
 /**

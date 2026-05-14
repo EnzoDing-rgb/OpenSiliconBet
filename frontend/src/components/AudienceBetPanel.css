@@ -130,6 +130,18 @@
   fill: rgba(15, 23, 42, 0.65);
 }
 
+.audience-bet-chart__grid {
+  stroke: rgba(148, 163, 184, 0.22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.audience-bet-chart__ylabel {
+  fill: #94a3b8;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
 .audience-bet-chart__line {
   stroke-width: 2.25;
   stroke-linecap: round;

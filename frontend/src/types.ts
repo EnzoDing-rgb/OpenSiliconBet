@@ -29,6 +29,8 @@ export interface DebateStatusResponse {
   turns: Turn[];
   error?: string;
   judge_result?: string;
+  /** 黄仁勋串场 LLM 流式片段（仅轮询用） */
+  jensen_stream_text?: string | null;
 }
 
 export interface StartDebateResponse {

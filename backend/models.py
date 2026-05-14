@@ -47,6 +47,10 @@ class DebateRun(BaseModel):
     chat_history: List[ChatMessage] = []
     # 为 True 时：下一轮论坛发言开始前跳出循环，直接进入黄仁勋串场
     skip_to_jensen: bool = False
+    # Video Call：串场独白流式输出（仅轮询展示；落库后清空）
+    jensen_stream_text: Optional[str] = None
+    # TTS：跳过当前及后续非 jensen_vc 段，只播黄仁勋（由 WS skip_audio_until_jensen 置位）
+    tts_skip_to_jensen: bool = False
 
 
 class StartDebateResponse(BaseModel):
@@ -59,3 +63,4 @@ class DebateStatusResponse(BaseModel):
     turns: List[Turn]
     error: Optional[str] = None
     judge_result: Optional[str] = None
+    jensen_stream_text: Optional[str] = None

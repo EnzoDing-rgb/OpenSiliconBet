@@ -180,54 +180,62 @@ def _strip_redundant_speaker_head(text: str, speaker: Speaker) -> str:
     return t
 
 
+def _number_to_chinese_digit_reading(n: int) -> str:
+    """数位读法：3200 → 三千二百。"""
+    digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
+    if n == 0:
+        return "零"
+    if n < 10:
+        return digits[n]
+    if n == 10:
+        return "十"
+    if n < 20:
+        return "十" + digits[n % 10]
+    if n < 100:
+        tens = n // 10
+        rest = n % 10
+        return digits[tens] + "十" + (digits[rest] if rest else "")
+    if n < 1000:
+        hundreds = n // 100
+        rest = n % 100
+        result = digits[hundreds] + "百"
+        if rest:
+            if rest < 10:
+                result += "零" + digits[rest]
+            else:
+                result += _number_to_chinese_digit_reading(rest)
+        return result
+    if n < 10000:
+        thousands = n // 1000
+        rest = n % 1000
+        result = digits[thousands] + "千"
+        if rest:
+            if rest < 100:
+                result += "零" + _number_to_chinese_digit_reading(rest)
+            else:
+                result += _number_to_chinese_digit_reading(rest)
+        return result
+    return str(n)
+
+
 def _number_to_chinese(num_str: str) -> str:
     """TTS 友好：把阿拉伯数字按口语读法转中文。
-    年份读法：2012 → 二零一二（非「两千零一十二」）
-    普通数字：30 → 三十，17 → 十七
-    百分比：60% → 百分之六十
+    年份读法（4位数且后面带「年」）：2012年 → 二零一二年（逐字读）
+    普通数字（1-3位，或 4 位非年份）：量读法 → 三十、十七、一千二百
+    百分比：3200% → 百分之三千二百（调用 _number_to_chinese_digit_reading）
     """
     digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
 
-    # 纯年份（4位数字）：逐字读
+    # 4位数字且不是年份上下文的：按数位读（1234 → 一千二百三十四）
     if re.match(r"^\d{4}$", num_str):
-        return "".join(digits[int(d)] for d in num_str)
+        # 注意：年份的逐字读由上层 re.sub(r'(\d{4})(年)') 处理
+        # 这里进来的是普通的 4 位数字（不带年），按数位读
+        return _number_to_chinese_digit_reading(int(num_str))
 
     # 普通数字：量读法
     try:
         n = int(num_str)
-        if n == 0:
-            return "零"
-        if n < 10:
-            return digits[n]
-        if n == 10:
-            return "十"
-        if n < 20:
-            return "十" + digits[n % 10]
-        if n < 100:
-            tens = n // 10
-            rest = n % 10
-            return digits[tens] + "十" + (digits[rest] if rest else "")
-        if n < 1000:
-            hundreds = n // 100
-            rest = n % 100
-            result = digits[hundreds] + "百"
-            if rest:
-                if rest < 10:
-                    result += "零" + digits[rest]
-                else:
-                    result += _number_to_chinese(str(rest))
-            return result
-        if n < 10000:
-            thousands = n // 1000
-            rest = n % 1000
-            result = digits[thousands] + "千"
-            if rest:
-                if rest < 100:
-                    result += "零" + _number_to_chinese(str(rest))
-                else:
-                    result += _number_to_chinese(str(rest))
-            return result
-        return num_str  # 超大数字保留原文
+        return _number_to_chinese_digit_reading(n)
     except ValueError:
         return num_str
 
@@ -251,31 +259,46 @@ def _convert_numerals_to_chinese_readable(text: str) -> str:
 
     t = re.sub(r"(\d{4})(年)", replace_year, t)
 
-    # 普通数字（但避免已经转好的中文数字被二次处理）
-    # 只处理独立的、非特殊格式的阿拉伯数字
-    def replace_number(m: re.Match[str]) -> str:
-        num_str = m.group(1)
-        # 如果前后是中文，按语境读；否则保留原文
-        return _number_to_chinese(num_str)
+    # 百分比：% 前面的数字转中文
+    def replace_percent(m: re.Match[str]) -> str:
+        num = m.group(1)
+        # 百分比用中文数位读法：3200 → 三千二百
+        try:
+            n = int(num)
+            if n < 10000:
+                return "百分之" + _number_to_chinese_digit_reading(n)
+        except ValueError:
+            pass
+        return "百分之" + num
 
-    # 处理 "第X轮" → "第X轮" 但 X 转中文
+    t = re.sub(r"(\d+(?:\.\d+)?)%", replace_percent, t)
+
+    # 年份：2025年 → 二零二五年（逐字读法）
+    def replace_year(m: re.Match[str]) -> str:
+        year_chinese = "".join(["零一二三四五六七八九"[int(d)] for d in m.group(1)])
+        return year_chinese + m.group(2)
+
+    t = re.sub(r"(\d{4})(年)", replace_year, t)
+
+    # "第X轮" → "第X轮" 但 X 转中文
     def replace_round(m: re.Match[str]) -> str:
         return "第" + _number_to_chinese(m.group(1)) + "轮"
 
     t = re.sub(r"第(\d+)轮", replace_round, t)
 
-    # 普通数字（1-3位）：周围是中文或空格
-    def replace_standalone_number(m: re.Match[str]) -> str:
-        before = m.group(1) or ""
-        num = m.group(2)
-        after = m.group(3) or ""
-        # 已经是特殊格式的不处理
-        if len(num) <= 4:
-            return before + _number_to_chinese(num) + after
-        return m.group(0)
+    # 所有阿拉伯数字（1-4位）：直接替换，不管前后是什么字符
+    # 排除已知的专有名词：x86，ARMv8 等，以及 8086/80386 等 CPU 型号
+    SKIP_NUMBERS = {"86", "8086", "80386", "80486", "64", "32", "128", "256", "512", "1024"}
 
-    t = re.sub(r"(\s|，|。|、|：|「|」|（|）|^)(\d+)(\s|，|。|、|：|「|」|（|）|$)",
-               replace_standalone_number, t)
+    def replace_all_numbers(m: re.Match[str]) -> str:
+        num = m.group(1)
+        if num in SKIP_NUMBERS:
+            return num  # 专有名词保留阿拉伯数字
+        if len(num) <= 4:
+            return _number_to_chinese(num)
+        return num  # 太长的保留原文
+
+    t = re.sub(r"(\d+)", replace_all_numbers, t)
 
     return t
 
@@ -309,6 +332,27 @@ def _clean_forum_live(text: str, *, speaker: Optional[Speaker] = None) -> str:
         t = _strip_redundant_speaker_head(t, speaker)
     # 强制把阿拉伯数字转成中文口语读法（TTS 友好）
     t = _convert_numerals_to_chinese_readable(t)
+    return t
+
+
+def _tts_speech_optimization(text: str) -> str:
+    """【仅 TTS 使用】语音友好化处理：不影响前端显示，只优化 TTS 读法。
+    前端原样显示：x86, RISC-V
+    TTS 优化读：叉86, RISC五（避免读成 RISC减V）
+    """
+    if not text:
+        return text
+    t = text
+
+    # x86 → 叉86（不要读成「艾克斯86」）
+    t = re.sub(r"x86", "叉86", t, flags=re.IGNORECASE)
+
+    # RISC-V → RISC五（避免读成 RISC减V）
+    t = re.sub(r"RISC-V", "RISC五", t)
+    t = re.sub(r"RISC V", "RISC五", t)
+
+    # ARM → 保持 ARM（TTS 读得还可以）
+
     return t
 
 
@@ -646,13 +690,19 @@ class DebateRunner:
             print("Warning: jensen-closing-speech.md missing or empty")
             ammo = "（弹药文件缺失；仍请按 Jensen SKILL 完成闭幕独白。）"
         transcript = _format_turns_transcript_zh(run.turns)
+        _jvc_tmax = 12000
+        if len(transcript) > _jvc_tmax:
+            transcript = "…[论坛前段已省略以加速串场]\n" + transcript[-_jvc_tmax:]
         user = _jensen_vc_user_prompt(transcript, ammo)
         system = self._build_system_prompt(Speaker.JENSEN)
+        _jvc_smax = 28000
+        if len(system) > _jvc_smax:
+            system = system[:_jvc_smax].rstrip() + "\n\n[为串场独白加速：system 尾部已截断]\n"
         raw = await self._call_llm(
             system,
             user,
             temperature=FORUM_LLM_TEMPERATURE,
-            max_tokens=MAX_RESPONSE_TOKENS,
+            max_tokens=min(600, MAX_RESPONSE_TOKENS + 200),
         )
         if not raw:
             run.status = RunStatus.ERROR

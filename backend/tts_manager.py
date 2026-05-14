@@ -341,7 +341,10 @@ class TtsManager:
 
                 if turn_index < len(run.turns):
                     turn = run.turns[turn_index]
-                    session = TtsSession(websocket, turn.speaker, turn.text, turn.round, turn_index=turn_index)
+                    # 【仅 TTS 优化】不影响前端显示，只优化语音读法
+                    from .debate_runner import _tts_speech_optimization
+                    tts_text = _tts_speech_optimization(turn.text)
+                    session = TtsSession(websocket, turn.speaker, tts_text, turn.round, turn_index=turn_index)
                     self._current_session = session
                     await session.run()
                     self._current_session = None

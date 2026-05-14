@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './App.css'
 import { RoleCard } from './components/RoleCard'
 import { TurnMessage } from './components/TurnMessage'
@@ -10,6 +10,7 @@ import { speakerMeta } from './utils/avatars'
 import { markdownToSafeHtml } from './utils/markdownRender'
 import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, skipForumToJensen } from './api'
 import type { Turn, RunStatus } from './types'
+import { mergeTurnsFromPoll, hasServerJensenVc } from './utils/mergeTurnsFromPoll'
 
 const KEYNOTE_IMAGE_SRC = '/images/summit-cas-iss-keynote.png'
 
@@ -24,6 +25,12 @@ function App() {
   /** 架构 §1：阶段 0 / 0.5 由 Lex 垫场 + 预录开场，完成后再请求后端论坛交锋（阶段 1） */
   const [lexPreamble, setLexPreamble] = useState(false)
   const [skipForumSent, setSkipForumSent] = useState(false)
+  const skipForumSentRef = useRef(false)
+  const jensenPlaceholderRef = useRef<Turn | null>(null)
+
+  useEffect(() => {
+    skipForumSentRef.current = skipForumSent
+  }, [skipForumSent])
 
   const renderCompareMarkdown = (text: string) => (
     <div className="md-render compare-md" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(text) }} />
@@ -37,6 +44,7 @@ function App() {
     setRunId(null)
     setJudgeResult(null)
     setSkipForumSent(false)
+    jensenPlaceholderRef.current = null
     try {
       const id = await startDebate()
       setRunId(id)
@@ -73,7 +81,12 @@ function App() {
       try {
         const data = await getDebateStatus(runId)
         setStatus(data.status)
-        setTurns(data.turns)
+        setTurns(
+          mergeTurnsFromPoll(data.turns, skipForumSentRef.current, jensenPlaceholderRef.current),
+        )
+        if (hasServerJensenVc(data.turns)) {
+          jensenPlaceholderRef.current = null
+        }
         if (data.error) {
           setError(data.error)
         }
@@ -220,40 +233,45 @@ function App() {
               {runId &&
                 status === 'running' &&
                 turns.length >= 1 &&
-                turns.length < 6 && (() => {
-                  const hasJensen = turns.some((t) => t.kind === 'jensen_vc')
-                  if (hasJensen) return null
-                  if (skipForumSent) {
-                    return (
-                      <div className="jensen-vc-callout" aria-label="黄仁勋视频串场加载中">
+                turns.length < 6 &&
+                !turns.some((t) => t.kind === 'jensen_vc') && (
+                  <div className="jensen-vc-callout" aria-label="黄仁勋视频串场">
+                    {!skipForumSent ? (
+                      <>
+                        <button
+                          type="button"
+                          className="jensen-vc-btn"
+                          onClick={() => {
+                            const ph: Turn = {
+                              round: 4,
+                              speaker: 'jensen',
+                              text: '[视频接入中，黄仁勋正在发言...]',
+                              created_at: Date.now(),
+                              kind: 'jensen_vc',
+                            }
+                            jensenPlaceholderRef.current = ph
+                            setTurns((prev) => [...prev, ph])
+                            setSkipForumSent(true)
+                            void skipForumToJensen(runId)
+                          }}
+                        >
+                          黄仁勋 Video Call
+                        </button>
+                        <p className="jensen-vc-hint">
+                          跳过尚未生成的论坛尾段，直接进入黄仁勋视频串场环节。
+                        </p>
+                      </>
+                    ) : (
+                      <>
                         <div className="jensen-vc-loading">
                           <div className="jensen-vc-spinner" />
                           <span>黄仁勋视频接入中...</span>
                         </div>
                         <p className="jensen-vc-hint">正在生成黄仁勋串场独白，请稍候</p>
-                      </div>
-                    )
-                  }
-                  return (
-                    <div className="jensen-vc-callout" aria-label="黄仁勋视频串场">
-                      <button
-                        type="button"
-                        className="jensen-vc-btn"
-                        onClick={() => {
-                          void (async () => {
-                            const ok = await skipForumToJensen(runId)
-                            if (ok) setSkipForumSent(true)
-                          })()
-                        }}
-                      >
-                        黄仁勋 Video Call
-                      </button>
-                      <p className="jensen-vc-hint">
-                        跳过尚未生成的论坛尾段，直接进入黄仁勋视频串场环节。
-                      </p>
-                    </div>
-                  )
-                })()}
+                      </>
+                    )}
+                  </div>
+                )}
 
               {(() => {
                 const elements: React.ReactElement[] = []

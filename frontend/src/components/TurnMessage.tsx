@@ -48,7 +48,7 @@ export function TurnMessage({ turn, displayTextOverride, onSpeakSelection }: Tur
               <span className="jensen-vc-window-title">黄仁勋 Video Call</span>
             </div>
             <div className="jensen-vc-frame-wrap">
-              <img src={getAvatarSrc('jensen')} alt="" className="jensen-vc-frame" />
+              <img src="/images/jensen-noodles.png" alt="黄仁勋在北京吃炸酱面" className="jensen-vc-frame" />
               <div className="jensen-vc-overlay">
                 <span className="jensen-vc-name">黄仁勋</span>
                 <span className="jensen-vc-role">NVIDIA</span>

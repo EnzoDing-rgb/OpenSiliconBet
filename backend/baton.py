@@ -24,7 +24,7 @@ def _norm_token(raw: str) -> str:
 _ALIASES: Dict[str, str] = {}
 for _canon, _aliases in (
     ("wuwei", ("神秘 RISC-V 专家", "riscv", "risk-v", "riskv", "risc-v", "risc5", "睿芯", "wuwei", "神秘专家")),
-    ("liptan", ("陈立武", "x86", "intel", "lipbu", "lip-bu", "liptan", "立武", "tan")),
+    ("liptan", ("陈立武", "x86", "intel", "liptan", "立武")),
     ("cook", ("库克", "arm", "apple", "tim", "timcook", "cook", "苹果", "silicon")),
     ("lex", ("lex", "弗莱德曼", "弗里德曼")),
     ("jensen", ("jensen", "黄仁勋", "老黄", "nvidia", "英伟达")),

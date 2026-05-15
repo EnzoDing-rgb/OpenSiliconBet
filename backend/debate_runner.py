@@ -86,15 +86,15 @@ JENSEN_CLOSING_PATH = _skill_path(
 # Dialogue topic（论坛交锋 demo）
 DEBATE_TOPIC = "RISC-V vs x86 vs ARM：Agent 时代的指令集与算力格局（公众科学日分会场 · 论坛交锋）"
 
-MAX_RESPONSE_TOKENS = 400
-# 与宪章 GLOBAL 对齐：可见中文正文约 200 字（宁少勿灌水）
-RESPONSE_LEN_HINT_ZH = "中文可见正文约 两百字以内（用汉字写「两百」仅作提示）；宁少勿堆字，密度优先。**念给语音听**：年限、比例、年份尽量用汉字（三十年、百分之六十），少用阿拉伯数字串。"
+MAX_RESPONSE_TOKENS = 250
+# 精简版：可见中文正文约 150 字（宁少勿灌水）
+RESPONSE_LEN_HINT_ZH = "中文可见正文约一百五十字以内，宁少勿灌水。**念给语音听**：年限、比例、年份尽量用汉字（三十年、百分之六十），少用阿拉伯数字串。"
 FORUM_LLM_TEMPERATURE = 0.88
 DEFAULT_LLM_TEMPERATURE = 0.72
 DISPLAY_DELAY_SECONDS_PER_TURN = 7.0
 
 # Judge output needs to be longer than debater turns; otherwise it gets cut off.
-JUDGE_MAX_RESPONSE_TOKENS = 500
+JUDGE_MAX_RESPONSE_TOKENS = 350
 # Lex 散场锐评：略拉高温度，口语更像人（仍受模型上限约束）
 JUDGE_LLM_TEMPERATURE = 0.86
 # 注入 Lex SKILL 全文可能过长；保留前缀保证角色 DNA + 心智模型进上下文
@@ -347,9 +347,9 @@ def _tts_speech_optimization(text: str) -> str:
     # x86 → 叉86（不要读成「艾克斯86」）
     t = re.sub(r"x86", "叉86", t, flags=re.IGNORECASE)
 
-    # RISC-V → RISC五（避免读成 RISC减V）
-    t = re.sub(r"RISC-V", "RISC五", t)
-    t = re.sub(r"RISC V", "RISC五", t)
+    # RISC-V → RISC五（避免读成 RISC减V；兼容大小写变体）
+    t = re.sub(r"RISC[ -]V", "RISC五", t, flags=re.IGNORECASE)
+    t = re.sub(r"RISC[ -]五", "RISC五", t)
 
     # ARM → 保持 ARM（TTS 读得还可以）
 
@@ -401,34 +401,28 @@ def _clean_model_output(text: str) -> str:
 # 阶段 1 论坛交锋：每人 2 段、共 6 段（顺序：神秘 RISC-V 专家→陈立武→库克×2 轮）。口吻：现场口语 + TTS，非纪要体。
 DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
     (Speaker.WUWEI, (
-        "你是神秘 RISC-V 专家，圆桌**开场第一段**。台下是公众科学日分会场观众，左右还有两位同行在听。\n"
-        "像对着人和麦克风聊天：先把「Agent 时代 RISC-V 的机会」摊开，**一两个点**就够，可以带半句「我猜你们接下来要杠我哪」。\n"
-        "事实别编；拿不准就说「这块我还得回去核一下」。不要人身攻击。"
+        "你是神秘 RISC-V 专家，圆桌**开场**：台下是公众科学日观众。像聊天一样摊开「Agent 时代 RISC-V 的机会」，**一两个点**就够。事实别编。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.LIPTAN, (
-        "你是陈立武，接着神秘 RISC-V 专家**刚才那段话**往下接——先用**一句口语**接住（顶一句、笑一下、认一半都行），"
-        "再从 **x86 / Intel、存量系统、工艺与产品节奏** 里挑你最有把握的角度聊，别写成「Q1/Q2」那种答辩稿。"
+        "你是陈立武，**接上一段**——先用一句口语接住（顶一句、笑一下、认一半都行），"
+        "再从 **x86 存量、工艺节奏**挑你最有把握的聊。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.COOK, (
-        "你是库克，接着现场气氛往下聊：别端「公关声明」腔，可以有一句「我直说」式的坦白。"
-        "从 **ARM / Apple 的功耗与整合、IP 模式** 里挑你能站得住的两句硬话，顺带对另外两路各**半句**「我懂你的压力，但…」。"
+        "你是库克，**接着聊**：别端公关腔。从 **ARM 功耗整合、IP 模式** 挑两句站得住的硬话。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.WUWEI, (
-        "你是神秘 RISC-V 专家，**第二轮**：接着前面已经聊出来的火药味，往 **设计自由度 vs 生态碎片化** 上收一收，"
-        "可以抛一个**可检验的预测**，但用口语说出来，别列「待核验清单」。"
+        "你是神秘 RISC-V 专家，**第二轮**：往**设计自由度 vs 生态碎片化**上收，口语抛一个可检验的预测即可。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.LIPTAN, (
-        "你是陈立武，**第二轮**：从 **软件栈 / 数据中心 CPU-GPU 配比** 里抓一个你最有手感的点，"
-        "用**讲故事**的方式讲出来——可以反问一句，但不要写成「对方过度简化」的八股标题。"
+        "你是陈立武，**第二轮**：从 **软件栈、CPU-GPU 配比**抓一个有手感的点，用讲故事的方式讲。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.COOK, (
-        "你是库克，**收个尾**：像主持人跟观众说一句「今天先聊到这」，顺手把三条路线各**点一句人话**，"
-        "让观众觉得「这三个人是真的在吵同一件事」，不是来判输赢的。"
+        "你是库克，**收尾**：三条路线各点一句人话，让观众觉得「这三人在吵同一件事」，不是判输赢。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
 ]
@@ -527,7 +521,8 @@ def _jensen_vc_user_prompt(turns_block: str, ammo: str, topic: str) -> str:
         f"--- 实录 ---\n{block}\n\n"
         f"--- 导演弹药（精读；可化用骨架与金句；勿发明实录没有的硬数字）---\n{ammo.strip()}\n\n"
         "【硬要求】\n"
-        "- 中文可见正文 ≤ 两百字；口语数字：年限、比例、年份用汉字（如三十年、百分之六十），少用阿拉伯数字。\n"
+        "- 中文可见正文 ≤ 一百五十字；口语数字：年限、比例、年份用汉字（如三十年、百分之六十），少用阿拉伯数字。\n"
+        "- 必须：开场先以一句新鲜热乎的口语带出刚到北京/吃炸酱面的事实钩子，再接正式独白。\n"
         "- 须让观众听清「你们都没赢」与「我赢了」两大块语义；推荐嵌进一整句，例如「其实你们都没赢，我赢了」。\n"
         "- 末行 Baton：→ @无（或与 SKILL 一致的另四种之一）。\n"
         "- 叙事仍落在 SKILL：三家都买你的栈、卖铲子、CUDA / horizontal moat。\n"
@@ -798,7 +793,7 @@ class DebateRunner:
         if ji is not None and not _is_jensen_server_placeholder_turn(run.turns[ji]):
             return
         system, user = self._prepare_jensen_vc_prompts(run)
-        max_tok = min(600, MAX_RESPONSE_TOKENS + 200)
+        max_tok = min(450, MAX_RESPONSE_TOKENS + 200)
         raw: Optional[str]
         if self.protocol == "anthropic":
             raw = await self._call_llm(
@@ -913,7 +908,7 @@ class DebateRunner:
         run.jensen_stream_text = ""
         try:
             system, user = self._prepare_jensen_vc_prompts(run)
-            max_tok = min(600, MAX_RESPONSE_TOKENS + 200)
+            max_tok = min(450, MAX_RESPONSE_TOKENS + 200)
             raw: Optional[str]
             if self.protocol == "anthropic":
                 run.jensen_stream_text = "正在生成中…"

@@ -7,7 +7,7 @@
 
 ## 1. 执行摘要（与 Plan overview 一致）
 
-- 滴滴/Manus demo 改为「RISC-V vs x86 vs ARM」**论坛交锋**（非胜负辩论；公众科学日类科普分会场）。Lex + 吴伟/陈立武/库克 + 黄仁勋；阶段 3 五人常显。
+- 滴滴/Manus demo 改为「RISC-V vs x86 vs ARM」**论坛交锋**（非胜负辩论；公众科学日类科普分会场）。Lex + 神秘 RISC-V 专家/陈立武/库克 + 黄仁勋；阶段 3 五人常显。
 - **架构钉死**：实现以 [./architecture.md](./architecture.md) 为准（阶段机 `0→0.5→1→2→2.5→3`、三级 baton、回合级 TTS）。
 - **阶段 1 收口**：三嘉宾各 **2** 段 → **共 6** 条 guest turn → 立即进阶段 2。
 - **阶段 2.5（必选）**：黄仁勋独白播完后 Lex 固定句：「好，观众朋友们，我们现在进入观众提问环节。」再开阶段 3；不可叠播、不可省略。
@@ -71,7 +71,7 @@
 | 人 | 文件 |
 |----|------|
 | Lex | [`../characters/lex-fridman-host-perspective-SKILL.md`](../characters/lex-fridman-host-perspective-SKILL.md) |
-| 吴伟 / 陈立武 / 库克 / 黄仁勋 | `wuwei-riscv-…`、`liptan-…`、`timcook-…`、`jensen-…` 同上目录 |
+| 神秘 RISC-V 专家 / 陈立武 / 库克 / 黄仁勋 | `wuwei-riscv-…`、`liptan-…`、`timcook-…`、`jensen-…` 同上目录 |
 
 黄仁勋：阶段 2 **纯 CSS**；小窗保留至结束；阶段 3 在席。
 

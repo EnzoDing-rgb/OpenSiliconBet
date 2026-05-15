@@ -38,6 +38,14 @@ export async function postChat(runId: string, speaker: Speaker, message: string)
   return await response.json();
 }
 
+export async function triggerLexReview(runId: string): Promise<string | null> {
+  const response = await fetch(`${API_BASE}/debate/trigger-lex-review/${runId}`, {
+    method: 'POST',
+  });
+  const data = await response.json() as { judge_result?: string };
+  return data.judge_result ?? null;
+}
+
 export function downloadMarkdown(content: string, filename: string = 'debate_result.md') {
   const blob = new Blob([content], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);

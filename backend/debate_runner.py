@@ -107,7 +107,7 @@ CHAT_MAX_RESPONSE_TOKENS = 500
 def _speaker_zh(speaker: Speaker) -> str:
     return {
         Speaker.LEX: "Lex Fridman（主持人）",
-        Speaker.WUWEI: "吴伟（RISC-V）",
+        Speaker.WUWEI: "神秘 RISC-V 专家（RISC-V）",
         Speaker.LIPTAN: "陈立武（x86 / Intel）",
         Speaker.COOK: "蒂姆·库克（ARM / Apple）",
         Speaker.JENSEN: "黄仁勋（NVIDIA）",
@@ -127,8 +127,8 @@ ORAL_FORUM_CONTRACT_ZH = """
 【本场表达契约 — 现场圆桌 + 语音给观众听】
 - 场合是**公众科学日分会场**：台下是真观众，你的话会走 **TTS 念出来**——要像**对着人和麦克风聊天**，有停顿、有口气；不要咨询备忘录、PR one-pager、研报「执行摘要」体。
 - **念给 TTS 的中文数字**：阿拉伯数字易被读成「三零年」之类。**年限、年份、百分比、金额、型号里的数字尽量用汉字**：写「三十年」不要写「30年」，「百分之六十」不要写「60%」，「二零二五年」优于「2025」；若必须用数码，优先全角「３０」并少用。
-- **禁止**在正文里出现传棒符号：`@人名`、`@无`、`→@`、`→ @` 等——**仅限吴伟 / 陈立武 / 库克三位论坛嘉宾**；想点名就口语直呼「老陈」「库克这边」之类自然带过即可。
-- **黄仁勋（阶段二视频串场闭幕独白）例外**：须遵守 SKILL 末行 Baton，**仅允许** `→ @无` / `→ @所有人` / `→ @吴伟` / `→ @陈立武` / `→ @库克` 五选一，且放在**最后一行**。
+- **禁止**在正文里出现传棒符号：`@人名`、`@无`、`→@`、`→ @` 等——**仅限神秘 RISC-V 专家 / 陈立武 / 库克三位论坛嘉宾**；想点名就口语直呼「老陈」「库克这边」之类自然带过即可。
+- **黄仁勋（阶段二视频串场闭幕独白）例外**：须遵守 SKILL 末行 Baton，**仅允许** `→ @无` / `→ @所有人` / `→ @神秘专家` / `→ @陈立武` / `→ @库克` 五选一，且放在**最后一行**。
 - **禁止**公文编号腔：不要写「Q1/Q2」「第1条」「1）共识」这种；宁可短句、偶尔自我打断「不对，我换个说法」。
 - **少用** markdown 大标题层级；**加粗**最多一两处真正要敲黑板的地方；不要为排版而排版。
 - 事实底盘在 system 里已给：心里有数即可，**口语里不必句句挂「§几」**；拿不准就说「这块我还得回去核一下」。
@@ -136,7 +136,7 @@ ORAL_FORUM_CONTRACT_ZH = """
 
 
 _FORUM_HEAD_ALIASES: Dict[Speaker, Tuple[str, ...]] = {
-    Speaker.WUWEI: ("吴伟",),
+    Speaker.WUWEI: ("神秘 RISC-V 专家",),
     Speaker.LIPTAN: ("陈立武",),
     Speaker.COOK: ("蒂姆·库克", "库克"),
     Speaker.JENSEN: ("黄仁勋", "Jensen"),
@@ -145,7 +145,7 @@ _FORUM_HEAD_ALIASES: Dict[Speaker, Tuple[str, ...]] = {
 
 
 def _strip_redundant_speaker_head(text: str, speaker: Speaker) -> str:
-    """UI 已显示嘉宾名时，去掉正文开头重复的「吴伟：」或单独一行姓名。"""
+    """UI 已显示嘉宾名时，去掉正文开头重复的「神秘 RISC-V 专家：」或单独一行姓名。"""
     aliases = _FORUM_HEAD_ALIASES.get(speaker)
     if not aliases or not text:
         return text
@@ -171,7 +171,7 @@ def _strip_redundant_speaker_head(text: str, speaker: Speaker) -> str:
         if matched:
             t = rest.lstrip()
             continue
-        # 同一行重复两次短名，如「吴伟 吴伟」
+        # 同一行重复两次短名，如「神秘 RISC-V 专家 神秘 RISC-V 专家」
         bits = fl.split()
         if len(bits) >= 2 and bits[0] == bits[1] and bits[0] in aliases:
             t = rest.lstrip()
@@ -398,16 +398,16 @@ def _clean_model_output(text: str) -> str:
     return "\n".join(cleaned).strip()
 
 
-# 阶段 1 论坛交锋：每人 2 段、共 6 段（顺序：吴伟→陈立武→库克×2 轮）。口吻：现场口语 + TTS，非纪要体。
+# 阶段 1 论坛交锋：每人 2 段、共 6 段（顺序：神秘 RISC-V 专家→陈立武→库克×2 轮）。口吻：现场口语 + TTS，非纪要体。
 DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
     (Speaker.WUWEI, (
-        "你是吴伟，圆桌**开场第一段**。台下是公众科学日分会场观众，左右还有两位同行在听。\n"
+        "你是神秘 RISC-V 专家，圆桌**开场第一段**。台下是公众科学日分会场观众，左右还有两位同行在听。\n"
         "像对着人和麦克风聊天：先把「Agent 时代 RISC-V 的机会」摊开，**一两个点**就够，可以带半句「我猜你们接下来要杠我哪」。\n"
         "事实别编；拿不准就说「这块我还得回去核一下」。不要人身攻击。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.LIPTAN, (
-        "你是陈立武，接着吴伟**刚才那段话**往下接——先用**一句口语**接住（顶一句、笑一下、认一半都行），"
+        "你是陈立武，接着神秘 RISC-V 专家**刚才那段话**往下接——先用**一句口语**接住（顶一句、笑一下、认一半都行），"
         "再从 **x86 / Intel、存量系统、工艺与产品节奏** 里挑你最有把握的角度聊，别写成「Q1/Q2」那种答辩稿。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
@@ -417,7 +417,7 @@ DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
     (Speaker.WUWEI, (
-        "你是吴伟，**第二轮**：接着前面已经聊出来的火药味，往 **设计自由度 vs 生态碎片化** 上收一收，"
+        "你是神秘 RISC-V 专家，**第二轮**：接着前面已经聊出来的火药味，往 **设计自由度 vs 生态碎片化** 上收一收，"
         "可以抛一个**可检验的预测**，但用口语说出来，别列「待核验清单」。"
         f"\n{RESPONSE_LEN_HINT_ZH}"
     )),
@@ -849,7 +849,7 @@ class DebateRunner:
         await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
     async def _append_liptan_tag_turn(self, run: DebateRun) -> None:
-        """黄仁勋之后：陈立武一句收束（吴伟不再接话）。"""
+        """黄仁勋之后：陈立武一句收束（神秘 RISC-V 专家不再接话）。"""
         text = (
             "Jensen，您刚那段我听见了。**说白了：我们都没赢——因为这场仗才刚开始。**"
             "对，**这场仗才刚开始**；后面拼的是量产节奏、现金流、还有客户用脚投票，咱们别把终局今天就判死。"
@@ -1204,6 +1204,55 @@ class DebateRunner:
                 return f.read()
         except Exception:
             return None
+
+    async def trigger_lex_review(self, run_id: str) -> Optional[str]:
+        """Generate Lex review including debate + chat_history, trigger TTS readiness."""
+        run = self.runs.get(run_id)
+        if not run or not run.turns:
+            return None
+
+        lex_body = self._skills.get(Speaker.LEX, "") or ""
+        # Build user prompt with both debate turns AND chat history
+        chat_lines = []
+        for msg in run.chat_history:
+            who = "观众" if msg.role == "user" else msg.speaker
+            chat_lines.append(f"{who}：{msg.content}")
+        chat_section = "\n".join(chat_lines) if chat_lines else "（无观众提问）"
+
+        user_prompt = _lex_review_user_prompt(run.topic, run.turns)
+        user_prompt += (
+            f"\n\n【观众提问与嘉宾回答（请一并纳入锐评）】\n{chat_section}\n\n"
+            "请将这些观众互动也纳入你的总结——哪些提问最犀利、嘉宾的回应是否精彩、"
+            "整场论坛加上观众互动给你什么整体感受。"
+        )
+
+        try:
+            judge_text = (
+                self._call_openai(
+                    _lex_review_system_prompt(lex_body),
+                    user_prompt,
+                    JUDGE_MAX_RESPONSE_TOKENS,
+                    JUDGE_LLM_TEMPERATURE,
+                )
+                if self.protocol != "anthropic"
+                else self._call_anthropic(
+                    _lex_review_system_prompt(lex_body),
+                    user_prompt,
+                    JUDGE_MAX_RESPONSE_TOKENS,
+                    JUDGE_LLM_TEMPERATURE,
+                )
+            )
+            if judge_text:
+                judge_md = _clean_forum_live(_clean_model_output(judge_text).strip())
+                run.judge_result = judge_md
+                run.lex_review_pending = True
+                return judge_md
+        except Exception as e:
+            error_msg = f"Lex 锐评生成失败：{e}"
+            run.judge_result = error_msg
+            run.lex_review_pending = True
+            return error_msg
+        return None
 
     def get_current_run(self) -> Optional[DebateRun]:
         """Get the current active run (for TTS to consume)"""

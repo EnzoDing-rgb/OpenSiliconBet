@@ -5,16 +5,19 @@ import { TurnMessage } from './components/TurnMessage'
 import { MasterChat } from './components/MasterChat.tsx'
 import { DebateAudio, type DebateAudioHandle } from './components/DebateAudio'
 import { LexOpeningStage } from './components/LexOpeningStage'
+import { LexTransitionStage } from './components/LexTransitionStage'
 import { AudienceBetPanel } from './components/AudienceBetPanel'
 import { speakerMeta } from './utils/avatars'
 import { markdownToSafeHtml } from './utils/markdownRender'
-import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, skipForumToJensen } from './api'
+import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, skipForumToJensen, triggerLexReview } from './api'
 import type { Turn, RunStatus } from './types'
 import { mergeTurnsFromPoll, hasServerJensenVc, isJensenVcPlaceholder } from './utils/mergeTurnsFromPoll'
 
 const KEYNOTE_IMAGE_SRC = '/images/summit-cas-iss-keynote.png'
+const INTRO_VIDEO_SRC = '/video/intro.mp4'
 
 function App() {
+  const [showIntro, setShowIntro] = useState(true)
   const [runId, setRunId] = useState<string | null>(null)
   const [status, setStatus] = useState<RunStatus | null>(null)
   const [turns, setTurns] = useState<Turn[]>([])
@@ -22,13 +25,17 @@ function App() {
   const [judgeResult, setJudgeResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
-  /** 架构 §1：阶段 0 / 0.5 由 Lex 垫场 + 预录开场，完成后再请求后端论坛交锋（阶段 1） */
   const [lexPreamble, setLexPreamble] = useState(false)
   const [skipForumSent, setSkipForumSent] = useState(false)
   const skipForumSentRef = useRef(false)
   const [jensenStreamText, setJensenStreamText] = useState<string | null>(null)
   const debateAudioRef = useRef<DebateAudioHandle>(null)
   const jensenPlaceholderRef = useRef<Turn | null>(null)
+  const [lexReviewVisible, setLexReviewVisible] = useState(false)
+  const [lexTransitionDone, setLexTransitionDone] = useState(false)
+  const [lexReviewLoading, setLexReviewLoading] = useState(false)
+  const [lexReviewTtsActive, setLexReviewTtsActive] = useState(false)
+  const introVideoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     skipForumSentRef.current = skipForumSent
@@ -48,6 +55,9 @@ function App() {
     setSkipForumSent(false)
     jensenPlaceholderRef.current = null
     setJensenStreamText(null)
+    setLexReviewVisible(false)
+    setLexReviewTtsActive(false)
+    setLexTransitionDone(false)
     try {
       const id = await startDebate()
       setRunId(id)
@@ -58,7 +68,6 @@ function App() {
   }, [])
 
   const handleStart = useCallback(() => {
-    // 用户手势：解锁后续 TTS / 预录 mp3 autoplay
     setAudioEnabled(true)
     setError(null)
     setLexPreamble(true)
@@ -70,7 +79,34 @@ function App() {
     downloadMarkdown(content, 'riscv_forum_result.md')
   }, [runId])
 
-  // Polling（黄仁勋流式时加快）
+  const handleEndQa = useCallback(async () => {
+    if (!runId) return
+    setLexReviewLoading(true)
+    try {
+      const result = await triggerLexReview(runId)
+      if (result) {
+        setJudgeResult(result)
+        setLexReviewVisible(true)
+        setLexReviewTtsActive(true)
+      }
+    } catch {
+      setError('Lex 锐评生成失败')
+    } finally {
+      setLexReviewLoading(false)
+    }
+  }, [runId])
+
+  const handleIntroEnded = useCallback(() => {
+    setShowIntro(false)
+  }, [])
+
+  const handleIntroSkip = useCallback(() => {
+    const v = introVideoRef.current
+    if (v) { v.pause(); v.currentTime = v.duration ?? 0 }
+    setShowIntro(false)
+  }, [])
+
+  // Polling
   useEffect(() => {
     if (!runId || status === 'done' || status === 'error') {
       if (status === 'done' || status === 'error') {
@@ -99,9 +135,6 @@ function App() {
         if (data.error) {
           setError(data.error)
         }
-        if (data.judge_result) {
-          setJudgeResult(data.judge_result)
-        }
       } catch (e) {
         console.error('Polling error', e)
       }
@@ -114,6 +147,27 @@ function App() {
 
   const isDone = status === 'done'
   const isRunning = status === 'running' || loading || lexPreamble
+
+  // Intro video overlay
+  if (showIntro) {
+    return (
+      <div className="intro-video-overlay">
+        <video
+          ref={introVideoRef}
+          className="intro-video"
+          src={INTRO_VIDEO_SRC}
+          autoPlay
+          playsInline
+          onEnded={handleIntroEnded}
+        />
+        <div className="intro-video-controls">
+          <button className="intro-skip-btn" onClick={handleIntroSkip}>
+            跳过 &rarr;
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="app-root">
@@ -228,6 +282,16 @@ function App() {
           totalTurns={8}
         />
 
+        {lexReviewTtsActive && runId && (
+          <DebateAudio
+            runId={runId}
+            enabled={true}
+            skipToJensenActive={false}
+            totalTurns={1}
+            lexReview={true}
+          />
+        )}
+
         {error && (
           <div className="error-box">
             <strong>运行提示</strong>：{error}
@@ -240,7 +304,7 @@ function App() {
 
         {!lexPreamble && isRunning && runId && turns.length === 0 && (
           <div className="loading-box">
-            论坛交锋生成中：首位发言嘉宾为吴伟（RISC-V）——主持开场已由 Lex 完成。
+            论坛交锋生成中：首位发言嘉宾为神秘 RISC-V 专家（RISC-V）——主持开场已由 Lex 完成。
           </div>
         )}
 
@@ -283,7 +347,7 @@ function App() {
                       <div className="jensen-vc-confirmed" aria-live="polite">
                         <div className="jensen-vc-confirmed-badge">已触发</div>
                         <div className="jensen-vc-confirmed-title">黄仁勋 Video Call</div>
-                        <p className="jensen-vc-hint">系统将在当前吴伟发言结束后，切入黄仁勋视频串场。</p>
+                        <p className="jensen-vc-hint">系统将在当前神秘 RISC-V 专家发言结束后，切入黄仁勋视频串场。</p>
                         <div className="jensen-vc-loading">
                           <div className="jensen-vc-spinner" />
                           <span>正在生成黄仁勋串场内容，请稍候</span>
@@ -342,7 +406,35 @@ function App() {
           </div>
         )}
 
-        {judgeResult && (
+        {/* After debate done: Lex transition → then BET + Q&A */}
+        {isDone && !lexTransitionDone && (
+          <LexTransitionStage onFinished={() => setLexTransitionDone(true)} />
+        )}
+
+        {isDone && lexTransitionDone && !lexReviewVisible && (
+          <div className="lex-section">
+            <AudienceBetPanel />
+
+            {runId && (
+              <div className="audience-qa-box">
+                <h2 className="audience-qa-title">观众提问</h2>
+                <MasterChat runId={runId} />
+                <div className="qa-end-area">
+                  <button
+                    className="qa-end-btn"
+                    onClick={handleEndQa}
+                    disabled={lexReviewLoading}
+                  >
+                    {lexReviewLoading ? '正在生成 Lex 锐评…' : '结束提问 · Lex 锐评'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Lex review visible after ending Q&A */}
+        {judgeResult && lexReviewVisible && (
           <div className="lex-section">
             <div className="judge-box">
               <h2 className="judge-title">Lex 锐评</h2>
@@ -350,15 +442,6 @@ function App() {
                 {renderCompareMarkdown(judgeResult)}
               </div>
             </div>
-
-            <AudienceBetPanel />
-
-            {runId && (
-              <div className="audience-qa-box">
-                <h2 className="audience-qa-title">观众提问</h2>
-                <MasterChat runId={runId} />
-              </div>
-            )}
           </div>
         )}
 

@@ -247,30 +247,36 @@ class TtsSession:
             await self._emit_phase("generating", message="正在合成语音…")
 
             # 4. Chunk text and send to ali yun
-            chunks = self.chunker.push(self.full_text)
-            for chunk in chunks:
-                if self._should_abort_tts():
-                    aborted_early = True
-                    break
-                qwen_tts.append_text(chunk)
-                await asyncio.sleep(0.05)
-
-            if not aborted_early:
-                remaining = self.chunker.flush_remaining()
-                if remaining:
-                    qwen_tts.append_text(remaining)
+            # — lex_judge: send as one single chunk to avoid overlapping audio
+            if self.turn_kind == "lex_judge":
+                qwen_tts.append_text(self.full_text)
                 qwen_tts.finish()
                 await asyncio.to_thread(callback.complete_event.wait)
             else:
-                try:
+                chunks = self.chunker.push(self.full_text)
+                for chunk in chunks:
+                    if self._should_abort_tts():
+                        aborted_early = True
+                        break
+                    qwen_tts.append_text(chunk)
+                    await asyncio.sleep(0.05)
+
+                if not aborted_early:
+                    remaining = self.chunker.flush_remaining()
+                    if remaining:
+                        qwen_tts.append_text(remaining)
                     qwen_tts.finish()
-                except Exception:
-                    pass
-                try:
-                    qwen_tts.close()
-                except Exception:
-                    pass
-                callback.complete_event.set()
+                    await asyncio.to_thread(callback.complete_event.wait)
+                else:
+                    try:
+                        qwen_tts.finish()
+                    except Exception:
+                        pass
+                    try:
+                        qwen_tts.close()
+                    except Exception:
+                        pass
+                    callback.complete_event.set()
         finally:
             try:
                 if qwen_tts is not None:
@@ -340,6 +346,7 @@ class TtsManager:
             # Resolve run_id from query params (preferred), fallback to latest run
             run_id = websocket.query_params.get("run_id")
             is_test = websocket.query_params.get("test") == "1"
+            lex_review_mode = websocket.query_params.get("lex_review") == "1"
             if run_id and not is_test:
                 if not self._claim_run_audio(run_id):
                     await websocket.send_text(json.dumps({
@@ -451,6 +458,39 @@ class TtsManager:
             pump_task = asyncio.create_task(pump_ws())
             turn_index = 0
             last_wait_phase = 0.0
+
+            # Lex review only mode: skip debate turns, just play judge_result TTS
+            if lex_review_mode:
+                try:
+                    run = runner.get_run_status(run_id) if run_id else runner.get_current_run()
+                    _lex_deadline = time.monotonic() + 180.0
+                    while time.monotonic() < _lex_deadline:
+                        run = runner.get_run_status(run_id) if run_id else run
+                        if not run:
+                            break
+                        if run.lex_review_pending and (run.judge_result or "").strip():
+                            break
+                        await asyncio.sleep(0.2)
+                    if run and run.lex_review_pending and (run.judge_result or "").strip():
+                        jr_tts = _tts_speech_optimization(
+                            _clean_forum_live(run.judge_result.strip(), speaker=Speaker.LEX)
+                        )
+                        if jr_tts.strip():
+                            lex_session = TtsSession(
+                                websocket, Speaker.LEX, jr_tts, 0,
+                                turn_index=999, runner=runner, run_id=run_id,
+                                turn_kind="lex_judge",
+                            )
+                            self._current_session = lex_session
+                            await lex_session.run()
+                            self._current_session = None
+                            await wait_ack(999)
+                            while deferred_selection:
+                                await play_speak_selection(deferred_selection.pop(0))
+                finally:
+                    await websocket.send_text(json.dumps({"type": "all_done"}))
+                return
+
             try:
                 while True:
                     while deferred_selection:
@@ -538,41 +578,8 @@ class TtsManager:
                     if not run:
                         break
 
-                    # Lex 锐评：所有对话 turn 已播完；judge 在 _save_result 里生成，可能略晚于 status=DONE
+                    # Lex 锐评：不再自动播放，由前端触发（通过 lex_review=1 WebSocket 通道）
                     if run.status == RunStatus.DONE and turn_index >= len(run.turns):
-                        _judge_deadline = time.monotonic() + 180.0
-                        while time.monotonic() < _judge_deadline:
-                            run = runner.get_run_status(run_id) if run_id else run
-                            if not run:
-                                break
-                            if (run.judge_result or "").strip():
-                                break
-                            await asyncio.sleep(0.2)
-                        run = runner.get_run_status(run_id) if run_id else run
-                        if run and (run.judge_result or "").strip():
-                            jr_tts = _tts_speech_optimization(
-                                _clean_forum_live(run.judge_result.strip(), speaker=Speaker.LEX)
-                            )
-                            if jr_tts.strip():
-                                lex_session = TtsSession(
-                                    websocket,
-                                    Speaker.LEX,
-                                    jr_tts,
-                                    0,
-                                    turn_index=turn_index,
-                                    runner=runner,
-                                    run_id=run_id,
-                                    turn_kind="lex_judge",
-                                )
-                                self._current_session = lex_session
-                                await lex_session.run()
-                                self._current_session = None
-                                ok = await wait_ack(turn_index)
-                                if not ok:
-                                    return
-                                while deferred_selection:
-                                    await play_speak_selection(deferred_selection.pop(0))
-                                turn_index += 1
                         break
 
                     if run.status == RunStatus.DONE:

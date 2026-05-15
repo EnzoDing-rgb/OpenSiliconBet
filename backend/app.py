@@ -139,6 +139,13 @@ async def get_debate_result(run_id: str):
     return {"content": content}
 
 
+@app.post("/api/debate/trigger-lex-review/{run_id}")
+async def trigger_lex_review(run_id: str):
+    """Trigger Lex review generation including audience Q&A content, then mark TTS ready."""
+    result = await runner.trigger_lex_review(run_id)
+    return {"judge_result": result}
+
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""

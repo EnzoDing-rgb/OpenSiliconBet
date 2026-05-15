@@ -51,6 +51,8 @@ class DebateRun(BaseModel):
     jensen_stream_text: Optional[str] = None
     # TTS：跳过当前及后续非 jensen_vc 段，只播黄仁勋（由 WS skip_audio_until_jensen 置位）
     tts_skip_to_jensen: bool = False
+    # Lex review triggered: set after audience Q&A ends; TTS checks this before playing Lex
+    lex_review_pending: bool = False
 
 
 class StartDebateResponse(BaseModel):

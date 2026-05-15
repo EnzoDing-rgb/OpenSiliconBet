@@ -85,7 +85,7 @@ export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
         <div className="lex-opening-stage__masthead">
           <p className="lex-opening-stage__venue">公众科学日分会场 · 科普圆桌（布景示意）</p>
           <h2 className="lex-opening-stage__h2" id="lex-opening-title">
-            {step === 'init' ? 'Lex 主持开场' : 'Lex 预录开场'}
+            {step === 'init' ? 'Lex 主持开场' : 'Lex 开场'}
           </h2>
         </div>
 
@@ -122,10 +122,10 @@ export function LexOpeningStage({ onFinished }: { onFinished: () => void }) {
             </div>
             <div className="lex-opening-stage__actions">
               <p className="lex-opening-stage__hint">
-                下面是我的预录开场。你也可以稍后一键跳过，直接进入圆桌。
+                下面是我的开场。你也可以稍后一键跳过，直接进入圆桌。
               </p>
               <button type="button" className="lex-opening-stage__primary" onClick={() => setStep('opening')}>
-                播放 Lex 预录开场
+                播放 Lex 开场
               </button>
             </div>
           </>

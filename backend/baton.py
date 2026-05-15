@@ -23,7 +23,7 @@ def _norm_token(raw: str) -> str:
 # 别名 → 规范 id（仅小写）；未命中则返回 None
 _ALIASES: Dict[str, str] = {}
 for _canon, _aliases in (
-    ("wuwei", ("吴伟", "riscv", "risk-v", "riskv", "risc-v", "risc5", "睿芯", "wuwei", "伍伟")),
+    ("wuwei", ("神秘 RISC-V 专家", "riscv", "risk-v", "riskv", "risc-v", "risc5", "睿芯", "wuwei", "神秘专家")),
     ("liptan", ("陈立武", "x86", "intel", "lipbu", "lip-bu", "liptan", "立武", "tan")),
     ("cook", ("库克", "arm", "apple", "tim", "timcook", "cook", "苹果", "silicon")),
     ("lex", ("lex", "弗莱德曼", "弗里德曼")),

@@ -57,8 +57,10 @@ export const DebateAudio = forwardRef<
     skipToJensenActive?: boolean
     /** Expected dialogue segments (e.g. 6 for 3 rounds × 2). Shown as progress hint. */
     totalTurns?: number | null
+    /** When true, connects in lex_review mode (plays judge_result TTS only). */
+    lexReview?: boolean
   }
->(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null }, ref) {
+>(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false }, ref) {
   const [meta, setMeta] = useState<AudioMeta | null>(null)
   const [serverPhase, setServerPhase] = useState<string>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -153,7 +155,8 @@ export const DebateAudio = forwardRef<
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsHost = window.location.host || 'localhost'
-    const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}`)
+    const lexReviewParam = lexReview ? '&lex_review=1' : ''
+    const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}${lexReviewParam}`)
     ws.binaryType = 'arraybuffer'
     wsRef.current = ws
 
@@ -237,7 +240,7 @@ export const DebateAudio = forwardRef<
       window.clearInterval(ackTimer)
       player.stop()
     }
-  }, [enabled, runId, player])
+  }, [enabled, runId, player, lexReview])
 
   if (!enabled || !runId) return null
 

@@ -21,7 +21,7 @@ export const speakerMeta: Record<Speaker, SpeakerMeta> = {
     accent: '#64748b',
   },
   wuwei: {
-    nameZh: '吴伟',
+    nameZh: '神秘 RISC-V 专家',
     subtitleZh: 'RISC-V 阵营',
     avatarSrc: wuweiFace,
     accent: '#22c55e',

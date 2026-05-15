@@ -685,7 +685,8 @@ class DebateRunner:
                     continue
                 if response_text is None:
                     run.status = RunStatus.ERROR
-                    run.error = f"第 {i} 轮（{speaker}）未能获取模型回复：请检查 API 配置、网络或模型可用性。"
+                    error_detail = self._llm_error_info or "请检查 API 配置、网络或模型可用性。"
+                    run.error = f"第 {i} 轮（{speaker}）未能获取模型回复：{error_detail}"
                     self._save_result(run)
                     return
 
@@ -818,11 +819,13 @@ class DebateRunner:
         if not raw:
             run.jensen_stream_text = None
             run.status = RunStatus.ERROR
-            run.error = "黄仁勋（视频串场）独白生成失败：模型无返回或 API 异常。"
+            error_detail = getattr(self, '_llm_error_info', None) or "模型无返回或 API 异常。"
+            run.error = f"黄仁勋（视频串场）独白生成失败：{error_detail}"
             if ji is not None:
                 cur = run.turns[ji]
+                error_short = getattr(self, '_llm_error_info', None) or "模型无返回或 API 异常，请检查配置与网络。"
                 run.turns[ji] = cur.model_copy(
-                    update={"text": "（串场生成失败：模型无返回或 API 异常，请检查配置与网络。）"}
+                    update={"text": f"（串场生成失败：{error_short}）"}
                 )
             return
         fixed = _ensure_jensen_golden_line(_clean_model_output(raw))
@@ -970,6 +973,7 @@ class DebateRunner:
         temperature: Optional[float] = None,
     ) -> Optional[str]:
         """Call LLM with error handling (supports 2 protocols)."""
+        self._llm_error_info = None  # reset per-call
         if self.protocol == "anthropic":
             t = temperature if temperature is not None else DEFAULT_LLM_TEMPERATURE
             return await asyncio.to_thread(
@@ -1003,15 +1007,22 @@ class DebateRunner:
 
         if self._using_fallback:
             if not self._fallback_client or not self._fallback_model:
+                self._llm_error_info = "已切换到后备模式，但未配置 LLM_FALLBACK_* 环境变量"
                 print("[LLM] 已标记为后备模式，但未配置 LLM_FALLBACK_*")
                 return None
             try:
                 response = _create(self._fallback_client, self._fallback_model)
                 return response.choices[0].message.content
             except AuthenticationError:
+                self._llm_error_info = "本地后备模型鉴权失败，请检查 LLM_FALLBACK_API_KEY"
                 print("[LLM] 后备模型鉴权失败")
                 return None
+            except APIConnectionError as e:
+                self._llm_error_info = f"本地后备模型网络连接失败，请检查 LLM_FALLBACK_BASE_URL 和网络：{e}"
+                print(f"[LLM] 后备模型连接失败: {e}")
+                return None
             except Exception as e:
+                self._llm_error_info = f"本地后备模型调用异常：{e}"
                 print(f"[LLM] 后备模型调用失败: {e}")
                 return None
 
@@ -1019,9 +1030,11 @@ class DebateRunner:
             response = _create(self._primary_client, self._primary_model)
             return response.choices[0].message.content
         except AuthenticationError:
+            self._llm_error_info = "API 鉴权失败（AuthenticationError），请检查 API_KEY 是否正确"
             print("API Authentication failed")
             return None
         except APIConnectionError as e:
+            self._llm_error_info = f"API 网络连接失败（APIConnectionError），请检查网络和 API_BASE_URL：{e}"
             print(f"API Connection error: {e}")
             return None
         except (RateLimitError, APIError) as e:
@@ -1033,12 +1046,28 @@ class DebateRunner:
                 try:
                     response = _create(self._fallback_client, self._fallback_model)
                     return response.choices[0].message.content
-                except Exception as e2:
-                    print(f"[LLM] 本地后备模型调用失败: {e2}")
+                except AuthenticationError:
+                    self._llm_error_info = "主 API 配额耗尽，但本地后备模型鉴权也失败"
+                    print("[LLM] 配额耗尽，后备鉴权失败")
                     return None
+                except APIConnectionError as e2:
+                    self._llm_error_info = f"主 API 配额耗尽，但本地后备模型也无法连接：{e2}"
+                    print(f"[LLM] 配额耗尽，后备连接失败: {e2}")
+                    return None
+                except Exception as e2:
+                    self._llm_error_info = f"主 API 配额耗尽，本地后备模型调用也失败：{e2}"
+                    print(f"[LLM] 配额耗尽，后备调用异常: {e2}")
+                    return None
+            if "AccountQuotaExceeded" in str(e):
+                self._llm_error_info = "API 配额耗尽（AccountQuotaExceeded），且未配置本地后备模型"
+            elif isinstance(e, RateLimitError):
+                self._llm_error_info = f"API 触发限流（RateLimitError）：{e}"
+            else:
+                self._llm_error_info = f"API 错误：{e}"
             print(f"API Error: {e}")
             return None
         except Exception as e:
+            self._llm_error_info = f"未知 LLM 错误：{e}"
             print(f"Unexpected LLM error: {e}")
             return None
 
@@ -1087,6 +1116,17 @@ class DebateRunner:
                     parts.append(text)
             return "\n".join(parts).strip() if parts else None
         except Exception as e:
+            em = str(e)
+            if "authentication" in em.lower() or "unauthorized" in em.lower() or "401" in em:
+                self._llm_error_info = "Anthropic API 鉴权失败，请检查 API Key 是否正确"
+            elif "rate limit" in em.lower() or "429" in em or "too many requests" in em.lower():
+                self._llm_error_info = f"Anthropic API 触发限流（RateLimit）：{e}"
+            elif "quota" in em.lower() or "credit" in em.lower() or "insufficient" in em.lower():
+                self._llm_error_info = f"Anthropic API 配额耗尽：{e}"
+            elif "connection" in em.lower() or "timeout" in em.lower() or "reset" in em.lower():
+                self._llm_error_info = f"Anthropic API 网络连接失败，请检查网络和代理配置：{e}"
+            else:
+                self._llm_error_info = f"Anthropic API 错误：{e}"
             print(f"Anthropic-compatible API error: {e}")
             return None
 

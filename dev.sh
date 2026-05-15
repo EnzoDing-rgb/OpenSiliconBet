@@ -33,6 +33,9 @@ cleanup_all() {
   # Clean up log files
   rm -f "${ROOT_DIR}/.backend.log" "${ROOT_DIR}/.frontend.log" "${ROOT_DIR}/.tunnel.log"
 
+  # Clean frontend build artifacts and Vite cache (avoid stale dist / HMR ghosting)
+  rm -rf "${ROOT_DIR}/frontend/dist" "${ROOT_DIR}/frontend/node_modules/.vite"
+
   # Also clean up any leftover child processes from previous runs
   if [[ -f "${ROOT_DIR}/.frontend.pid" ]]; then
     kill -9 $(<"${ROOT_DIR}/.frontend.pid") 2>/dev/null || true

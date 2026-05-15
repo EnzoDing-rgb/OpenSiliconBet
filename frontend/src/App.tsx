@@ -35,6 +35,8 @@ function App() {
   const [lexTransitionDone, setLexTransitionDone] = useState(false)
   const [lexReviewLoading, setLexReviewLoading] = useState(false)
   const [lexReviewTtsActive, setLexReviewTtsActive] = useState(false)
+  const [audioAllDone, setAudioAllDone] = useState(false)
+  const [transitionReady, setTransitionReady] = useState(false)
   const introVideoRef = useRef<HTMLVideoElement>(null)
   const [introStarted, setIntroStarted] = useState(false)
 
@@ -50,6 +52,13 @@ function App() {
   useEffect(() => {
     skipForumSentRef.current = skipForumSent
   }, [skipForumSent])
+
+  // 陈立武说完后 4 秒停顿，再切 Lex 转场
+  useEffect(() => {
+    if (!audioAllDone) return
+    const t = setTimeout(() => setTransitionReady(true), 4000)
+    return () => clearTimeout(t)
+  }, [audioAllDone])
 
   const renderCompareMarkdown = (text: string) => (
     <div className="md-render compare-md" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(text) }} />
@@ -68,6 +77,8 @@ function App() {
     setLexReviewVisible(false)
     setLexReviewTtsActive(false)
     setLexTransitionDone(false)
+    setAudioAllDone(false)
+    setTransitionReady(false)
     try {
       const id = await startDebate()
       setRunId(id)
@@ -297,6 +308,7 @@ function App() {
           enabled={audioEnabled}
           skipToJensenActive={skipForumSent}
           totalTurns={8}
+          onAllDone={() => setAudioAllDone(true)}
         />
 
         {lexReviewTtsActive && runId && (
@@ -423,8 +435,8 @@ function App() {
           </div>
         )}
 
-        {/* After debate done: Lex transition → then BET + Q&A */}
-        {isDone && !lexTransitionDone && (
+        {/* After debate done, audio finished + 4s pause: Lex transition → then BET + Q&A */}
+        {isDone && transitionReady && !lexTransitionDone && (
           <LexTransitionStage onFinished={() => setLexTransitionDone(true)} />
         )}
 

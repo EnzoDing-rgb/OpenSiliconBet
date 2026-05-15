@@ -59,8 +59,10 @@ export const DebateAudio = forwardRef<
     totalTurns?: number | null
     /** When true, connects in lex_review mode (plays judge_result TTS only). */
     lexReview?: boolean
+    /** Called when all_done message received from audio WebSocket. */
+    onAllDone?: () => void
   }
->(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false }, ref) {
+>(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false, onAllDone }, ref) {
   const [meta, setMeta] = useState<AudioMeta | null>(null)
   const [serverPhase, setServerPhase] = useState<string>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -174,7 +176,7 @@ export const DebateAudio = forwardRef<
           setServerPhase(msg.phase)
         }
         if (msg.type === 'error') setError(msg.message)
-        if (msg.type === 'all_done') setDone(true)
+        if (msg.type === 'all_done') { setDone(true); onAllDone?.() }
         if (msg.type === 'turn_done') {
           if (msg.selection && msg.turn_index === -1) {
             const wsNow = wsRef.current

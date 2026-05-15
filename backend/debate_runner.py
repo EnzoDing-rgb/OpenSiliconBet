@@ -644,7 +644,7 @@ class DebateRunner:
             print(f"Error reading skill file {path}: {e}")
             return ""
 
-    def _build_system_prompt(self, speaker: Speaker) -> str:
+    def _build_system_prompt(self, speaker: Speaker, *, skip_deep_research: bool = False) -> str:
         """SKILL + 共享事实底盘 deep-research.md（与架构宪章一致）。"""
         skill_text = (self._skills.get(speaker) or "").strip()
         role = _speaker_zh(speaker)
@@ -654,13 +654,14 @@ class DebateRunner:
         parts: List[str] = [
             f"你现在需要扮演 **{role}**，严格遵循下列角色技能文档中的思维框架与表达要求：\n\n{skill_text}",
         ]
-        dr = (self.deep_research or "").strip()
-        if dr:
-            parts.append(
-                "\n\n---\n\n【共享事实底盘 — 全文】\n"
-                "以下为 `docs/background/deep-research.md` 合并正文；心里有数即可，**口语里不必句句挂「§几」**。\n\n"
-                f"{dr}"
-            )
+        if not skip_deep_research:
+            dr = (self.deep_research or "").strip()
+            if dr:
+                parts.append(
+                    "\n\n---\n\n【共享事实底盘 — 全文】\n"
+                    "以下为 `docs/background/deep-research.md` 合并正文；心里有数即可，**口语里不必句句挂「§几」**。\n\n"
+                    f"{dr}"
+                )
         parts.append("\n\n" + ORAL_FORUM_CONTRACT_ZH.strip())
         parts.append("\n\n接下来只根据本回合 user 指令发言；不要编造文档未支持的具体数字。")
         return "".join(parts)
@@ -764,7 +765,7 @@ class DebateRunner:
         if len(transcript) > _jvc_tmax:
             transcript = "…[论坛前段已省略以加速串场]\n" + transcript[-_jvc_tmax:]
         user = _jensen_vc_user_prompt(transcript, ammo, run.topic)
-        system = self._build_system_prompt(Speaker.JENSEN)
+        system = self._build_system_prompt(Speaker.JENSEN, skip_deep_research=True)
         _jvc_smax = 28000
         if len(system) > _jvc_smax:
             system = system[:_jvc_smax].rstrip() + "\n\n[为串场独白加速：system 尾部已截断]\n"

@@ -392,9 +392,11 @@ fi
 # Start backend in background, logs to .backend.log
 echo "Starting backend on ${BACKEND_HOST}:${BACKEND_PORT}"
 : >"${ROOT_DIR}/.backend.log"
-(cd "${ROOT_DIR}" && "${PYTHON_RUN}" -m uvicorn backend.app:app \
-  --host "${BACKEND_HOST}" \
-  --port "${BACKEND_PORT}") \
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+    -u all_proxy -u ALL_PROXY \
+  sh -c "cd '${ROOT_DIR}' && '${PYTHON_RUN}' -m uvicorn backend.app:app \
+    --host '${BACKEND_HOST}' \
+    --port '${BACKEND_PORT}'" \
   >>"${ROOT_DIR}/.backend.log" 2>&1 &
 backend_pid="$!"
 

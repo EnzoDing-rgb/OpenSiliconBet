@@ -8,6 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, APIConnectionError, AuthenticationError, RateLimitError
+import httpx
 from .models import DebateRun, RunStatus, Turn, Speaker, ChatMessage
 
 # Load environment variables
@@ -595,7 +596,19 @@ class DebateRunner:
                 base_url=self.base_url,
             )
         else:
-            self._primary_client = OpenAI(api_key=primary_key, base_url=primary_base)
+            # Use a dedicated httpx client that bypasses system proxy —
+            # Volcengine Ark is a domestic Chinese service; routing through
+            # foreign proxies (Clash/V2Ray) causes timeout.
+            _http_client = httpx.Client(
+                proxy=None,
+                timeout=httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=15.0),
+            )
+            self._primary_client = OpenAI(
+                api_key=primary_key,
+                base_url=primary_base,
+                http_client=_http_client,
+                max_retries=2,
+            )
             self.client = self._primary_client
 
             disabled = (_env("LLM_FALLBACK_DISABLED") or "").lower() in ("1", "true", "yes")
@@ -603,7 +616,15 @@ class DebateRunner:
             fb_key = _env("LLM_FALLBACK_API_KEY", "my-local-secret-key")
             fb_model = _env("LLM_FALLBACK_MODEL", "qwen3.5")
             if not disabled and fb_base and fb_key and fb_model:
-                self._fallback_client = OpenAI(api_key=fb_key, base_url=fb_base)
+                self._fallback_client = OpenAI(
+                    api_key=fb_key,
+                    base_url=fb_base,
+                    http_client=httpx.Client(
+                        proxy=None,
+                        timeout=httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=15.0),
+                    ),
+                    max_retries=2,
+                )
                 self._fallback_model = fb_model
 
         # In-memory storage for active runs

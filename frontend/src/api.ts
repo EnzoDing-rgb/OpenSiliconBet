@@ -46,6 +46,23 @@ export async function triggerLexReview(runId: string): Promise<string | null> {
   return data.judge_result ?? null;
 }
 
+export async function postBetVote(camp: string): Promise<{ riscv: number; x86: number; arm: number }> {
+  const response = await fetch(`${API_BASE}/bet/vote?camp=${encodeURIComponent(camp)}`, {
+    method: 'POST',
+  })
+  return await response.json()
+}
+
+export async function getBetState(): Promise<{ riscv: number; x86: number; arm: number }> {
+  const response = await fetch(`${API_BASE}/bet/state`)
+  return await response.json()
+}
+
+export async function postBetReset(): Promise<{ riscv: number; x86: number; arm: number }> {
+  const response = await fetch(`${API_BASE}/bet/reset`, { method: 'POST' })
+  return await response.json()
+}
+
 export function downloadMarkdown(content: string, filename: string = 'debate_result.md') {
   const blob = new Blob([content], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);

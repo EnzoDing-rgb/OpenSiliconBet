@@ -179,6 +179,46 @@
   font-weight: 600;
 }
 
+.audience-bet__qr {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.audience-bet__qr-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 4px;
+}
+
+.audience-bet__qr-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.audience-bet__qr-label {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.audience-bet__qr-url {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  word-break: break-all;
+  font-family: ui-monospace, monospace;
+}
+
 .audience-bet__footer {
   margin-top: 0.85rem;
   display: flex;

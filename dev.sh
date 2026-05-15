@@ -353,6 +353,9 @@ cleanup() {
   if [[ -n "${tunnel_pid}" ]] && kill -0 "${tunnel_pid}" >/dev/null 2>&1; then
     kill "${tunnel_pid}" >/dev/null 2>&1 || true
   fi
+  if [[ -n "${_auto_tunnel_pid}" ]] && kill -0 "${_auto_tunnel_pid}" >/dev/null 2>&1; then
+    kill "${_auto_tunnel_pid}" >/dev/null 2>&1 || true
+  fi
   # Final kill any leftover processes on ports
   kill_port "$BACKEND_PORT"
   kill_port "$FRONTEND_PORT"
@@ -448,6 +451,113 @@ if [[ -n "${linux_ip}" ]]; then
   echo
 fi
 
+# ---- Auto Tunnel: try Cloudflare Quick Tunnel if cloudflared installed ----
+_auto_tunnel_pid=""
+_auto_tunnel_url=""
+if [[ "${TUNNEL_MODE}" != "1" ]] && [[ -z "${NAMED_TUNNEL_NAME}" ]] && command -v cloudflared &>/dev/null; then
+  _tunnel_log="${ROOT_DIR}/.tunnel.log"
+  : > "$_tunnel_log"
+
+  # Attempt DNS fix silently (don't spam output like explicit --tunnel mode)
+  _fake_ip="$(detect_argotunnel_fake_ip)"
+  if [[ -n "$_fake_ip" ]] && is_fake_ip "$_fake_ip"; then
+    install_argotunnel_hosts_fix &>/dev/null || true
+  fi
+
+  _cf_cmd="cloudflared tunnel --no-autoupdate --protocol http2"
+  if [[ "${PROD_MODE}" == "1" ]]; then
+    _cf_cmd="$_cf_cmd --url http://127.0.0.1:${BACKEND_PORT}"
+  else
+    _cf_cmd="$_cf_cmd --url http://127.0.0.1:${FRONTEND_PORT}"
+  fi
+  env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+      -u all_proxy -u ALL_PROXY \
+      $_cf_cmd >"$_tunnel_log" 2>&1 &
+  _auto_tunnel_pid="$!"
+
+  # Wait up to 30s for tunnel URL + registered connection
+  for _i in $(seq 1 60); do
+    _auto_tunnel_url="$(
+      "${PYTHON_CMD}" - "$_tunnel_log" <<'PY'
+import re, sys
+path = sys.argv[1]
+try:
+    data = open(path, "r", encoding="utf-8", errors="ignore").read()
+except FileNotFoundError:
+    print(""); raise SystemExit(0)
+m = re.findall(r"https://[a-zA-Z0-9.-]*trycloudflare\.com", data)
+print(m[-1] if m else "")
+PY
+    )"
+    _auto_tunnel_ready="$(
+      "${PYTHON_CMD}" - "$_tunnel_log" <<'PY'
+import re, sys
+path = sys.argv[1]
+try:
+    data = open(path, "r", encoding="utf-8", errors="ignore").read()
+except FileNotFoundError:
+    print("0"); raise SystemExit(0)
+ok = (
+    "Registered tunnel connection" in data
+    or "Connection registered" in data
+    or bool(re.search(r"connIndex=\d+.*registered", data, re.IGNORECASE))
+)
+print("1" if ok else "0")
+PY
+    )"
+    if [[ -n "$_auto_tunnel_url" ]] && [[ "$_auto_tunnel_ready" == "1" ]]; then break; fi
+    sleep 0.5
+  done
+  # Clear URL if connection never became ready
+  if [[ "$_auto_tunnel_ready" != "1" ]]; then _auto_tunnel_url=""; fi
+fi
+
+# ---- Detect Tailscale IP ----
+_tailscale_ip=""
+if command -v tailscale &>/dev/null; then
+  _tailscale_ip="$(tailscale ip -4 2>/dev/null || true)"
+fi
+
+# ---- Determine the port for URL display ----
+if [[ "${PROD_MODE}" == "1" ]]; then
+  _display_port="${BACKEND_PORT}"
+else
+  _display_port="${FRONTEND_PORT}"
+fi
+
+# ---- Print all available URLs in priority order ----
+echo
+echo "=========================================="
+echo "  可访问地址（按优先级）"
+echo "=========================================="
+echo
+
+_first_url=""
+if [[ -n "$_auto_tunnel_url" ]]; then
+  echo -e "  🌍  ${GREEN}${_auto_tunnel_url}${NC}   ← 推荐（公网，观众直接扫码）"
+  _first_url="$_auto_tunnel_url"
+  echo
+fi
+if [[ -n "$_tailscale_ip" ]]; then
+  _ts_url="http://${_tailscale_ip}:${_display_port}"
+  if [[ -z "$_first_url" ]]; then _first_url="$_ts_url"; fi
+  echo -e "  📱  ${GREEN}${_ts_url}${NC}   (Tailscale, 同 tailnet 设备可访问)"
+  echo
+fi
+if [[ -n "${linux_ip}" ]]; then
+  _lan_url="http://${linux_ip}:${_display_port}"
+  if [[ -z "$_first_url" ]]; then _first_url="$_lan_url"; fi
+  echo -e "  💻  ${GREEN}${_lan_url}${NC}   (局域网, 同 WiFi 设备可访问)"
+  echo
+fi
+
+echo "----------------------------------------"
+echo -e "  用 ${GREEN}${_first_url}${NC} 打开页面"
+echo "  二维码会自动编码该地址，观众扫码即可投票"
+echo "=========================================="
+echo
+
+# ---- Legacy: explicit --tunnel mode uses the existing code below ----
 if [[ "${TUNNEL_MODE}" == "1" ]]; then
   if ! command -v cloudflared >/dev/null 2>&1; then
     echo "cloudflared not found. Install it first, or run without --tunnel."

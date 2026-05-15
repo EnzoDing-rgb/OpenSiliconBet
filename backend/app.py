@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -167,6 +167,29 @@ async def websocket_debate_audio(websocket: WebSocket):
     """
     await websocket.accept()
     await tts_manager.handle_connection(websocket, runner)
+
+
+# ---- Audience Bet: in-memory poll-based voting ----
+_bet_state: dict[str, int] = {"riscv": 0, "x86": 0, "arm": 0}
+
+
+@app.post("/api/bet/vote")
+async def bet_vote(camp: str = Query(...)):
+    if camp in _bet_state:
+        _bet_state[camp] += 1
+    return _bet_state
+
+
+@app.get("/api/bet/state")
+async def bet_state():
+    return _bet_state
+
+
+@app.post("/api/bet/reset")
+async def bet_reset():
+    for k in _bet_state:
+        _bet_state[k] = 0
+    return _bet_state
 
 
 # ---- Production: serve frontend dist (single-port deployment) ----

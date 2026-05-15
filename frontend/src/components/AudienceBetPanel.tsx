@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CAMP_BASE, displayPricesFromVotes, type CampVotes } from '../utils/votePrice'
+import { getBetState, postBetVote, postBetReset } from '../api'
 import './AudienceBetPanel.css'
 
 function ChartThreeBars({ prices }: { prices: CampVotes }) {
@@ -83,12 +84,32 @@ export function AudienceBetPanel() {
 
   const prices = useMemo(() => displayPricesFromVotes(votes), [votes])
 
-  const bump = useCallback((key: keyof CampVotes) => {
-    setVotes((v) => ({ ...v, [key]: v[key] + 1 }))
+  // Poll server for live vote counts every 2 seconds
+  useEffect(() => {
+    let cancelled = false
+    const poll = async () => {
+      try {
+        const state = await getBetState()
+        if (!cancelled) setVotes(state)
+      } catch { /* network not ready yet */ }
+    }
+    poll()
+    const timer = setInterval(poll, 2000)
+    return () => { cancelled = true; clearInterval(timer) }
   }, [])
 
-  const reset = useCallback(() => {
-    setVotes({ riscv: 0, x86: 0, arm: 0 })
+  const bump = useCallback(async (key: keyof CampVotes) => {
+    try {
+      const state = await postBetVote(key)
+      setVotes(state)
+    } catch { /* offline, ignore */ }
+  }, [])
+
+  const reset = useCallback(async () => {
+    try {
+      const state = await postBetReset()
+      setVotes(state)
+    } catch { /* offline, ignore */ }
   }, [])
 
   return (
@@ -97,7 +118,7 @@ export function AudienceBetPanel() {
         押注演示（Which one you bet?）
       </h2>
       <p className="audience-bet__hint">
-        点阵营 → 票数 +1（可连点）。展示价为启发式 demo 指数，非真实行情。刷新页面清空。
+        点阵营 → 票数 +1（可连点）。实时投票，所有人看到的票数一致。展示价为启发式 demo 指数，非真实行情。
       </p>
 
       <div className="audience-bet__row">
@@ -129,6 +150,20 @@ export function AudienceBetPanel() {
           <span className="lgd lgd--arm">紫色增量 = ARM</span>
         </p>
         <ChartThreeBars prices={prices} />
+      </div>
+
+      <div className="audience-bet__qr">
+        <img
+          className="audience-bet__qr-img"
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin)}`}
+          alt="扫码参与实时投票"
+          width={150}
+          height={150}
+        />
+        <div className="audience-bet__qr-text">
+          <p className="audience-bet__qr-label">扫码参与实时投票</p>
+          <p className="audience-bet__qr-url">{window.location.origin}</p>
+        </div>
       </div>
 
       <div className="audience-bet__footer">

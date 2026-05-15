@@ -36,6 +36,16 @@ function App() {
   const [lexReviewLoading, setLexReviewLoading] = useState(false)
   const [lexReviewTtsActive, setLexReviewTtsActive] = useState(false)
   const introVideoRef = useRef<HTMLVideoElement>(null)
+  const [introStarted, setIntroStarted] = useState(false)
+
+  const handleIntroClick = useCallback(() => {
+    const v = introVideoRef.current
+    if (!v) return
+    if (!introStarted) {
+      setIntroStarted(true)
+      void v.play().catch(() => { /* autoplay still blocked, show error silently */ })
+    }
+  }, [introStarted])
 
   useEffect(() => {
     skipForumSentRef.current = skipForumSent
@@ -151,19 +161,26 @@ function App() {
   // Intro video overlay
   if (showIntro) {
     return (
-      <div className="intro-video-overlay">
+      <div className="intro-video-overlay" onClick={handleIntroClick}>
+        {!introStarted && (
+          <div className="intro-play-prompt">
+            <div className="intro-play-icon">▶</div>
+            <p className="intro-play-text">点击播放开场视频</p>
+          </div>
+        )}
         <video
           ref={introVideoRef}
           className="intro-video"
           src={INTRO_VIDEO_SRC}
-          autoPlay
           playsInline
           onEnded={handleIntroEnded}
         />
         <div className="intro-video-controls">
-          <button className="intro-skip-btn" onClick={handleIntroSkip}>
-            跳过 &rarr;
-          </button>
+          {introStarted && (
+            <button className="intro-skip-btn" onClick={(e) => { e.stopPropagation(); handleIntroSkip() }}>
+              跳过 &rarr;
+            </button>
+          )}
         </div>
       </div>
     )

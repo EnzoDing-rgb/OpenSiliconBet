@@ -33,8 +33,13 @@ cleanup_all() {
   # Clean up log files
   rm -f "${ROOT_DIR}/.backend.log" "${ROOT_DIR}/.frontend.log" "${ROOT_DIR}/.tunnel.log"
 
-  # Clean frontend build artifacts and Vite cache (avoid stale dist / HMR ghosting)
+  # Clean Python bytecode cache — guarantees fresh imports after code changes
+  find "${ROOT_DIR}/backend" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+  find "${ROOT_DIR}/backend" -type f -name '*.pyc' -delete 2>/dev/null || true
+
+  # Clean frontend build artifacts and caches
   rm -rf "${ROOT_DIR}/frontend/dist" "${ROOT_DIR}/frontend/node_modules/.vite"
+  rm -rf "${ROOT_DIR}/frontend/node_modules/.cache" 2>/dev/null || true
 
   # Also clean up any leftover child processes from previous runs
   if [[ -f "${ROOT_DIR}/.frontend.pid" ]]; then

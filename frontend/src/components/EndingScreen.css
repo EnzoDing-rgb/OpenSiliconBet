@@ -1,0 +1,124 @@
+/* Ending overlay – full-screen with particle animation */
+.ending-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #0f172a 0%, #020617 100%);
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.ending-overlay--visible {
+  opacity: 1;
+}
+
+/* Particle background */
+.ending-bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ending-particle {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  animation: ending-drift 2.5s cubic-bezier(0.22, 1, 0.36, 1) var(--delay) forwards;
+  opacity: 0;
+}
+
+@keyframes ending-drift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+    transform: translate(var(--dx), var(--dy)) scale(1);
+  }
+}
+
+/* Content */
+.ending-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: ending-content-rise 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both;
+}
+
+@keyframes ending-content-rise {
+  from {
+    opacity: 0;
+    transform: translateY(48px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ending-badge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.1);
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  margin-bottom: 12px;
+}
+
+.ending-title {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  margin: 0;
+  text-shadow: 0 2px 40px rgba(255, 255, 255, 0.08);
+}
+
+.ending-subtitle {
+  font-size: clamp(24px, 4vw, 48px);
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: 0.12em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.ending-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #475569, transparent);
+  margin: 16px 0;
+}
+
+.ending-meta {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.ending-meta-sub {
+  font-size: 12px;
+  color: #475569;
+  margin: 0;
+  letter-spacing: 0.06em;
+}

@@ -68,6 +68,7 @@ export const DebateAudio = forwardRef<
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [manualPaused, setManualPaused] = useState(false)
+  const [volume, setVolume] = useState(1.0)
   const wsRef = useRef<WebSocket | null>(null)
   const player = useMemo(() => new PcmPlayer(), [])
   const pendingAckRef = useRef<number | null>(null)
@@ -260,6 +261,21 @@ export const DebateAudio = forwardRef<
             {manualPaused ? '继续' : '暂停'}
           </button>
         )}
+        <label className="audio-volume-label">
+          <span className="audio-volume-icon">VOL</span>
+          <input
+            type="range"
+            className="audio-volume-slider"
+            min="0"
+            max="100"
+            value={Math.round(volume * 100)}
+            onChange={(e) => {
+              const v = Number(e.target.value) / 100
+              setVolume(v)
+              player.setVolume(v)
+            }}
+          />
+        </label>
       </div>
     </div>
   )

@@ -21,6 +21,9 @@ beforeEach(() => {
         onaudioprocess: null as unknown as ((ev: AudioProcessingEvent) => void) | null,
       }
     }
+    createGain() {
+      return { gain: { value: 1.0 }, connect: vi.fn() }
+    }
   }
   vi.stubGlobal('AudioContext', MockAudioContext as unknown as typeof AudioContext)
 })

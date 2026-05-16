@@ -2,6 +2,7 @@
 export class PcmPlayer {
   private ctx: AudioContext | null = null
   private node: ScriptProcessorNode | null = null
+  private gainNode: GainNode | null = null
   private queue: Float32Array[] = []
   private queuedSamples = 0
   private readOffset = 0
@@ -11,6 +12,8 @@ export class PcmPlayer {
   prime() {
     if (this.ctx) return
     this.ctx = new AudioContext({ sampleRate: 24000 })
+    this.gainNode = this.ctx.createGain()
+    this.gainNode.gain.value = 1.0
     this.node = this.ctx.createScriptProcessor(4096, 0, 1)
     this.node.onaudioprocess = (e) => {
       const out = e.outputBuffer.getChannelData(0)
@@ -31,7 +34,18 @@ export class PcmPlayer {
       }
       while (i < out.length) out[i++] = 0
     }
-    this.node.connect(this.ctx.destination)
+    this.node.connect(this.gainNode)
+    this.gainNode.connect(this.ctx.destination)
+  }
+
+  setVolume(v: number) {
+    if (this.gainNode) {
+      this.gainNode.gain.value = Math.max(0, Math.min(2, v))
+    }
+  }
+
+  getVolume(): number {
+    return this.gainNode?.gain.value ?? 1.0
   }
 
   async resumeIfNeeded() {

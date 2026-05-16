@@ -395,6 +395,27 @@ body {
   color: #b91c1c;
 }
 
+.audio-volume-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.audio-volume-icon {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: -0.02em;
+}
+
+.audio-volume-slider {
+  width: 72px;
+  height: 4px;
+  accent-color: #475569;
+  cursor: pointer;
+}
+
 .loading-box {
   padding: 20px;
   text-align: center;

@@ -68,7 +68,7 @@ export const DebateAudio = forwardRef<
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [manualPaused, setManualPaused] = useState(false)
-  const [volume, setVolume] = useState(15.0)
+  const [volume, setVolume] = useState(100.0)
   const wsRef = useRef<WebSocket | null>(null)
   const player = useMemo(() => new PcmPlayer(), [])
   const pendingAckRef = useRef<number | null>(null)
@@ -267,7 +267,7 @@ export const DebateAudio = forwardRef<
             type="range"
             className="audio-volume-slider"
             min="0"
-            max="2000"
+            max="10000"
             value={Math.round(volume * 100)}
             onChange={(e) => {
               const v = Number(e.target.value) / 100

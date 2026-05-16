@@ -37,6 +37,8 @@ function App() {
   const [lexReviewTtsActive, setLexReviewTtsActive] = useState(false)
   const [audioAllDone, setAudioAllDone] = useState(false)
   const [transitionReady, setTransitionReady] = useState(false)
+  const [qaMode, setQaMode] = useState(false)
+  const qaAudioRef = useRef<DebateAudioHandle>(null)
   const introVideoRef = useRef<HTMLVideoElement>(null)
   const [introStarted, setIntroStarted] = useState(false)
 
@@ -56,7 +58,10 @@ function App() {
   // 陈立武说完后 4 秒停顿，再切 Lex 转场
   useEffect(() => {
     if (!audioAllDone) return
-    const t = setTimeout(() => setTransitionReady(true), 4000)
+    const t = setTimeout(() => {
+      setTransitionReady(true)
+      setQaMode(true)
+    }, 4000)
     return () => clearTimeout(t)
   }, [audioAllDone])
 
@@ -79,6 +84,7 @@ function App() {
     setLexTransitionDone(false)
     setAudioAllDone(false)
     setTransitionReady(false)
+    setQaMode(false)
     try {
       const id = await startDebate()
       setRunId(id)
@@ -138,6 +144,7 @@ function App() {
     setTransitionReady(true)
     setStatus('done')
     setLexTransitionDone(true)
+    setQaMode(true)
   }, [runId])
 
   // Polling
@@ -324,7 +331,7 @@ function App() {
         <DebateAudio
           ref={debateAudioRef}
           runId={runId}
-          enabled={audioEnabled}
+          enabled={audioEnabled && !qaMode}
           skipToJensenActive={skipForumSent}
           totalTurns={8}
           onAllDone={() => setAudioAllDone(true)}
@@ -337,6 +344,17 @@ function App() {
             skipToJensenActive={false}
             totalTurns={1}
             lexReview={true}
+          />
+        )}
+
+        {/* Q&A audio state machine — independent from debate audio */}
+        {qaMode && runId && (
+          <DebateAudio
+            ref={qaAudioRef}
+            runId={runId}
+            enabled={true}
+            skipToJensenActive={false}
+            totalTurns={8}
           />
         )}
 
@@ -459,7 +477,8 @@ function App() {
           <LexTransitionStage onFinished={() => setLexTransitionDone(true)} />
         )}
 
-        {isDone && lexTransitionDone && !lexReviewVisible && (
+        {/* Q&A section: after Lex transition or direct skip */}
+        {(qaMode || (isDone && lexTransitionDone)) && !lexReviewVisible && (
           <div className="lex-section">
             <AudienceBetPanel />
 
@@ -469,8 +488,12 @@ function App() {
                 <MasterChat
                   runId={runId}
                   onSpeakSelection={
-                    audioEnabled && runId
-                      ? (speaker, text) => debateAudioRef.current?.speakSelection(speaker, text)
+                    audioEnabled || qaMode
+                      ? (speaker, text) => {
+                          // Prefer Q&A audio ref when in Q&A mode
+                          const ref = qaAudioRef.current ?? debateAudioRef.current
+                          ref?.speakSelection(speaker, text)
+                        }
                       : undefined
                   }
                 />

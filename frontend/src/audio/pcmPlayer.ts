@@ -13,7 +13,7 @@ export class PcmPlayer {
     if (this.ctx) return
     this.ctx = new AudioContext({ sampleRate: 24000 })
     this.gainNode = this.ctx.createGain()
-    this.gainNode.gain.value = 1.0
+    this.gainNode.gain.value = 15.0
     this.node = this.ctx.createScriptProcessor(4096, 0, 1)
     this.node.onaudioprocess = (e) => {
       const out = e.outputBuffer.getChannelData(0)

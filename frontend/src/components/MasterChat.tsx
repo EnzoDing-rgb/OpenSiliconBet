@@ -9,9 +9,10 @@ const CHAT_SPEAKERS: Speaker[] = ['lex', 'wuwei', 'liptan', 'cook', 'jensen'];
 
 interface MasterChatProps {
   runId: string;
+  onSpeakSelection?: (speaker: Speaker, text: string) => void;
 }
 
-export function MasterChat({ runId }: MasterChatProps) {
+export function MasterChat({ runId, onSpeakSelection }: MasterChatProps) {
   const [speaker, setSpeaker] = useState<Speaker>('wuwei');
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -45,6 +46,13 @@ export function MasterChat({ runId }: MasterChatProps) {
     try {
       const reply = await postChat(runId, speaker, trimmed);
       setChatHistory(reply.chat_history);
+      // Play the assistant's reply via TTS
+      if (onSpeakSelection && reply.chat_history.length > 0) {
+        const lastMsg = reply.chat_history[reply.chat_history.length - 1];
+        if (lastMsg.role === 'assistant' && lastMsg.content) {
+          onSpeakSelection(lastMsg.speaker as Speaker, lastMsg.content);
+        }
+      }
     } catch (err: unknown) {
       console.error('Chat error', err);
       setError(err instanceof Error ? err.message : 'Network error');

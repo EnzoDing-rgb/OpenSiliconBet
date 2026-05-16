@@ -127,6 +127,19 @@ function App() {
     setShowIntro(false)
   }, [])
 
+  const handleSkipToQa = useCallback(async () => {
+    if (!runId) return
+    try {
+      await skipForumToJensen(runId)
+    } catch { /* backend may reject if already done */ }
+    debateAudioRef.current?.skipNonJensenAudioToJensen()
+    setSkipForumSent(true)
+    setAudioAllDone(true)
+    setTransitionReady(true)
+    setStatus('done')
+    setLexTransitionDone(true)
+  }, [runId])
+
   // Polling
   useEffect(() => {
     if (!runId || status === 'done' || status === 'error') {
@@ -300,6 +313,12 @@ function App() {
               下载 Markdown 纪要
             </button>
           )}
+
+          {isRunning && runId && (
+            <button className="skip-qa-btn" onClick={() => void handleSkipToQa()}>
+              跳过 → 观众问答
+            </button>
+          )}
         </div>
 
         <DebateAudio
@@ -447,7 +466,14 @@ function App() {
             {runId && (
               <div className="audience-qa-box">
                 <h2 className="audience-qa-title">观众提问</h2>
-                <MasterChat runId={runId} />
+                <MasterChat
+                  runId={runId}
+                  onSpeakSelection={
+                    audioEnabled && runId
+                      ? (speaker, text) => debateAudioRef.current?.speakSelection(speaker, text)
+                      : undefined
+                  }
+                />
                 <div className="qa-end-area">
                   <button
                     className="qa-end-btn"

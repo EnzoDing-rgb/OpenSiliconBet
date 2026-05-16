@@ -59,10 +59,12 @@ export const DebateAudio = forwardRef<
     totalTurns?: number | null
     /** When true, connects in lex_review mode (plays judge_result TTS only). */
     lexReview?: boolean
+    /** When true, don't send 'start' on connect — only handle speakSelection. */
+    noAutoStart?: boolean
     /** Called when all_done message received from audio WebSocket. */
     onAllDone?: () => void
   }
->(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false, onAllDone }, ref) {
+>(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false, noAutoStart = false, onAllDone }, ref) {
   const [meta, setMeta] = useState<AudioMeta | null>(null)
   const [serverPhase, setServerPhase] = useState<string>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -164,7 +166,9 @@ export const DebateAudio = forwardRef<
     wsRef.current = ws
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'start' }))
+      if (!noAutoStart) {
+        ws.send(JSON.stringify({ type: 'start' }))
+      }
     }
 
     ws.onmessage = (evt) => {

@@ -355,6 +355,7 @@ function App() {
             enabled={true}
             skipToJensenActive={false}
             totalTurns={8}
+            noAutoStart
           />
         )}
 

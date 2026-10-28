@@ -8,7 +8,7 @@ cd OpenSiliconBet
 cp .env.example .env
 ```
 
-打开 `.env`，把 `API_KEY=` 换成你的密钥。
+打开 `.env`，把 `API_KEY=` 换成你的 DeepSeek 密钥。对话走 DeepSeek，语音仍用文件里另一把阿里云密钥。
 
 ```bash
 chmod +x dev.sh

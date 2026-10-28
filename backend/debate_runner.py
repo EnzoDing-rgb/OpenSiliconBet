@@ -35,25 +35,26 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
     return v if v else default
 
 
-def _is_volcengine_quota_exhausted(exc: BaseException) -> bool:
-    """429 / AccountQuotaExceeded from Volcengine Ark (and similar OpenAI-compatible gateways)."""
+def _is_quota_or_rate_limited(exc: BaseException) -> bool:
+    """429 / 402 / quota errors from DeepSeek and other OpenAI-compatible gateways."""
     if isinstance(exc, RateLimitError):
         return True
     if isinstance(exc, APIError):
         status = getattr(exc, "status_code", None)
-        if status == 429:
+        if status in (402, 429):
             return True
         body = getattr(exc, "body", None)
         if isinstance(body, dict):
             err = body.get("error") or {}
-            if err.get("code") == "AccountQuotaExceeded":
+            code = str(err.get("code") or "")
+            if code in ("AccountQuotaExceeded", "insufficient_quota"):
                 return True
         if body is not None and "AccountQuotaExceeded" in str(body):
             return True
-    text = str(exc)
-    if "AccountQuotaExceeded" in text:
+    text = str(exc).lower()
+    if "accountquotaexceeded" in text or "insufficient_quota" in text or "insufficient balance" in text:
         return True
-    if "429" in text and ("quota" in text.lower() or "AccountQuota" in text):
+    if "429" in text and ("quota" in text or "rate" in text):
         return True
     return False
 
@@ -561,9 +562,9 @@ class DebateRunner:
 
         # Sensible defaults when base/model omitted.
         if not primary_base:
-            primary_base = "https://ark.cn-beijing.volces.com/api/coding/v3"
+            primary_base = "https://api.deepseek.com"
         if not primary_model:
-            primary_model = "ark-code-latest"
+            primary_model = "deepseek-chat"
 
         self.api_key = primary_key
         self.base_url = primary_base
@@ -596,9 +597,8 @@ class DebateRunner:
                 base_url=self.base_url,
             )
         else:
-            # Use a dedicated httpx client that bypasses system proxy —
-            # Volcengine Ark is a domestic Chinese service; routing through
-            # foreign proxies (Clash/V2Ray) causes timeout.
+            # Bypass the system proxy. DeepSeek's API is reached directly;
+            # a foreign proxy often resets or times out this call.
             _http_client = httpx.Client(
                 proxy=None,
                 timeout=httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=15.0),
@@ -1015,7 +1015,7 @@ class DebateRunner:
         max_tokens: int,
         temperature: float = DEFAULT_LLM_TEMPERATURE,
     ) -> Optional[str]:
-        """Primary = Volcengine Ark; on 429 / AccountQuotaExceeded switch to local OpenAI-compatible (e.g. Qwen)."""
+        """Primary = DeepSeek; on 402 / 429 / quota errors switch to local OpenAI-compatible (e.g. Qwen)."""
         if self.protocol != "openai":
             return None
 
@@ -1060,8 +1060,8 @@ class DebateRunner:
             print(f"API Connection error: {e}")
             return None
         except (RateLimitError, APIError) as e:
-            if self._fallback_client and self._fallback_model and _is_volcengine_quota_exhausted(e):
-                print(f"[LLM] 火山引擎配额或限流，自动切换到本地后备模型 {self._fallback_model!r}（{e!s}）")
+            if self._fallback_client and self._fallback_model and _is_quota_or_rate_limited(e):
+                print(f"[LLM] 主模型配额或限流，自动切换到本地后备模型 {self._fallback_model!r}（{e!s}）")
                 self._using_fallback = True
                 self.model = self._fallback_model
                 self.client = self._fallback_client
@@ -1192,7 +1192,7 @@ class DebateRunner:
         lines.append("")
         lines.append(f"**生成时间**：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         model_line = (
-            f"{self._primary_model} → {self._fallback_model}（火山配额/限流后已切换本地后备）"
+            f"{self._primary_model} → {self._fallback_model}（配额或限流后已切换本地后备）"
             if self._using_fallback and self._fallback_model
             else self.model
         )

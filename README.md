@@ -5,10 +5,10 @@
 ```bash
 git clone https://github.com/EnzoDing-rgb/OpenSiliconBet.git
 cd OpenSiliconBet
-cp .env.example .env
+cp -n .env.example .env
 ```
 
-打开 `.env`，把 `API_KEY=` 换成你的 DeepSeek 密钥。对话走 DeepSeek，语音仍用文件里另一把阿里云密钥。
+如果 `.env` 已经在，上面这条不会覆盖它。还没有的话，打开 `.env`，把 `API_KEY=` 换成你的 DeepSeek 密钥。对话走 DeepSeek，语音仍用文件里另一把阿里云密钥。
 
 ```bash
 chmod +x dev.sh

@@ -1,41 +1,34 @@
-/** Plays mono 16-bit LE PCM at 24kHz via ScriptProcessorNode (legacy but simple). */
+/** One context for the page, created inside a click so the browser allows sound. */
+let sharedCtx: AudioContext | null = null
+
+function liveContext(): AudioContext {
+  if (!sharedCtx || sharedCtx.state === 'closed') {
+    sharedCtx = new AudioContext({ sampleRate: 24000 })
+  }
+  if (sharedCtx.state !== 'running') void sharedCtx.resume()
+  return sharedCtx
+}
+
+export function unlockPcmPlayback() {
+  if (typeof window === 'undefined') return
+  liveContext()
+}
+
+/** Plays mono 16-bit LE PCM at 24kHz by scheduling buffers on one shared context. */
 export class PcmPlayer {
   private ctx: AudioContext | null = null
-  private node: ScriptProcessorNode | null = null
   private gainNode: GainNode | null = null
-  private queue: Float32Array[] = []
-  private queuedSamples = 0
-  private readOffset = 0
-  private currentChunk: Float32Array | null = null
+  private sources: AudioBufferSourceNode[] = []
+  private playhead = 0
   private readonly sampleRate = 24000
 
   prime() {
-    if (this.ctx) return
-    this.ctx = new AudioContext({ sampleRate: 24000 })
+    if (this.ctx && this.ctx.state !== 'closed') return
+    this.ctx = liveContext()
     this.gainNode = this.ctx.createGain()
     this.gainNode.gain.value = 100.0
-    this.node = this.ctx.createScriptProcessor(4096, 0, 1)
-    this.node.onaudioprocess = (e) => {
-      const out = e.outputBuffer.getChannelData(0)
-      let i = 0
-      while (i < out.length) {
-        if (!this.currentChunk || this.readOffset >= this.currentChunk.length) {
-          this.currentChunk = this.queue.shift() ?? null
-          this.readOffset = 0
-          if (!this.currentChunk) break
-        }
-        const available = this.currentChunk.length - this.readOffset
-        const need = out.length - i
-        const take = Math.min(available, need)
-        out.set(this.currentChunk.subarray(this.readOffset, this.readOffset + take), i)
-        this.readOffset += take
-        i += take
-        this.queuedSamples -= take
-      }
-      while (i < out.length) out[i++] = 0
-    }
-    this.node.connect(this.gainNode)
     this.gainNode.connect(this.ctx.destination)
+    this.playhead = 0
   }
 
   setVolume(v: number) {
@@ -72,53 +65,58 @@ export class PcmPlayer {
   }
 
   getBufferedMs() {
-    const currentRemaining = this.currentChunk ? Math.max(0, this.currentChunk.length - this.readOffset) : 0
-    const total = this.queuedSamples + currentRemaining
-    return (total / this.sampleRate) * 1000
+    if (!this.ctx) return 0
+    return Math.max(0, (this.playhead - this.ctx.currentTime) * 1000)
   }
 
   pushPcm16le(buf: ArrayBuffer) {
+    this.prime()
+    const ctx = this.ctx
+    const gain = this.gainNode
+    if (!ctx || ctx.state === 'closed' || !gain) return
+    if (ctx.state !== 'running') void ctx.resume()
     const view = new DataView(buf)
     const n = Math.floor(view.byteLength / 2)
     if (n <= 0) return
-    const out = new Float32Array(n)
+    const audioBuf = ctx.createBuffer(1, n, this.sampleRate)
+    const channel = audioBuf.getChannelData(0)
     for (let i = 0; i < n; i++) {
-      const s = view.getInt16(i * 2, true)
-      out[i] = s / 32768
+      channel[i] = view.getInt16(i * 2, true) / 32768
     }
-    this.queue.push(out)
-    this.queuedSamples += out.length
-    const maxBuffered = 24000 * 30
-    while (this.queuedSamples > maxBuffered && this.queue.length > 1) {
-      const drop = this.queue.shift()
-      if (drop) this.queuedSamples -= drop.length
+    const src = ctx.createBufferSource()
+    src.buffer = audioBuf
+    src.connect(gain)
+    const startAt = Math.max(ctx.currentTime + 0.02, this.playhead)
+    src.start(startAt)
+    this.playhead = startAt + audioBuf.duration
+    this.sources.push(src)
+    src.onended = () => {
+      this.sources = this.sources.filter((item) => item !== src)
     }
   }
 
   clear() {
-    this.queue = []
-    this.queuedSamples = 0
-    this.readOffset = 0
-    this.currentChunk = null
+    for (const src of this.sources) {
+      try {
+        src.stop()
+      } catch {
+        void 0
+      }
+    }
+    this.sources = []
+    this.playhead = this.ctx ? this.ctx.currentTime : 0
   }
 
   stop() {
     this.clear()
-    if (this.node) {
+    if (this.gainNode) {
       try {
-        this.node.disconnect()
+        this.gainNode.disconnect()
       } catch {
         void 0
       }
     }
-    if (this.ctx) {
-      try {
-        void this.ctx.close()
-      } catch {
-        void 0
-      }
-    }
-    this.node = null
+    this.gainNode = null
     this.ctx = null
   }
 }

@@ -80,6 +80,12 @@ async def start_debate(background_tasks: BackgroundTasks):
     return StartDebateResponse(run_id=run_id)
 
 
+@app.post("/api/debate/finish-forum/{run_id}")
+async def finish_forum(run_id: str):
+    """停下还没开口的嘉宾，辩论收束，页面进入观众提问。"""
+    return {"ok": runner.request_finish_forum(run_id)}
+
+
 @app.post("/api/debate/skip-forum/{run_id}")
 async def skip_forum_to_jensen(run_id: str):
     """跳过论坛尾段：立刻并行触发黄仁勋串场 LLM（流式），并令 TTS 跳过非黄仁勋段。"""

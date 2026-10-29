@@ -7,7 +7,7 @@ export function friendlyTtsPhaseDetail(params: {
 }): string {
   const { phase, speakerLabel, round, turnIndex, totalTurns } = params
   const who = speakerLabel ?? '当前讲者'
-  const r = round != null ? `第 ${round} 轮` : ''
+  const r = round == null ? '' : round === 0 ? '开场' : `第 ${round} 轮`
   const turnHint =
     turnIndex != null &&
     turnIndex >= 0 &&

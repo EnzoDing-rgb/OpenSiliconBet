@@ -130,6 +130,23 @@ FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 VENV_DIR="${VENV_DIR:-$ROOT_DIR/.venv}"
+OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
+
+# python3 on macOS/Linux; python on some Windows Git Bash installs.
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+  elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+  else
+    echo "需要 Python 3。macOS / Linux / Windows 先装好 Python 3，再运行 ./dev.sh"
+    exit 1
+  fi
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "需要 Node.js（含 npm）。装好后重新运行 ./dev.sh"
+  exit 1
+fi
 
 # Prefer python3 across environments (some distros don't ship `python`)
 PYTHON_CMD="${PYTHON_BIN}"
@@ -337,7 +354,17 @@ install_argotunnel_hosts_fix() {
   echo "Fixing Cloudflare Tunnel DNS for this Linux machine..."
   echo "This needs sudo once because it writes /etc/hosts."
 
-  if sudo sh -c "sed -i '/# BEGIN national_security cloudflared real DNS/,/# END national_security cloudflared real DNS/d' /etc/hosts && cat '${tmp_hosts_block}' >> /etc/hosts"; then
+  local hosts_ok="0"
+  if [[ "${OS_NAME}" == "Darwin" ]]; then
+    if sudo sed -i '' '/# BEGIN national_security cloudflared real DNS/,/# END national_security cloudflared real DNS/d' /etc/hosts \
+      && sudo sh -c "cat '${tmp_hosts_block}' >> /etc/hosts"; then
+      hosts_ok="1"
+    fi
+  elif sudo sed -i '/# BEGIN national_security cloudflared real DNS/,/# END national_security cloudflared real DNS/d' /etc/hosts \
+    && sudo sh -c "cat '${tmp_hosts_block}' >> /etc/hosts"; then
+    hosts_ok="1"
+  fi
+  if [[ "${hosts_ok}" == "1" ]]; then
     rm -f "${tmp_hosts_block}"
     echo "Cloudflare Tunnel DNS fix installed."
     return 0
@@ -368,17 +395,27 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Ensure venv
-if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
+# Ensure venv. Git Bash on Windows puts the interpreter in Scripts/, not bin/.
+if [[ ! -x "${VENV_DIR}/bin/python" && ! -x "${VENV_DIR}/Scripts/python.exe" ]]; then
   "${PYTHON_BIN}" -m venv "${VENV_DIR}"
 fi
 # shellcheck disable=SC1091
-source "${VENV_DIR}/bin/activate"
+if [[ -f "${VENV_DIR}/bin/activate" ]]; then
+  source "${VENV_DIR}/bin/activate"
+elif [[ -f "${VENV_DIR}/Scripts/activate" ]]; then
+  source "${VENV_DIR}/Scripts/activate"
+fi
 
 # Always use the venv interpreter for python module entrypoints (pip/uvicorn/etc).
-PYTHON_RUN="${VENV_DIR}/bin/python"
 if [[ -x "${VENV_DIR}/bin/python3" ]]; then
   PYTHON_RUN="${VENV_DIR}/bin/python3"
+elif [[ -x "${VENV_DIR}/bin/python" ]]; then
+  PYTHON_RUN="${VENV_DIR}/bin/python"
+elif [[ -x "${VENV_DIR}/Scripts/python.exe" ]]; then
+  PYTHON_RUN="${VENV_DIR}/Scripts/python.exe"
+else
+  echo "虚拟环境创建失败。请确认 ${PYTHON_BIN} 是 Python 3。"
+  exit 1
 fi
 
 # A leftover proxy (for example one pointing at another machine) makes pip hang.
@@ -432,7 +469,7 @@ fi
 
 # Print access URLs with ONLY URLs in green
 echo
-echo "Local access (Linux):"
+echo "本机打开:"
 if [[ "${PROD_MODE}" == "1" ]]; then
   echo -e "  ${GREEN}http://127.0.0.1:${BACKEND_PORT}${NC}"
 else

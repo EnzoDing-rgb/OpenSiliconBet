@@ -4,20 +4,17 @@ import { RoleCard } from './components/RoleCard'
 import { TurnMessage } from './components/TurnMessage'
 import { MasterChat } from './components/MasterChat.tsx'
 import { DebateAudio, type DebateAudioHandle } from './components/DebateAudio'
-import { LexOpeningStage } from './components/LexOpeningStage'
-import { LexTransitionStage } from './components/LexTransitionStage'
 import { AudienceBetPanel } from './components/AudienceBetPanel'
 import { speakerMeta } from './utils/avatars'
 import { markdownToSafeHtml } from './utils/markdownRender'
-import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, skipForumToJensen, triggerLexReview } from './api'
+import { startDebate, getDebateStatus, getDebateResult, downloadMarkdown, finishForum, triggerLexReview } from './api'
 import type { Turn, RunStatus } from './types'
 import { mergeTurnsFromPoll, hasServerJensenVc, isJensenVcPlaceholder } from './utils/mergeTurnsFromPoll'
+import { unlockPcmPlayback } from './audio/pcmPlayer'
 
 const KEYNOTE_IMAGE_SRC = '/images/summit-cas-iss-keynote.png'
-const INTRO_VIDEO_SRC = '/video/intro.mp4'
 
 function App() {
-  const [showIntro, setShowIntro] = useState(true)
   const [runId, setRunId] = useState<string | null>(null)
   const [status, setStatus] = useState<RunStatus | null>(null)
   const [turns, setTurns] = useState<Turn[]>([])
@@ -25,45 +22,21 @@ function App() {
   const [judgeResult, setJudgeResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
-  const [lexPreamble, setLexPreamble] = useState(false)
+  const [audienceOpen, setAudienceOpen] = useState(false)
+  const [audiencePhase, setAudiencePhase] = useState<'qa' | 'vote'>('qa')
   const [skipForumSent, setSkipForumSent] = useState(false)
   const skipForumSentRef = useRef(false)
   const [jensenStreamText, setJensenStreamText] = useState<string | null>(null)
   const debateAudioRef = useRef<DebateAudioHandle>(null)
   const jensenPlaceholderRef = useRef<Turn | null>(null)
   const [lexReviewVisible, setLexReviewVisible] = useState(false)
-  const [lexTransitionDone, setLexTransitionDone] = useState(false)
   const [lexReviewLoading, setLexReviewLoading] = useState(false)
   const [lexReviewTtsActive, setLexReviewTtsActive] = useState(false)
-  const [audioAllDone, setAudioAllDone] = useState(false)
-  const [transitionReady, setTransitionReady] = useState(false)
-  const [qaMode, setQaMode] = useState(false)
   const qaAudioRef = useRef<DebateAudioHandle>(null)
-  const introVideoRef = useRef<HTMLVideoElement>(null)
-  const [introStarted, setIntroStarted] = useState(false)
-
-  const handleIntroClick = useCallback(() => {
-    const v = introVideoRef.current
-    if (!v) return
-    if (!introStarted) {
-      setIntroStarted(true)
-      void v.play().catch(() => { /* autoplay still blocked, show error silently */ })
-    }
-  }, [introStarted])
 
   useEffect(() => {
     skipForumSentRef.current = skipForumSent
   }, [skipForumSent])
-
-  // 陈立武说完后 4 秒停顿，再切 Lex 转场
-  useEffect(() => {
-    if (!audioAllDone) return
-    const t = setTimeout(() => {
-      setTransitionReady(true)
-      setQaMode(true)
-    }, 4000)
-    return () => clearTimeout(t)
-  }, [audioAllDone])
 
   const renderCompareMarkdown = (text: string) => (
     <div className="md-render compare-md" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(text) }} />
@@ -81,10 +54,8 @@ function App() {
     setJensenStreamText(null)
     setLexReviewVisible(false)
     setLexReviewTtsActive(false)
-    setLexTransitionDone(false)
-    setAudioAllDone(false)
-    setTransitionReady(false)
-    setQaMode(false)
+    setAudienceOpen(false)
+    setAudiencePhase('qa')
     try {
       const id = await startDebate()
       setRunId(id)
@@ -95,10 +66,11 @@ function App() {
   }, [])
 
   const handleStart = useCallback(() => {
+    unlockPcmPlayback()
     setAudioEnabled(true)
     setError(null)
-    setLexPreamble(true)
-  }, [])
+    void startForumBackend()
+  }, [startForumBackend])
 
   const handleDownload = useCallback(async () => {
     if (!runId) return
@@ -123,28 +95,12 @@ function App() {
     }
   }, [runId])
 
-  const handleIntroEnded = useCallback(() => {
-    setShowIntro(false)
-  }, [])
-
-  const handleIntroSkip = useCallback(() => {
-    const v = introVideoRef.current
-    if (v) { v.pause(); v.currentTime = v.duration ?? 0 }
-    setShowIntro(false)
-  }, [])
-
   const handleSkipToQa = useCallback(async () => {
     if (!runId) return
     try {
-      await skipForumToJensen(runId)
+      await finishForum(runId)
     } catch { /* backend may reject if already done */ }
-    debateAudioRef.current?.skipNonJensenAudioToJensen()
-    setSkipForumSent(true)
-    setAudioAllDone(true)
-    setTransitionReady(true)
-    setStatus('done')
-    setLexTransitionDone(true)
-    setQaMode(true)
+    setAudienceOpen(true)
   }, [runId])
 
   // Polling
@@ -187,35 +143,10 @@ function App() {
   }, [runId, status])
 
   const isDone = status === 'done'
-  const isRunning = status === 'running' || loading || lexPreamble
-
-  // Intro video overlay
-  if (showIntro) {
-    return (
-      <div className="intro-video-overlay" onClick={handleIntroClick}>
-        {!introStarted && (
-          <div className="intro-play-prompt">
-            <div className="intro-play-icon">▶</div>
-            <p className="intro-play-text">点击播放开场视频</p>
-          </div>
-        )}
-        <video
-          ref={introVideoRef}
-          className="intro-video"
-          src={INTRO_VIDEO_SRC}
-          playsInline
-          onEnded={handleIntroEnded}
-        />
-        <div className="intro-video-controls">
-          {introStarted && (
-            <button className="intro-skip-btn" onClick={(e) => { e.stopPropagation(); handleIntroSkip() }}>
-              跳过 &rarr;
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
+  const isRunning = status === 'running' || loading
+  const showAudience = isDone || audienceOpen
+  const showQa = showAudience && audiencePhase === 'qa' && !lexReviewVisible
+  const showVote = showAudience && audiencePhase === 'vote'
 
   return (
     <div className="app-root">
@@ -237,19 +168,7 @@ function App() {
           />
         </div>
 
-        {lexPreamble && (
-          <LexOpeningStage
-            onFinished={() => {
-              setLexPreamble(false)
-              void startForumBackend()
-            }}
-          />
-        )}
-
-        <div
-          className={`roundtable-wrap${lexPreamble ? ' roundtable-wrap--lex-active' : ''}`}
-          aria-hidden={lexPreamble}
-        >
+        <div className="roundtable-wrap">
           <p className="roundtable-caption">圆桌席次 · Lex 左侧主持 · 四嘉宾围席</p>
           <div className="roundtable-stage" aria-label="论坛圆桌席次">
             <div className="roundtable-oval" aria-hidden />
@@ -312,7 +231,7 @@ function App() {
             onClick={handleStart}
             disabled={isRunning}
           >
-            {lexPreamble ? 'Lex 开场中…' : isRunning ? '对谈进行中...' : '开始对谈'}
+            {isRunning ? '对谈进行中...' : '开始对谈'}
           </button>
 
           {isDone && (
@@ -331,10 +250,9 @@ function App() {
         <DebateAudio
           ref={debateAudioRef}
           runId={runId}
-          enabled={audioEnabled && !qaMode}
+          enabled={audioEnabled}
           skipToJensenActive={skipForumSent}
-          totalTurns={8}
-          onAllDone={() => setAudioAllDone(true)}
+          totalTurns={9}
         />
 
         {lexReviewTtsActive && runId && (
@@ -364,75 +282,30 @@ function App() {
           </div>
         )}
 
-        {!lexPreamble && loading && !runId && (
+        {loading && !runId && (
           <div className="loading-box">正在连接论坛服务器…</div>
         )}
 
-        {!lexPreamble && isRunning && runId && turns.length === 0 && (
+        {isRunning && runId && turns.length === 0 && (
           <div className="loading-box">
-            论坛交锋生成中：首位发言嘉宾为神秘 RISC-V 专家（RISC-V）——主持开场已由 Lex 完成。
+            Lex 先开口。上一位语音播完，下一位才会开口。
           </div>
         )}
 
         {turns.length > 0 && (
           <div className="timeline-with-skip">
             <div className="timeline-container">
-              {runId &&
-                status === 'running' &&
-                turns.length >= 1 &&
-                turns.length < 6 &&
-                !turns.some((t) => t.kind === 'jensen_vc') && (
-                  <div className="jensen-vc-callout" aria-label="黄仁勋视频串场">
-                    {!skipForumSent ? (
-                      <>
-                        <button
-                          type="button"
-                          className="jensen-vc-btn"
-                          onClick={() => {
-                            debateAudioRef.current?.skipNonJensenAudioToJensen()
-                            const ph: Turn = {
-                              round: 4,
-                              speaker: 'jensen',
-                              text: '[视频接入中，黄仁勋正在发言...]',
-                              created_at: Date.now(),
-                              kind: 'jensen_vc',
-                            }
-                            jensenPlaceholderRef.current = ph
-                            setTurns((prev) => [...prev, ph])
-                            setSkipForumSent(true)
-                            void skipForumToJensen(runId)
-                          }}
-                        >
-                          黄仁勋 Video Call
-                        </button>
-                        <p className="jensen-vc-hint">
-                          跳过尚未生成的论坛尾段，直接进入黄仁勋视频串场环节。
-                        </p>
-                      </>
-                    ) : (
-                      <div className="jensen-vc-confirmed" aria-live="polite">
-                        <div className="jensen-vc-confirmed-badge">已触发</div>
-                        <div className="jensen-vc-confirmed-title">黄仁勋 Video Call</div>
-                        <p className="jensen-vc-hint">系统将在当前神秘 RISC-V 专家发言结束后，切入黄仁勋视频串场。</p>
-                        <div className="jensen-vc-loading">
-                          <div className="jensen-vc-spinner" />
-                          <span>正在生成黄仁勋串场内容，请稍候</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
               {(() => {
                 const elements: React.ReactElement[] = []
-                let currentRound = 0
+                let currentRound = -1
 
                 turns.forEach((turn) => {
                   if (turn.round !== currentRound) {
                     currentRound = turn.round
                     const k = turn.kind || 'forum'
                     let label = `第 ${currentRound} 轮`
-                    if (k === 'jensen_vc') label = '黄仁勋 · 视频串场'
+                    if (k === 'lex_open') label = 'Lex 开场'
+                    else if (k === 'jensen_vc') label = '黄仁勋 · 视频串场'
                     else if (k === 'liptan_tag') label = '陈立武 · 散场接话'
                     elements.push(
                       <div key={`round-${currentRound}-${k}`} className="round-divider">
@@ -472,40 +345,53 @@ function App() {
           </div>
         )}
 
-        {/* After debate done, audio finished + 4s pause: Lex transition → then BET + Q&A */}
-        {isDone && transitionReady && !lexTransitionDone && (
-          <LexTransitionStage onFinished={() => setLexTransitionDone(true)} />
+        {showQa && runId && (
+          <div className="lex-section">
+            <div className="audience-qa-box">
+              <h2 className="audience-qa-title">观众提问</h2>
+              <MasterChat
+                runId={runId}
+                onArmPlayback={
+                  audioEnabled
+                    ? () => {
+                        unlockPcmPlayback()
+                        ;(qaAudioRef.current ?? debateAudioRef.current)?.unlock()
+                      }
+                    : undefined
+                }
+                onSpeakSelection={
+                  audioEnabled
+                    ? (speaker, text) => {
+                        const ref = qaAudioRef.current ?? debateAudioRef.current
+                        ref?.speakSelection(speaker, text)
+                      }
+                    : undefined
+                }
+              />
+              <div className="qa-end-area">
+                <button
+                  className="qa-end-btn"
+                  onClick={() => setAudiencePhase('vote')}
+                >
+                  结束提问
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Q&A stays at the bottom once the forum has a run, so a reply can be spoken immediately. */}
-        {runId && !lexPreamble && !lexReviewVisible && (
+        {showVote && (
           <div className="lex-section">
             <AudienceBetPanel />
-
-            {runId && (
-              <div className="audience-qa-box">
-                <h2 className="audience-qa-title">观众提问</h2>
-                <MasterChat
-                  runId={runId}
-                  onSpeakSelection={
-                    audioEnabled || qaMode
-                      ? (speaker, text) => {
-                          // Prefer Q&A audio ref when in Q&A mode
-                          const ref = qaAudioRef.current ?? debateAudioRef.current
-                          ref?.speakSelection(speaker, text)
-                        }
-                      : undefined
-                  }
-                />
-                <div className="qa-end-area">
-                  <button
-                    className="qa-end-btn"
-                    onClick={handleEndQa}
-                    disabled={lexReviewLoading}
-                  >
-                    {lexReviewLoading ? '正在生成 Lex 锐评…' : '结束提问 · Lex 锐评'}
-                  </button>
-                </div>
+            {!lexReviewVisible && (
+              <div className="qa-end-area">
+                <button
+                  className="qa-end-btn"
+                  onClick={() => void handleEndQa()}
+                  disabled={lexReviewLoading || !runId}
+                >
+                  {lexReviewLoading ? '正在生成 Lex 锐评…' : '结束投票'}
+                </button>
               </div>
             )}
           </div>

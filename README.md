@@ -15,6 +15,8 @@ chmod +x dev.sh
 ./dev.sh
 ```
 
+`./dev.sh` 在 macOS、Linux，以及 Windows 的 Git Bash 里都能用。缺的 Python 依赖和前端依赖会自己安装。
+
 浏览器打开 http://127.0.0.1:5173
 
 停掉：回到这个终端，按 `Ctrl+C`。

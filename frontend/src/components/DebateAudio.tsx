@@ -7,7 +7,7 @@ import {
   useState,
   forwardRef,
 } from 'react'
-import { PcmPlayer } from '../audio/pcmPlayer'
+import { PcmPlayer, unlockPcmPlayback } from '../audio/pcmPlayer'
 import { friendlyTtsPhaseDetail } from '../utils/ttsPhaseUi'
 import type { Speaker } from '../types'
 import { speakerLabelZh } from '../utils/avatars'
@@ -47,6 +47,8 @@ export type DebateAudioHandle = {
   skipNonJensenAudioToJensen: () => void
   /** 选中气泡内文字：用对应讲者 Voice ID 播一段（仅 jensen / liptan） */
   speakSelection: (speaker: Speaker, text: string) => void
+  /** Call inside a click, before any await, so the reply can be heard. */
+  unlock: () => void
 }
 
 export const DebateAudio = forwardRef<
@@ -78,6 +80,9 @@ export const DebateAudio = forwardRef<
   const player = useMemo(() => new PcmPlayer(), [])
   const pendingAckRef = useRef<number | null>(null)
   const lowBufferSinceRef = useRef<number | null>(null)
+  const pendingSpeakRef = useRef<{ speaker: Speaker; text: string } | null>(null)
+  const openSocketRef = useRef<(() => void) | null>(null)
+  const socketGenRef = useRef(0)
 
   useImperativeHandle(
     ref,
@@ -97,16 +102,29 @@ export const DebateAudio = forwardRef<
           lowBufferSinceRef.current = null
         }
       },
+      unlock: () => {
+        unlockPcmPlayback()
+        player.prime()
+        void player.resumeIfNeeded()
+      },
       speakSelection: (speaker: Speaker, text: string) => {
         const t = text.trim().slice(0, 1500)
         if (t.length < 2) return
-        const ws = wsRef.current
-        if (!ws || ws.readyState !== WebSocket.OPEN) return
+        unlockPcmPlayback()
+        player.prime()
         void player.resumeIfNeeded()
-        ws.send(JSON.stringify({ type: 'speak_selection', speaker, text: t }))
+        pendingSpeakRef.current = { speaker, text: t }
+        const ws = wsRef.current
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'speak_selection', speaker, text: t }))
+          pendingSpeakRef.current = null
+          return
+        }
+        if (ws && ws.readyState === WebSocket.CONNECTING) return
+        if (selectionOnly) openSocketRef.current?.()
       },
     }),
-    [player],
+    [player, selectionOnly],
   )
 
   const statusDetail = useMemo(() => {
@@ -165,64 +183,93 @@ export const DebateAudio = forwardRef<
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsHost = window.location.host || 'localhost'
     const lexReviewParam = lexReview ? '&lex_review=1' : ''
-    const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}${lexReviewParam}`)
-    ws.binaryType = 'arraybuffer'
-    wsRef.current = ws
+    const url = `${wsProtocol}//${wsHost}/ws/debate-audio?run_id=${encodeURIComponent(runId)}${lexReviewParam}`
+    let stopped = false
+    let reconnectTimer: number | null = null
 
-    ws.onopen = () => {
-      if (selectionOnly) {
-        ws.send(JSON.stringify({ type: 'start', selection_only: true }))
-      } else if (!noAutoStart) {
-        ws.send(JSON.stringify({ type: 'start' }))
+    const openSocket = () => {
+      if (stopped) return
+      if (reconnectTimer != null) {
+        window.clearTimeout(reconnectTimer)
+        reconnectTimer = null
       }
-    }
-
-    ws.onmessage = (evt) => {
-      if (typeof evt.data === 'string') {
-        const msg = JSON.parse(evt.data) as ControlMsg
-        if (msg.type === 'meta') {
-          setMeta(msg)
-        }
-        if (msg.type === 'phase') {
-          setServerPhase(msg.phase)
-        }
-        if (msg.type === 'error') setError(msg.message)
-        if (msg.type === 'all_done') { setDone(true); onAllDone?.() }
-        if (msg.type === 'turn_done') {
-          if (msg.selection && msg.turn_index === -1) {
-            const wsNow = wsRef.current
-            if (wsNow && wsNow.readyState === WebSocket.OPEN) {
-              wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: -1 }))
-            }
-            pendingAckRef.current = null
-            lowBufferSinceRef.current = null
-            return
-          }
-          pendingAckRef.current = msg.turn_index
-          lowBufferSinceRef.current = null
-          if (msg.skip_playback) {
-            const wsNow = wsRef.current
-            if (wsNow && wsNow.readyState === WebSocket.OPEN) {
-              wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: msg.turn_index }))
-              pendingAckRef.current = null
-              lowBufferSinceRef.current = null
-            }
-          }
-        }
+      const existing = wsRef.current
+      if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) {
         return
       }
-      if (evt.data instanceof ArrayBuffer) {
-        player.pushPcm16le(evt.data)
+      const gen = ++socketGenRef.current
+      const ws = new WebSocket(url)
+      ws.binaryType = 'arraybuffer'
+      wsRef.current = ws
+
+      ws.onopen = () => {
+        if (selectionOnly) {
+          ws.send(JSON.stringify({ type: 'start', selection_only: true }))
+        } else if (!noAutoStart) {
+          ws.send(JSON.stringify({ type: 'start' }))
+        }
+        const pending = pendingSpeakRef.current
+        if (pending && selectionOnly) {
+          ws.send(JSON.stringify({ type: 'speak_selection', speaker: pending.speaker, text: pending.text }))
+          pendingSpeakRef.current = null
+        }
+      }
+
+      ws.onmessage = (evt) => {
+        if (typeof evt.data === 'string') {
+          const msg = JSON.parse(evt.data) as ControlMsg
+          if (msg.type === 'meta') {
+            setMeta(msg)
+          }
+          if (msg.type === 'phase') {
+            setServerPhase(msg.phase)
+          }
+          if (msg.type === 'error') setError(msg.message)
+          if (msg.type === 'all_done') { setDone(true); onAllDone?.() }
+          if (msg.type === 'turn_done') {
+            if (msg.selection && msg.turn_index === -1) {
+              const wsNow = wsRef.current
+              if (wsNow && wsNow.readyState === WebSocket.OPEN) {
+                wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: -1 }))
+              }
+              pendingAckRef.current = null
+              lowBufferSinceRef.current = null
+              return
+            }
+            pendingAckRef.current = msg.turn_index
+            lowBufferSinceRef.current = null
+            if (msg.skip_playback) {
+              const wsNow = wsRef.current
+              if (wsNow && wsNow.readyState === WebSocket.OPEN) {
+                wsNow.send(JSON.stringify({ type: 'ack_turn_done', turn_index: msg.turn_index }))
+                pendingAckRef.current = null
+                lowBufferSinceRef.current = null
+              }
+            }
+          }
+          return
+        }
+        if (evt.data instanceof ArrayBuffer) {
+          player.pushPcm16le(evt.data)
+        }
+      }
+
+      ws.onerror = () => {
+        setError('音频 WebSocket 连接失败')
+      }
+
+      ws.onclose = () => {
+        if (wsRef.current === ws) wsRef.current = null
+        if (stopped || !selectionOnly || socketGenRef.current !== gen) return
+        reconnectTimer = window.setTimeout(() => {
+          if (stopped || socketGenRef.current !== gen) return
+          openSocket()
+        }, 400)
       }
     }
 
-    ws.onerror = () => {
-      setError('音频 WebSocket 连接失败')
-    }
-
-    ws.onclose = () => {
-      wsRef.current = null
-    }
+    openSocketRef.current = openSocket
+    openSocket()
 
     const ackTimer = window.setInterval(() => {
       const pending = pendingAckRef.current
@@ -244,12 +291,19 @@ export const DebateAudio = forwardRef<
     }, 80)
 
     return () => {
-      try {
-        ws.close()
-      } catch {
-        void 0
-      }
+      stopped = true
+      socketGenRef.current += 1
+      openSocketRef.current = null
+      if (reconnectTimer != null) window.clearTimeout(reconnectTimer)
+      const current = wsRef.current
       wsRef.current = null
+      if (current) {
+        try {
+          current.close()
+        } catch {
+          void 0
+        }
+      }
       window.clearInterval(ackTimer)
       player.stop()
     }

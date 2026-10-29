@@ -94,6 +94,8 @@ RESPONSE_LEN_HINT_ZH = "中文可见正文约一百五十字以内，宁少勿�
 FORUM_LLM_TEMPERATURE = 0.88
 DEFAULT_LLM_TEMPERATURE = 0.72
 DISPLAY_DELAY_SECONDS_PER_TURN = 7.0
+# 下一位嘉宾的文字要等上一位语音在浏览器里播完才公布。超时只作语音失败时的退路。
+FORUM_AUDIO_WAIT_SECONDS = 180.0
 
 # Judge output needs to be longer than debater turns; otherwise it gets cut off.
 JUDGE_MAX_RESPONSE_TOKENS = 350
@@ -345,6 +347,8 @@ def _tts_speech_optimization(text: str) -> str:
     if not text:
         return text
     t = text
+    t = re.sub(r"\*\*|__|`", "", t)
+    t = re.sub(r"^#{1,6}\s*", "", t, flags=re.MULTILINE)
 
     # x86 → 叉86（不要读成「艾克斯86」）
     t = re.sub(r"x86", "叉86", t, flags=re.IGNORECASE)
@@ -399,6 +403,13 @@ def _clean_model_output(text: str) -> str:
 
     return "\n".join(cleaned).strip()
 
+
+# 点「开始对谈」后先由 Lex 开口，再进入嘉宾三轮。固定短稿，走同一条语音。
+LEX_OPENING_TEXT = (
+    "Hi, I'm Lex, 来自 MIT。"
+    "今天坐在我旁边的，是 RISC-V、x86 和 ARM 三条路上的人。"
+    "Agent 时代，调度和等待压回了 CPU。我想先听他们怎么看。"
+)
 
 # 阶段 1 论坛交锋：每人 2 段、共 6 段（顺序：神秘 RISC-V 专家→陈立武→库克×2 轮）。口吻：现场口语 + TTS，非纪要体。
 DIALOGUE_TURNS: List[Tuple[Speaker, str]] = [
@@ -631,6 +642,10 @@ class DebateRunner:
         self.runs: Dict[str, DebateRun] = {}
         # Video Call 触发的黄仁勋 eager 生成（与论坛主循环并行；run_debate 在串场点 await）
         self._eager_jensen_tasks: Dict[str, asyncio.Task] = {}
+        # 论坛：某一轮语音在浏览器播完（ack）后才允许下一位开口
+        self._turn_heard: Dict[Tuple[str, int], asyncio.Event] = {}
+        self._forum_stop: Dict[str, asyncio.Event] = {}
+        self._finish_forum: set[str] = set()
 
     def _read_skill(self, path: Path) -> str:
         """Read skill content from file, return empty if not exists"""
@@ -676,7 +691,72 @@ class DebateRunner:
             turns=[],
         )
         self.runs[run_id] = run
+        self._forum_stop[run_id] = asyncio.Event()
+        self._finish_forum.discard(run_id)
         return run_id
+
+    def note_turn_audio_finished(self, run_id: str, turn_index: int) -> None:
+        """浏览器确认这一轮语音已经播完。"""
+        if turn_index < 0:
+            return
+        self._turn_heard.setdefault((run_id, turn_index), asyncio.Event()).set()
+
+    def request_finish_forum(self, run_id: str) -> bool:
+        """停下后续嘉宾，辩论直接收束到观众提问。不插入黄仁勋。"""
+        run = self.runs.get(run_id)
+        if not run or run.status != RunStatus.RUNNING:
+            return False
+        self._finish_forum.add(run_id)
+        self._forum_stop.setdefault(run_id, asyncio.Event()).set()
+        return True
+
+    def _forum_finish_requested(self, run_id: str) -> bool:
+        return run_id in self._finish_forum
+
+    async def _wait_until_turn_heard(self, run_id: str, turn_index: int) -> bool:
+        """等到这一轮语音播完。返回 True 表示应停止后续嘉宾。"""
+        if self._forum_finish_requested(run_id):
+            return True
+        heard = self._turn_heard.setdefault((run_id, turn_index), asyncio.Event())
+        stop = self._forum_stop.setdefault(run_id, asyncio.Event())
+        if heard.is_set():
+            return False
+        if stop.is_set():
+            return True
+        heard_task = asyncio.create_task(heard.wait())
+        stop_task = asyncio.create_task(stop.wait())
+        try:
+            done, pending = await asyncio.wait(
+                {heard_task, stop_task},
+                timeout=FORUM_AUDIO_WAIT_SECONDS,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+            if not done:
+                print(f"[debate] audio wait timed out for turn {turn_index}; continuing")
+                return self._forum_finish_requested(run_id)
+            return stop.is_set() and not heard.is_set()
+        finally:
+            for task in (heard_task, stop_task):
+                if not task.done():
+                    task.cancel()
+
+    async def _forum_reply(
+        self,
+        speaker: Speaker,
+        base_prompt: str,
+        last_speaker: Optional[Speaker],
+        opponent_last: Optional[str],
+    ) -> Optional[str]:
+        system_prompt = self._build_system_prompt(speaker)
+        opponent_name = _speaker_zh(last_speaker) if last_speaker else ""
+        user_prompt = f"{base_prompt}{_interaction_wrapper(opponent_name, opponent_last)}"
+        return await self._call_llm(
+            system_prompt,
+            user_prompt,
+            temperature=FORUM_LLM_TEMPERATURE,
+        )
 
     async def run_debate(self, run_id: str) -> None:
         """Execute the debate sequence turn by turn"""
@@ -684,27 +764,37 @@ class DebateRunner:
         if not run:
             return
 
+        prepared: Optional[asyncio.Task] = None
         try:
             last_text_by_speaker: Dict[Speaker, str] = {}
             last_speaker: Optional[Speaker] = None
-            for i, (speaker, base_prompt) in enumerate(DIALOGUE_TURNS, 1):
-                if run.status != RunStatus.RUNNING:
-                    break
-                if run.skip_to_jensen:
-                    break
-
-                system_prompt = self._build_system_prompt(speaker)
-                opponent_name = _speaker_zh(last_speaker) if last_speaker else ""
-                opponent_last = last_text_by_speaker.get(last_speaker) if last_speaker else None
-                user_prompt = f"{base_prompt}{_interaction_wrapper(opponent_name, opponent_last)}"
-
-                response_text = await self._call_llm(
-                    system_prompt,
-                    user_prompt,
-                    temperature=FORUM_LLM_TEMPERATURE,
+            turn_specs = DIALOGUE_TURNS
+            if run.status == RunStatus.RUNNING and not self._forum_finish_requested(run_id):
+                run.turns.append(
+                    Turn(
+                        round=0,
+                        speaker=Speaker.LEX,
+                        text=LEX_OPENING_TEXT,
+                        created_at=time.time(),
+                        kind="lex_open",
+                    )
                 )
-                if run.skip_to_jensen:
-                    continue
+                if await self._wait_until_turn_heard(run_id, len(run.turns) - 1):
+                    turn_specs = []
+            for i, (speaker, base_prompt) in enumerate(turn_specs, 1):
+                if run.status != RunStatus.RUNNING or self._forum_finish_requested(run_id):
+                    break
+
+                if prepared is not None:
+                    response_text = await prepared
+                    prepared = None
+                else:
+                    opponent_last = last_text_by_speaker.get(last_speaker) if last_speaker else None
+                    response_text = await self._forum_reply(
+                        speaker, base_prompt, last_speaker, opponent_last
+                    )
+                if run.status != RunStatus.RUNNING or self._forum_finish_requested(run_id):
+                    break
                 if response_text is None:
                     run.status = RunStatus.ERROR
                     error_detail = self._llm_error_info or "请检查 API 配置、网络或模型可用性。"
@@ -716,7 +806,7 @@ class DebateRunner:
                 response_text = _clean_forum_live(response_text or "", speaker=speaker)
                 response_text = response_text.strip()
 
-                # Add turn
+                # 文字先不上屏。上一位语音播完之后，这一位才出现并开始念。
                 turn = Turn(
                     round=(i + 1) // 2,  # 1,1,2,2,3,3
                     speaker=speaker,
@@ -727,23 +817,58 @@ class DebateRunner:
                 run.turns.append(turn)
                 last_text_by_speaker[speaker] = turn.text
                 last_speaker = speaker
+                published_index = len(run.turns) - 1
 
-                # Slow down text output so UI doesn't race ahead of audio playback.
-                await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
+                # 这一位在念的时候，先把下一位的稿子写好，但先不公布。
+                if i < len(turn_specs) and not self._forum_finish_requested(run_id):
+                    next_speaker, next_prompt = turn_specs[i]
+                    prepared = asyncio.create_task(
+                        self._forum_reply(
+                            next_speaker,
+                            next_prompt,
+                            last_speaker,
+                            last_text_by_speaker.get(last_speaker),
+                        )
+                    )
+                elif i == len(turn_specs) and not self._forum_finish_requested(run_id):
+                    # 最后一位嘉宾在念的时候写黄仁勋的稿，等语音播完再切 video call。
+                    prepared = asyncio.create_task(self._jensen_vc_raw_text(run))
 
-            t_eager = self._eager_jensen_tasks.pop(run_id, None)
-            if t_eager is not None:
-                try:
-                    await t_eager
-                except asyncio.CancelledError:
-                    raise
-                except Exception as e:
-                    print(f"[eager jensen] task failed (main loop continues): {e}")
+                stop = await self._wait_until_turn_heard(run_id, published_index)
+                if stop or self._forum_finish_requested(run_id):
+                    break
 
-            if run.status == RunStatus.RUNNING:
-                await self._append_jensen_vc_turn(run)
-            if run.status == RunStatus.RUNNING:
-                await self._append_liptan_tag_turn(run)
+                if i == len(turn_specs) and prepared is not None and run.status == RunStatus.RUNNING:
+                    jensen_text = await prepared
+                    prepared = None
+                    if (
+                        run.status == RunStatus.RUNNING
+                        and jensen_text
+                        and not self._forum_finish_requested(run_id)
+                    ):
+                        run.jensen_stream_text = None
+                        run.turns.append(
+                            Turn(
+                                round=4,
+                                speaker=Speaker.JENSEN,
+                                text=jensen_text,
+                                created_at=time.time(),
+                                kind="jensen_vc",
+                            )
+                        )
+                        stopped_for_audience = await self._wait_until_turn_heard(
+                            run_id, len(run.turns) - 1
+                        )
+                        if (
+                            not stopped_for_audience
+                            and run.status == RunStatus.RUNNING
+                            and not self._forum_finish_requested(run_id)
+                        ):
+                            await self._append_liptan_tag_turn(run)
+                            await self._wait_until_turn_heard(run_id, len(run.turns) - 1)
+
+            if prepared is not None and not prepared.done():
+                prepared.cancel()
 
             if run.status == RunStatus.RUNNING:
                 run.status = RunStatus.DONE
@@ -751,6 +876,8 @@ class DebateRunner:
             self._save_result(run)
 
         except Exception as e:
+            if prepared is not None and not prepared.done():
+                prepared.cancel()
             run.status = RunStatus.ERROR
             run.error = f"Unexpected error: {str(e)}"
             self._save_result(run)
@@ -810,11 +937,9 @@ class DebateRunner:
                 run.jensen_stream_text = fb.strip()
             return fb.strip() if fb else None
 
-    async def _append_jensen_vc_turn(self, run: DebateRun) -> None:
-        """阶段二：黄仁勋视频串场闭幕独白（叠 Jensen SKILL + jensen-closing-speech 弹药）。"""
+    async def _jensen_vc_raw_text(self, run: DebateRun) -> Optional[str]:
+        """生成黄仁勋 video call 正文，先不写入 turns。"""
         ji = _last_jensen_vc_index(run.turns)
-        if ji is not None and not _is_jensen_server_placeholder_turn(run.turns[ji]):
-            return
         system, user = self._prepare_jensen_vc_prompts(run)
         max_tok = min(450, MAX_RESPONSE_TOKENS + 200)
         raw: Optional[str]
@@ -849,9 +974,19 @@ class DebateRunner:
                 run.turns[ji] = cur.model_copy(
                     update={"text": f"（串场生成失败：{error_short}）"}
                 )
-            return
+            return None
         fixed = _ensure_jensen_golden_line(_clean_model_output(raw))
-        fixed = _clean_forum_live(fixed or "", speaker=Speaker.JENSEN).strip()
+        return _clean_forum_live(fixed or "", speaker=Speaker.JENSEN).strip() or None
+
+    async def _append_jensen_vc_turn(self, run: DebateRun) -> None:
+        """阶段二：黄仁勋视频串场闭幕独白（叠 Jensen SKILL + jensen-closing-speech 弹药）。"""
+        ji = _last_jensen_vc_index(run.turns)
+        if ji is not None and not _is_jensen_server_placeholder_turn(run.turns[ji]):
+            return
+        fixed = await self._jensen_vc_raw_text(run)
+        if not fixed:
+            return
+        ji = _last_jensen_vc_index(run.turns)
         if ji is not None:
             cur = run.turns[ji]
             run.turns[ji] = cur.model_copy(update={"text": fixed})
@@ -884,7 +1019,6 @@ class DebateRunner:
                 kind="liptan_tag",
             )
         )
-        await asyncio.sleep(DISPLAY_DELAY_SECONDS_PER_TURN)
 
     def request_skip_to_jensen(self, run_id: str) -> bool:
         run = self.runs.get(run_id)

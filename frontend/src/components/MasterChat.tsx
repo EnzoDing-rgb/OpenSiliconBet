@@ -10,9 +10,11 @@ const CHAT_SPEAKERS: Speaker[] = ['lex', 'wuwei', 'liptan', 'cook', 'jensen'];
 interface MasterChatProps {
   runId: string;
   onSpeakSelection?: (speaker: Speaker, text: string) => void;
+  /** Call synchronously on Send, before the reply comes back. */
+  onArmPlayback?: () => void;
 }
 
-export function MasterChat({ runId, onSpeakSelection }: MasterChatProps) {
+export function MasterChat({ runId, onSpeakSelection, onArmPlayback }: MasterChatProps) {
   const [speaker, setSpeaker] = useState<Speaker>('wuwei');
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -29,6 +31,7 @@ export function MasterChat({ runId, onSpeakSelection }: MasterChatProps) {
   const handleSend = async () => {
     const trimmed = message.trim();
     if (!trimmed || !runId || sending) return;
+    onArmPlayback?.();
 
     const now = Date.now();
     const optimisticUserMsg: ChatMessage = {

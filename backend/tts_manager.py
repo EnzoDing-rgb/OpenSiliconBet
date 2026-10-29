@@ -1,10 +1,13 @@
 import asyncio
 import base64
 import json
+import os
 import re
 import threading
 import time
+import uuid
 from typing import Optional, Callable, List, Any, Dict
+import websockets
 import dashscope
 from dashscope.audio.qwen_tts_realtime import QwenTtsRealtime, QwenTtsRealtimeCallback
 from fastapi import WebSocket, WebSocketDisconnect
@@ -31,6 +34,15 @@ TTS_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
 MIN_CHARS = 40
 MAX_CHARS = 180
 FLUSH_PUNCT = r"[。！？；\n]"
+# Qwen-Audio-TTS speech rate. 1.0 is the model default; valid range is 0.5–2.0.
+TTS_SPEECH_RATE = 1.4
+# 神秘专家 alone is a bit fast at the shared pace. 0.87 × that pace stays inside 0.85–0.9.
+WUWEI_RATE_SCALE = 0.87
+
+
+def _is_qwen_audio_tts() -> bool:
+    """Qwen-Audio-TTS uses run-task / continue-task / finish-task, not the Qwen3 realtime session."""
+    return TTS_MODEL.startswith("qwen-audio-") or TTS_WS_URL.rstrip("/").endswith("/inference")
 
 
 def init_tts(
@@ -40,13 +52,36 @@ def init_tts(
     url: str = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime",
 ) -> None:
     """Initialize TTS config, call this once at startup. speaker_voices keys: lex,wuwei,liptan,cook,jensen."""
-    global DASHSCOPE_API_KEY, VOICE_BY_SPEAKER, TTS_MODEL, TTS_WS_URL
+    global DASHSCOPE_API_KEY, VOICE_BY_SPEAKER, TTS_MODEL, TTS_WS_URL, TTS_SPEECH_RATE
     DASHSCOPE_API_KEY = api_key
     for k in (Speaker.LEX.value, Speaker.WUWEI.value, Speaker.LIPTAN.value, Speaker.COOK.value, Speaker.JENSEN.value):
         VOICE_BY_SPEAKER[k] = (speaker_voices.get(k) or "").strip() or None
     TTS_MODEL = model
     TTS_WS_URL = url
+    raw_rate = os.environ.get("TTS_RATE", "").strip()
+    if raw_rate:
+        try:
+            TTS_SPEECH_RATE = min(2.0, max(0.5, float(raw_rate)))
+        except ValueError:
+            TTS_SPEECH_RATE = 1.4
+    else:
+        TTS_SPEECH_RATE = 1.4
     dashscope.api_key = api_key
+
+
+def speech_rate_for(speaker: str) -> float:
+    """Shared pace for every guest. 神秘专家 (wuwei) speaks at 0.87 of that pace."""
+    base = TTS_SPEECH_RATE
+    key = speaker.value if isinstance(speaker, Speaker) else str(speaker)
+    if key != Speaker.WUWEI.value:
+        return base
+    override = os.environ.get("TTS_RATE_WUWEI", "").strip()
+    if override:
+        try:
+            return min(2.0, max(0.5, float(override)))
+        except ValueError:
+            pass
+    return min(2.0, max(0.5, round(base * WUWEI_RATE_SCALE, 2)))
 
 
 class TextChunker:
@@ -130,6 +165,7 @@ class TtsSession:
         self._done = asyncio.Event()
         self._error: Optional[Exception] = None
         self._phase_playing_sent = False
+        self._aborted_early = False
 
     def _should_abort_tts(self) -> bool:
         if self.turn_kind in ("speak_sel", "lex_judge"):
@@ -148,7 +184,21 @@ class TtsSession:
             raise RuntimeError(f"No DashScope voice id configured for speaker={key!r}")
         return vid
 
-    async def _emit_phase(self, phase: str, message: Optional[str] = None) -> None:
+    async def _send_text_safe(self, payload: str) -> bool:
+        try:
+            await self.websocket.send_text(payload)
+            return True
+        except (WebSocketDisconnect, RuntimeError):
+            return False
+
+    async def _send_bytes_safe(self, data: bytes) -> bool:
+        try:
+            await self.websocket.send_bytes(data)
+            return True
+        except (WebSocketDisconnect, RuntimeError):
+            return False
+
+    async def _emit_phase(self, phase: str, message: Optional[str] = None) -> bool:
         sp = self.speaker.value if hasattr(self.speaker, "value") else str(self.speaker)
         payload: dict = {
             "type": "phase",
@@ -159,7 +209,7 @@ class TtsSession:
         }
         if message:
             payload["message"] = message
-        await self.websocket.send_text(json.dumps(payload))
+        return await self._send_text_safe(json.dumps(payload))
 
     async def run(self) -> None:
         """Run the full session: chunk text → send to aliyun → forward audio to browser"""
@@ -174,8 +224,14 @@ class TtsSession:
         }
         if self.selection_one_shot:
             meta["selection"] = True
-        await self.websocket.send_text(json.dumps(meta))
+        if not await self._send_text_safe(json.dumps(meta)):
+            return
         await self._emit_phase("connecting", message="正在连接语音合成服务…")
+
+        if _is_qwen_audio_tts():
+            await self._run_qwen_audio()
+            await self._finish_browser_turn()
+            return
 
         # 2. Setup callback for dashscope: forward audio to browser
         class Callback(QwenTtsRealtimeCallback):
@@ -257,6 +313,7 @@ class TtsSession:
                 for chunk in chunks:
                     if self._should_abort_tts():
                         aborted_early = True
+                        self._aborted_early = True
                         break
                     qwen_tts.append_text(chunk)
                     await asyncio.sleep(0.05)
@@ -277,6 +334,8 @@ class TtsSession:
                     except Exception:
                         pass
                     callback.complete_event.set()
+        except Exception as e:
+            self._error = e
         finally:
             try:
                 if qwen_tts is not None:
@@ -284,9 +343,11 @@ class TtsSession:
             except Exception:
                 pass
 
+        await self._finish_browser_turn()
+
+    async def _finish_browser_turn(self) -> None:
         if self._error:
-            # Send error to browser
-            await self.websocket.send_text(json.dumps({
+            await self._send_text_safe(json.dumps({
                 "type": "error",
                 "message": str(self._error),
                 "turn_index": self.turn_index,
@@ -301,12 +362,108 @@ class TtsSession:
             "speaker": self.speaker.value if hasattr(self.speaker, 'value') else self.speaker,
             "round": self.round_num,
             "turn_index": self.turn_index,
-            "skip_playback": aborted_early,
+            "skip_playback": self._aborted_early,
         }
         if self.selection_one_shot:
             done_payload["selection"] = True
-        await self.websocket.send_text(json.dumps(done_payload))
+        await self._send_text_safe(json.dumps(done_payload))
         self._done.set()
+
+    async def _run_qwen_audio(self) -> None:
+        """Speak with Qwen-Audio-TTS: run-task, continue-task, finish-task.
+
+        Audio comes back as PCM binary frames. See
+        https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-audio-tts-client-events
+        """
+        task_id = str(uuid.uuid4())
+        try:
+            voice_id = self._get_voice_id()
+        except Exception as e:
+            self._error = e
+            return
+
+        started = asyncio.Event()
+        finished = asyncio.Event()
+        fail_msg: Optional[str] = None
+
+        async def reader(ws: websockets.ClientConnection) -> None:
+            nonlocal fail_msg
+            try:
+                async for msg in ws:
+                    if isinstance(msg, (bytes, bytearray)):
+                        if not self._phase_playing_sent:
+                            self._phase_playing_sent = True
+                            await self._emit_phase("playing")
+                        if not await self._send_bytes_safe(bytes(msg)):
+                            finished.set()
+                            return
+                        continue
+                    data = json.loads(msg)
+                    header = data.get("header") or {}
+                    event = header.get("event")
+                    if event == "task-started":
+                        started.set()
+                    elif event == "task-finished":
+                        finished.set()
+                        return
+                    elif event == "task-failed":
+                        fail_msg = str(header.get("error_message") or header.get("error_code") or "task-failed")
+                        finished.set()
+                        return
+            except Exception as e:
+                self._error = e
+                finished.set()
+
+        try:
+            async with websockets.connect(
+                TTS_WS_URL,
+                additional_headers={"Authorization": f"Bearer {DASHSCOPE_API_KEY}"},
+                open_timeout=20,
+                max_size=8 * 1024 * 1024,
+            ) as ws:
+                reader_task = asyncio.create_task(reader(ws))
+                await ws.send(json.dumps({
+                    "header": {"action": "run-task", "task_id": task_id, "streaming": "duplex"},
+                    "payload": {
+                        "task_group": "audio",
+                        "task": "tts",
+                        "function": "SpeechSynthesizer",
+                        "model": TTS_MODEL,
+                        "input": {},
+                        "parameters": {
+                            "text_type": "PlainText",
+                            "voice": voice_id,
+                            "format": "pcm",
+                            "sample_rate": 24000,
+                            "rate": speech_rate_for(self.speaker),
+                            "language_hints": ["zh"],
+                        },
+                    },
+                }))
+                await asyncio.wait_for(started.wait(), timeout=20)
+                await self._emit_phase("generating", message="正在合成语音…")
+                if self._should_abort_tts():
+                    self._aborted_early = True
+                    await ws.send(json.dumps({
+                        "header": {"action": "finish-task", "task_id": task_id, "streaming": "duplex"},
+                        "payload": {"input": {"directive": "cancel"}},
+                    }))
+                else:
+                    await ws.send(json.dumps({
+                        "header": {"action": "continue-task", "task_id": task_id, "streaming": "duplex"},
+                        "payload": {"input": {"text": self.full_text}},
+                    }))
+                    await ws.send(json.dumps({
+                        "header": {"action": "finish-task", "task_id": task_id, "streaming": "duplex"},
+                        "payload": {"input": {}},
+                    }))
+                await asyncio.wait_for(finished.wait(), timeout=180)
+                if fail_msg and self._error is None:
+                    self._error = RuntimeError(fail_msg)
+                reader_task.cancel()
+        except Exception as e:
+            if self._error is None:
+                self._error = e
 
     async def wait_done(self) -> None:
         await self._done.wait()
@@ -346,8 +503,8 @@ class TtsManager:
                     continue
                 if msg.get("type") != "speak_selection":
                     continue
-                text_raw = (msg.get("text") or "").strip()
-                if not text_raw or len(text_raw) > 1500:
+                text_raw = (msg.get("text") or "").strip()[:1500]
+                if len(text_raw) < 2:
                     continue
                 try:
                     speaker = Speaker(msg.get("speaker"))
@@ -356,6 +513,7 @@ class TtsManager:
                 tts_text = _tts_speech_optimization(text_raw)
                 if not tts_text.strip():
                     continue
+                print(f"[tts] speak_selection speaker={speaker.value} chars={len(tts_text)} rate={speech_rate_for(speaker)}")
                 session = TtsSession(
                     websocket,
                     speaker,
@@ -367,8 +525,12 @@ class TtsManager:
                     selection_one_shot=True,
                 )
                 self._current_session = session
-                await session.run()
-                self._current_session = None
+                try:
+                    await session.run()
+                except Exception as e:
+                    print(f"[tts] speak_selection failed: {e}")
+                finally:
+                    self._current_session = None
         except WebSocketDisconnect:
             return
 
@@ -428,8 +590,8 @@ class TtsManager:
             async def play_speak_selection(sel: dict) -> None:
                 """观众追问或选中文字：五位嘉宾都用各自音色朗读。"""
                 raw_sp = sel.get("speaker")
-                text_raw = (sel.get("text") or "").strip()
-                if not text_raw or len(text_raw) > 1500:
+                text_raw = (sel.get("text") or "").strip()[:1500]
+                if len(text_raw) < 2:
                     return
                 try:
                     sp = Speaker(raw_sp)
@@ -567,6 +729,8 @@ class TtsManager:
                                 "skip_playback": True,
                             }))
                             ok = await wait_ack(turn_index)
+                            if ok and run_id:
+                                runner.note_turn_audio_finished(run_id, turn_index)
                             if not ok:
                                 return
                             while deferred_selection:
@@ -609,7 +773,14 @@ class TtsManager:
                         self._current_session = session
                         await session.run()
                         self._current_session = None
+                        if session._error:
+                            if run_id:
+                                runner.note_turn_audio_finished(run_id, turn_index)
+                            turn_index += 1
+                            continue
                         ok = await wait_ack(turn_index)
+                        if ok and run_id:
+                            runner.note_turn_audio_finished(run_id, turn_index)
                         if not ok:
                             return
                         while deferred_selection:

@@ -24,7 +24,7 @@ VOICE_BY_SPEAKER: dict[str, Optional[str]] = {
     Speaker.JENSEN.value: None,
 }
 # TTS model (must match voice cloning target_model)
-TTS_MODEL = "qwen3-tts-vc-realtime-2026-01-15"
+TTS_MODEL = "qwen3-tts-flash-realtime"
 # Aliyun websocket url (for China region)
 TTS_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
 # Text chunking config
@@ -36,7 +36,7 @@ FLUSH_PUNCT = r"[。！？；\n]"
 def init_tts(
     api_key: str,
     speaker_voices: dict[str, str],
-    model: str = "qwen3-tts-vc-realtime-2026-01-15",
+    model: str = "qwen3-tts-flash-realtime",
     url: str = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime",
 ) -> None:
     """Initialize TTS config, call this once at startup. speaker_voices keys: lex,wuwei,liptan,cook,jensen."""
@@ -331,6 +331,47 @@ class TtsManager:
         if run_id in self._active_run_audio:
             self._active_run_audio.pop(run_id, None)
 
+    async def _selection_only_loop(self, websocket: WebSocket, run_id: Optional[str]) -> None:
+        """Audience Q&A: speak whichever guest was asked, without taking the forum playback lock."""
+        from .debate_runner import _tts_speech_optimization
+
+        try:
+            while True:
+                raw = await websocket.receive_text()
+                try:
+                    msg = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if msg.get("type") == "ack_turn_done":
+                    continue
+                if msg.get("type") != "speak_selection":
+                    continue
+                text_raw = (msg.get("text") or "").strip()
+                if not text_raw or len(text_raw) > 1500:
+                    continue
+                try:
+                    speaker = Speaker(msg.get("speaker"))
+                except ValueError:
+                    continue
+                tts_text = _tts_speech_optimization(text_raw)
+                if not tts_text.strip():
+                    continue
+                session = TtsSession(
+                    websocket,
+                    speaker,
+                    tts_text,
+                    0,
+                    turn_index=-1,
+                    run_id=run_id,
+                    turn_kind="speak_sel",
+                    selection_one_shot=True,
+                )
+                self._current_session = session
+                await session.run()
+                self._current_session = None
+        except WebSocketDisconnect:
+            return
+
     async def handle_connection(self, websocket: WebSocket, runner) -> None:
         """Handle incoming websocket connection from browser"""
         run_id: Optional[str] = None
@@ -341,6 +382,10 @@ class TtsManager:
             data = json.loads(start_msg)
             if data.get("type") != "start":
                 await websocket.close()
+                return
+            if data.get("selection_only"):
+                run_id = websocket.query_params.get("run_id")
+                await self._selection_only_loop(websocket, run_id)
                 return
 
             # Resolve run_id from query params (preferred), fallback to latest run
@@ -381,7 +426,7 @@ class TtsManager:
             )
 
             async def play_speak_selection(sel: dict) -> None:
-                """鼠标选中片段：仅 jensen / liptan，走各自 Voice ID。"""
+                """观众追问或选中文字：五位嘉宾都用各自音色朗读。"""
                 raw_sp = sel.get("speaker")
                 text_raw = (sel.get("text") or "").strip()
                 if not text_raw or len(text_raw) > 1500:
@@ -389,8 +434,6 @@ class TtsManager:
                 try:
                     sp = Speaker(raw_sp)
                 except ValueError:
-                    return
-                if sp not in (Speaker.JENSEN, Speaker.LIPTAN):
                     return
 
                 tts_text = _tts_speech_optimization(text_raw)

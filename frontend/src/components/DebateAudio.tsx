@@ -61,10 +61,13 @@ export const DebateAudio = forwardRef<
     lexReview?: boolean
     /** When true, don't send 'start' on connect — only handle speakSelection. */
     noAutoStart?: boolean
+    /** Audience replies: own socket that only speaks on demand, and does not show a second status bar. */
+    selectionOnly?: boolean
+    hideStatus?: boolean
     /** Called when all_done message received from audio WebSocket. */
     onAllDone?: () => void
   }
->(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false, noAutoStart = false, onAllDone }, ref) {
+>(function DebateAudio({ runId, enabled, skipToJensenActive = false, totalTurns = null, lexReview = false, noAutoStart = false, selectionOnly = false, hideStatus = false, onAllDone }, ref) {
   const [meta, setMeta] = useState<AudioMeta | null>(null)
   const [serverPhase, setServerPhase] = useState<string>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -99,6 +102,7 @@ export const DebateAudio = forwardRef<
         if (t.length < 2) return
         const ws = wsRef.current
         if (!ws || ws.readyState !== WebSocket.OPEN) return
+        void player.resumeIfNeeded()
         ws.send(JSON.stringify({ type: 'speak_selection', speaker, text: t }))
       },
     }),
@@ -166,7 +170,9 @@ export const DebateAudio = forwardRef<
     wsRef.current = ws
 
     ws.onopen = () => {
-      if (!noAutoStart) {
+      if (selectionOnly) {
+        ws.send(JSON.stringify({ type: 'start', selection_only: true }))
+      } else if (!noAutoStart) {
         ws.send(JSON.stringify({ type: 'start' }))
       }
     }
@@ -247,9 +253,9 @@ export const DebateAudio = forwardRef<
       window.clearInterval(ackTimer)
       player.stop()
     }
-  }, [enabled, runId, player, lexReview])
+  }, [enabled, runId, player, lexReview, selectionOnly, noAutoStart])
 
-  if (!enabled || !runId) return null
+  if (!enabled || !runId || hideStatus) return null
 
   const showPause = !skipToJensenActive && !error && !done && !!meta
 

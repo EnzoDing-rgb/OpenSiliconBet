@@ -348,14 +348,13 @@ function App() {
         )}
 
         {/* Q&A audio state machine — independent from debate audio */}
-        {qaMode && runId && (
+        {runId && audioEnabled && (
           <DebateAudio
             ref={qaAudioRef}
             runId={runId}
-            enabled={true}
-            skipToJensenActive={false}
-            totalTurns={8}
-            noAutoStart
+            enabled
+            selectionOnly
+            hideStatus
           />
         )}
 
@@ -478,8 +477,8 @@ function App() {
           <LexTransitionStage onFinished={() => setLexTransitionDone(true)} />
         )}
 
-        {/* Q&A section: after Lex transition or direct skip */}
-        {(qaMode || (isDone && lexTransitionDone)) && !lexReviewVisible && (
+        {/* Q&A stays at the bottom once the forum has a run, so a reply can be spoken immediately. */}
+        {runId && !lexPreamble && !lexReviewVisible && (
           <div className="lex-section">
             <AudienceBetPanel />
 

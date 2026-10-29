@@ -381,9 +381,14 @@ if [[ -x "${VENV_DIR}/bin/python3" ]]; then
   PYTHON_RUN="${VENV_DIR}/bin/python3"
 fi
 
-# Install deps silently
-"${PYTHON_RUN}" -m pip install --upgrade pip >/dev/null
-"${PYTHON_RUN}" -m pip install -r "${ROOT_DIR}/backend/requirements.txt" >/dev/null
+# A leftover proxy (for example one pointing at another machine) makes pip hang.
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY
+
+# Install deps only when the backend imports are missing.
+if ! "${PYTHON_RUN}" -c 'import fastapi,uvicorn,openai,dashscope' >/dev/null 2>&1; then
+  "${PYTHON_RUN}" -m pip install --upgrade pip >/dev/null
+  "${PYTHON_RUN}" -m pip install -r "${ROOT_DIR}/backend/requirements.txt" >/dev/null
+fi
 if [[ ! -d "${ROOT_DIR}/frontend/node_modules" ]]; then
   (cd "${ROOT_DIR}/frontend" && npm install >/dev/null)
 fi

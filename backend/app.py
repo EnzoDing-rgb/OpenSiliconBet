@@ -41,7 +41,7 @@ def _speaker_voice_map() -> dict[str, str]:
 
 
 _speaker_voices = _speaker_voice_map()
-tts_model = os.getenv("TTS_MODEL", "qwen3-tts-vc-realtime-2026-01-15")
+tts_model = os.getenv("TTS_MODEL", "qwen3-tts-flash-realtime")
 tts_ws_url = os.getenv("TTS_WS_URL", "wss://dashscope.aliyuncs.com/api-ws/v1/realtime")
 
 # Initialize TTS（至少有一个非空 voice id 即可全员复用）
